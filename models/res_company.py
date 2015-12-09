@@ -38,7 +38,6 @@ class CarepointResCompany(models.Model):
     _name = 'carepoint.res.company'
     _inherit = 'carepoint.binding'
     _inherits = {'res.company': 'odoo_id'}
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
     _description = 'Carepoint Company'
 
     odoo_id = fields.Many2one(
@@ -71,7 +70,7 @@ class ResCompany(models.Model):
 class ResCompanyAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.res.company'
-    _carepoint_model = 'store'
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
 
 @carepoint
 class ResCompanyBatchImporter(DelayedBatchImporter):
@@ -79,6 +78,7 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
     For every partner in the list, a delayed job is created.
     """
     _model_name = ['carepoint.res.company']
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -99,6 +99,7 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
 @carepoint
 class ResCompanyImportMapper(ImportMapper):
     _model_name = 'carepoint.res.company'
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
 
     direct = [
         ('name', 'name'),
@@ -130,6 +131,7 @@ class ResCompanyImportMapper(ImportMapper):
 @carepoint
 class ResCompanyImporter(CarepointImporter):
     _model_name = ['carepoint.res.company']
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
 
     _base_mapper = ResCompanyImportMapper
 

@@ -31,7 +31,8 @@ class CarepointDeleter(Deleter):
     """ Base deleter for Carepoint """
 
     def run(self, carepoint_id):
-        """ Run the synchronization, delete the record on Carepoint
+        """
+        Run the synchronization, delete the record on Carepoint
         :param carepoint_id: identifier of the record to delete
         """
         self.backend_adapter.delete(carepoint_id)
