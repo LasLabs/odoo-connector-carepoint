@@ -145,7 +145,7 @@ class CarepointBackend(models.Model):
                                backend.id,
                                filters={'from_date': from_date,
                                         'to_date': import_start_time})
-        # Records from Carepoint are imported based on their `created_at`
+        # Records from Carepoint are imported based on their `add_date`
         # date.  This date is set on Carepoint at the beginning of a
         # transaction, so if the import is run between the beginning and
         # the end of a transaction, the import of a record may be
@@ -287,7 +287,7 @@ class MagentoWebsite(models.Model):
                 {'magento_website_id': website.magento_id,
                  'from_date': from_date,
                  'to_date': import_start_time})
-        # Records from Magento are imported based on their `created_at`
+        # Records from Magento are imported based on their `add_date`
         # date.  This date is set on Magento at the beginning of a
         # transaction, so if the import is run between the beginning and
         # the end of a transaction, the import of a record may be
@@ -418,7 +418,7 @@ class MagentoStoreview(models.Model):
                  'from_date': from_date,
                  'to_date': import_start_time},
                 priority=1)  # executed as soon as possible
-        # Records from Magento are imported based on their `created_at`
+        # Records from Magento are imported based on their `add_date`
         # date.  This date is set on Magento at the beginning of a
         # transaction, so if the import is run between the beginning and
         # the end of a transaction, the import of a record may be
