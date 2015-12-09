@@ -27,6 +27,7 @@ from carepoint import Carepoint
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
 from openerp.addons.connector.exception import (NetworkRetryableError,
                                                 RetryableJobError)
+
 from datetime import datetime
 _logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ def output_recorder(filename):
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
-    def __init__(self, connector_env):
+    def __init__(self, connector_env, ):
         """
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
@@ -86,29 +87,88 @@ class CarepointCRUDAdapter(CRUDAdapter):
             user=backend.username,
             passwd=backend.password,
         )
+        
+    def __to_camel_case(self, snake_case, ):
+        """
+        Convert the snake_case to CamelCase
+        :param snake_case: To convert
+        :type snake_case: str
+        :rtype: str
+        """
+        parts = snake_case.split('_')
+        return "".join(x.title() for x in components)
+        
+    def __get_model(self, name, ):
+        """
+        Get the correct model object by name from Carepoint lib
+        :param name: Name of model to get (converts snake_case to CamelCase)
+        :type name: str
+        :rtype: :class:`sqlalchemy.schema.Table`
+        """
+        name = self.__to_camel_case(name)
+        return getattr(self.carepoint, name)
 
-    def search(self, filters=None):
-        """ Search records according to some criterias
-        and returns a list of ids """
-        raise self.carepoint.query()
+    def search(self, model_name, filters=None, ):
+        """
+        Search table by filters and return records
+        :param model_name: Name of model to search, will get obj
+        :type model_name: str
+        :param filters: Filters to apply to search
+        :type filters: dict or None
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        """
+        model_obj = self.__get_model(model_name)
+        return self.carepoint.search(model_obj, filters)
 
-    def read(self, id, attributes=None):
-        """ Returns the information of a record """
-        raise NotImplementedError
+    def read(self, model_name, _id, attributes=None, ):
+        """
+        Gets record by id and returns the object
+        :param model_name: Name of model to search, will get obj
+        :type model_name: str
+        :param _id: Id of record to get from Db
+        :type _id: int
+        :param attributes: Attributes to rcv from db. None for *
+        :type attributes: list or None
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        """
+        if attributes is not None:
+            raise NotImplementedError('Read attributes not implemented')
+        model_obj = self.__get_model(model_name)
+        return self.carepoint.query(model_obj).get(_id)
 
-    def search_read(self, filters=None):
-        """ Search records according to some criterias
-        and returns their information"""
-        raise NotImplementedError
+    def create(self, model_name, data, ):
+        """
+        Wrapper to create a record on the external system
+        :param model_name: Name of model to search, will get obj
+        :type model_name: str
+        :param data: Data to create record with
+        :type data: dict
+        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        """
+        model_obj = self.__get_model(model_name)
+        return self.carepoint.create(model_obj, data)
 
-    def create(self, data):
-        """ Create a record on the external system """
-        raise NotImplementedError
+    def write(self, model_name, _id, data, ):
+        """
+        Update records on the external system
+        :param model_name: Name of model to search, will get obj
+        :type model_name: str
+        :param _id: Id of record to manipulate
+        :type _id: int
+        :param data: Data to create record with
+        :type data: dict
+        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        """
+        model_obj = self.__get_model(model_name)
+        return self.carepoint.update(model_obj, _id, data)
 
-    def write(self, id, data):
-        """ Update records on the external system """
-        raise NotImplementedError
-
-    def delete(self, id):
-        """ Delete a record on the external system """
-        raise NotImplementedError
+    def delete(self, _id, ):
+        """
+        :param model_name: Name of model to search, will get obj
+        :type model_name: str
+        :param _id: Id of record to manipulate
+        :type _id: int
+        :rtype: bool
+        """
+        model_obj = self.__get_model(model_name)
+        return self.carepoint.delete(model_obj, _id)
