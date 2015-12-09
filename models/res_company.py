@@ -38,6 +38,7 @@ class CarepointResCompany(models.Model):
     _name = 'carepoint.res.company'
     _inherit = 'carepoint.binding'
     _inherits = {'res.company': 'odoo_id'}
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
     _description = 'Carepoint Company'
 
     odoo_id = fields.Many2one(

@@ -40,7 +40,7 @@ class CarepointModelBinder(CarepointBinder):
     fields belonging to the Carepoint instance.
     """
     _model_name = [
-        'carepoint.store',
+        'carepoint.res.company',
     ]
 
     def to_odoo(self, external_id, unwrap=False, browse=False):

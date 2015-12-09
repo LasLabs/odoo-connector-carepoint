@@ -98,75 +98,65 @@ class CarepointCRUDAdapter(CRUDAdapter):
         parts = snake_case.split('_')
         return "".join(x.title() for x in components)
         
-    def __get_model(self, name, ):
+    def __get_cp_model(self, ):
         """
         Get the correct model object by name from Carepoint lib
-        :param name: Name of model to get (converts snake_case to CamelCase)
-        :type name: str
         :rtype: :class:`sqlalchemy.schema.Table`
         """
-        name = self.__to_camel_case(name)
-        return getattr(self.carepoint, name)
+        name = self.connector_env.model._cp_lib
+        camel_name = self.__to_camel_case(name)
+        return getattr(self.carepoint, camel_name)
 
-    def search(self, model_name, filters=None, ):
+    def search(self, filters=None, ):
         """
         Search table by filters and return records
-        :param model_name: Name of model to search, will get obj
-        :type model_name: str
         :param filters: Filters to apply to search
         :type filters: dict or None
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
-        model_obj = self.__get_model(model_name)
+        model_obj = self.__get_cp_model()
         return self.carepoint.search(model_obj, filters)
 
-    def read(self, model_name, _id, attributes=None, ):
+    def read(self, _id, attributes=None, ):
         """
         Gets record by id and returns the object
-        :param model_name: Name of model to search, will get obj
-        :type model_name: str
         :param _id: Id of record to get from Db
         :type _id: int
         :param attributes: Attributes to rcv from db. None for *
         :type attributes: list or None
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
-        model_obj = self.__get_model(model_name)
+        model_obj = self.__get_cp_model()
         return self.carepoint.read(model_obj, _id)
 
-    def create(self, model_name, data, ):
+    def create(self, data, ):
         """
         Wrapper to create a record on the external system
-        :param model_name: Name of model to search, will get obj
-        :type model_name: str
         :param data: Data to create record with
         :type data: dict
         :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
         """
-        model_obj = self.__get_model(model_name)
+        model_obj = self.__get_cp_model()
         return self.carepoint.create(model_obj, data)
 
-    def write(self, model_name, _id, data, ):
+    def write(self, _id, data, ):
         """
-        Update records on the external system
-        :param model_name: Name of model to search, will get obj
-        :type model_name: str
+        Update record on the external system
         :param _id: Id of record to manipulate
         :type _id: int
         :param data: Data to create record with
         :type data: dict
         :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
         """
-        model_obj = self.__get_model(model_name)
+        model_obj = self.__get_cp_model()
         return self.carepoint.update(model_obj, _id, data)
 
     def delete(self, _id, ):
         """
-        :param model_name: Name of model to search, will get obj
-        :type model_name: str
+        Delete record on the external system
         :param _id: Id of record to manipulate
         :type _id: int
         :rtype: bool
         """
-        model_obj = self.__get_model(model_name)
+        model_obj = self.__get_cp_model()
         return self.carepoint.delete(model_obj, _id)
