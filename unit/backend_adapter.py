@@ -131,10 +131,8 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type attributes: list or None
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
-        if attributes is not None:
-            raise NotImplementedError('Read attributes not implemented')
         model_obj = self.__get_model(model_name)
-        return self.carepoint.query(model_obj).get(_id)
+        return self.carepoint.read(model_obj, _id)
 
     def create(self, model_name, data, ):
         """
