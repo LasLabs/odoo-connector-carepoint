@@ -157,76 +157,76 @@ class CarepointBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
-
-    @api.multi
-    def import_partners(self):
-        """ Import partners from all store """
-        for backend in self:
-            backend.check_carepoint_structure()
-            backend.store_ids.import_partners()
-        return True
-
-    @api.multi
-    def import_prescription_order(self):
-        """ Import prescription orders from associated stores """
-        store_obj = self.env['carepoint.store']
-        stores = store_obj.search([('backend_id', 'in', self.ids)])
-        stores.import_prescription_orders()
-        return True
-
-    @api.multi
-    def import_medical_medicament(self):
-        self._import_from_date('magento.product.product',
-                               'import_products_from_date')
-        return True
-
-    @api.multi
-    def _domain_for_update_product_stock_qty(self):
-        return [
-            ('backend_id', 'in', self.ids),
-            ('type', '!=', 'service'),
-            ('no_stock_sync', '=', False),
-        ]
-
-    @api.multi
-    def update_product_stock_qty(self):
-        mag_product_obj = self.env['magento.product.product']
-        domain = self._domain_for_update_product_stock_qty()
-        magento_products = mag_product_obj.search(domain)
-        magento_products.recompute_magento_qty()
-        return True
-
-    @api.model
-    def _magento_backend(self, callback, domain=None):
-        if domain is None:
-            domain = []
-        backends = self.search(domain)
-        if backends:
-            getattr(backends, callback)()
-
-    @api.model
-    def _scheduler_import_sale_orders(self, domain=None):
-        self._magento_backend('import_sale_orders', domain=domain)
-
-    @api.model
-    def _scheduler_import_customer_groups(self, domain=None):
-        self._magento_backend('import_customer_groups', domain=domain)
-
-    @api.model
-    def _scheduler_import_partners(self, domain=None):
-        self._magento_backend('import_partners', domain=domain)
-
-    @api.model
-    def _scheduler_import_product_categories(self, domain=None):
-        self._magento_backend('import_product_categories', domain=domain)
-
-    @api.model
-    def _scheduler_import_product_product(self, domain=None):
-        self._magento_backend('import_product_product', domain=domain)
-
-    @api.model
-    def _scheduler_update_product_stock_qty(self, domain=None):
-        self._magento_backend('update_product_stock_qty', domain=domain)
+    # 
+    # @api.multi
+    # def import_partners(self):
+    #     """ Import partners from all store """
+    #     for backend in self:
+    #         backend.check_carepoint_structure()
+    #         backend.store_ids.import_partners()
+    #     return True
+    # 
+    # @api.multi
+    # def import_prescription_order(self):
+    #     """ Import prescription orders from associated stores """
+    #     store_obj = self.env['carepoint.store']
+    #     stores = store_obj.search([('backend_id', 'in', self.ids)])
+    #     stores.import_prescription_orders()
+    #     return True
+    # 
+    # @api.multi
+    # def import_medical_medicament(self):
+    #     self._import_from_date('magento.product.product',
+    #                            'import_products_from_date')
+    #     return True
+    # 
+    # @api.multi
+    # def _domain_for_update_product_stock_qty(self):
+    #     return [
+    #         ('backend_id', 'in', self.ids),
+    #         ('type', '!=', 'service'),
+    #         ('no_stock_sync', '=', False),
+    #     ]
+    # 
+    # @api.multi
+    # def update_product_stock_qty(self):
+    #     mag_product_obj = self.env['magento.product.product']
+    #     domain = self._domain_for_update_product_stock_qty()
+    #     magento_products = mag_product_obj.search(domain)
+    #     magento_products.recompute_magento_qty()
+    #     return True
+    # 
+    # @api.model
+    # def _magento_backend(self, callback, domain=None):
+    #     if domain is None:
+    #         domain = []
+    #     backends = self.search(domain)
+    #     if backends:
+    #         getattr(backends, callback)()
+    # 
+    # @api.model
+    # def _scheduler_import_sale_orders(self, domain=None):
+    #     self._magento_backend('import_sale_orders', domain=domain)
+    # 
+    # @api.model
+    # def _scheduler_import_customer_groups(self, domain=None):
+    #     self._magento_backend('import_customer_groups', domain=domain)
+    # 
+    # @api.model
+    # def _scheduler_import_partners(self, domain=None):
+    #     self._magento_backend('import_partners', domain=domain)
+    # 
+    # @api.model
+    # def _scheduler_import_product_categories(self, domain=None):
+    #     self._magento_backend('import_product_categories', domain=domain)
+    # 
+    # @api.model
+    # def _scheduler_import_product_product(self, domain=None):
+    #     self._magento_backend('import_product_product', domain=domain)
+    # 
+    # @api.model
+    # def _scheduler_update_product_stock_qty(self, domain=None):
+    #     self._magento_backend('update_product_stock_qty', domain=domain)
 
     @api.multi
     def output_recorder(self):
