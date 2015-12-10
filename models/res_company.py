@@ -46,6 +46,15 @@ class CarepointResCompany(models.Model):
         required=True,
         ondelete='cascade'
     )
+    backend_id = fields.Many2one(
+        comodel_name='carepoint.backend',
+        related='website_id.backend_id',
+        string='Carepoint Backend',
+        store=True,
+        readonly=True,
+        # override 'carepoint.binding', can't be INSERTed if True:
+        required=False,
+    )
 
     _sql_constraints = [
         ('odoo_uniq', 'unique(backend_id, odoo_id)',
@@ -131,15 +140,34 @@ class ResCompanyImportMapper(ImportMapper):
 @carepoint
 class ResCompanyImporter(CarepointImporter):
     _model_name = ['carepoint.res.company']
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
 
     _base_mapper = ResCompanyImportMapper
+    
+    def _create(self, data):
+        binding = super(StoreImporter, self)._create(data)
+        checkpoint = self.unit_for(ResCompanyAddCheckpoint)
+        checkpoint.run(binding.id)
+        return binding
 
     # 
     # def _after_import(self, partner_binding):
     #     """ Import the addresses """
     #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
     #     book.import_addresses(self.carepoint_id, partner_binding.id)
+
+
+@carepoint
+class ResCompanyAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.res.company record """
+    _model_name = ['carepoint.res.company', ]
+    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
+
+    def run(self, binding_id):
+        add_checkpoint(self.session,
+                       self.model._name,
+                       binding_id,
+                       self.backend_record.id)
+
 
 
 @job(default_channel='root.carepoint')
