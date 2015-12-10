@@ -74,7 +74,7 @@ class CarepointBackend(models.Model):
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
-        default='cp-',
+        default='CP/',
         help="A prefix put before the name of imported sales orders.\n"
              "For instance, if the prefix is 'cp-', the sales "
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
