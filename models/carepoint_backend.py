@@ -122,7 +122,7 @@ class CarepointBackend(models.Model):
     def synchronize_metadata(self):
         session = ConnectorSession()
         for backend in self:
-            for model in ('carepoint.store',):
+            for model in ('carepoint.res.company',):
                 # import directly, do not delay because this
                 # is a fast operation, a direct return is fine
                 # and it is simpler to import them sequentially
