@@ -22,7 +22,7 @@
 
 import openerp
 from openerp.addons.connector.connector import Binder
-from ..backend import magento
+from ..backend import carepoint
 
 
 class CarepointBinder(Binder):
