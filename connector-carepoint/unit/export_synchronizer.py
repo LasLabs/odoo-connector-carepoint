@@ -33,7 +33,6 @@ from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.connector.exception import (IDMissingInBackend,
                                                 RetryableJobError)
 from .import_synchronizer import import_record
-from .backend_adapter import MAGENTO_DATETIME_FORMAT
 from ..connector import get_environment
 from ..related_action import unwrap_binding
 
@@ -93,8 +92,7 @@ class CarepointBaseExporter(Exporter):
             # in rare case it can be empty, in doubt, import it
             return False
         sync_date = odoo.fields.Datetime.from_string(sync)
-        carepoint_date = datetime.strptime(record['chg_date'],
-                                         MAGENTO_DATETIME_FORMAT)
+        carepoint_date = record['chg_date']
         return sync_date < carepoint_date
 
     def _get_odoo_data(self):
