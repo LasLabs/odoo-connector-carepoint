@@ -30,10 +30,8 @@ from .unit.import_synchronizer import (import_batch,
                                        DirectBatchImporter,
                                        CarepointImporter,
                                        )
-from .partner import partner_import_batch
-from .sale import sale_order_import_batch
-from .backend import carepoint
-from .connector import add_checkpoint
+from ..backend import carepoint
+from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
