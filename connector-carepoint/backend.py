@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import odoo.addons.connector.backend as backend
+import openerp.addons.connector.backend as backend
 
 
 carepoint = backend.Backend('carepoint')
