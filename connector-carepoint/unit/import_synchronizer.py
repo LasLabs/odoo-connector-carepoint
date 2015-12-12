@@ -37,7 +37,6 @@ from openerp.addons.connector.unit.synchronizer import Importer
 from openerp.addons.connector.exception import IDMissingInBackend
 from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
-from ..related_action import link
 
 
 
@@ -353,7 +352,6 @@ def import_batch(session, model_name, backend_id, filters=None):
 
 
 @job(default_channel='root.carepoint')
-@related_action(action=link)
 def import_record(session, model_name, backend_id, carepoint_id, force=False):
     """ Import a record from Carepoint """
     env = get_environment(session, model_name, backend_id)
