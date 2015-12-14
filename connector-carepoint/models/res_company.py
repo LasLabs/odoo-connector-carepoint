@@ -57,7 +57,7 @@ class CarepointResCompany(models.Model):
     )
     backend_id = fields.Many2one(
         comodel_name='carepoint.backend',
-        related='website_id.backend_id',
+        inverse_name='store_ids',
         string='Carepoint Backend',
         store=True,
         readonly=True,
@@ -102,12 +102,11 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
         """ Run the synchronization """
         from_date = filters.pop('from_date', None)
         to_date = filters.pop('to_date', None)
-        carepoint_website_ids = [filters.pop('carepoint_website_id')]
         record_ids = self.backend_adapter.search(
             filters,
             from_date=from_date,
             to_date=to_date,
-            carepoint_website_ids=carepoint_website_ids)
+        )
         _logger.info('search for carepoint partners %s returned %s',
                      filters, record_ids)
         for record_id in record_ids:

@@ -77,6 +77,12 @@ class CarepointBackend(models.Model):
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
              "in Odoo.",
     )
+    store_ids = fields.One2many(
+        comodel_name='carepoint.res.company',
+        inverse_name='backend_id',
+        string='Store',
+        readonly=True,
+    )
     default_lang_id = fields.Many2one(
         comodel_name='res.lang',
         string='Default Language',
@@ -91,13 +97,13 @@ class CarepointBackend(models.Model):
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
     )
-
-    product_binding_ids = fields.One2many(
-        comodel_name='carepoint.medical.medicament',
-        inverse_name='backend_id',
-        string='Carepoint Products',
-        readonly=True,
-    )
+    # 
+    # product_binding_ids = fields.One2many(
+    #     comodel_name='carepoint.medical.medicament',
+    #     inverse_name='backend_id',
+    #     string='Carepoint Products',
+    #     readonly=True,
+    # )
 
     _sql_constraints = [
         ('sale_prefix_uniq', 'unique(sale_prefix)',
