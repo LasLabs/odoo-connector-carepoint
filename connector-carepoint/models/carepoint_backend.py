@@ -25,11 +25,10 @@ from openerp import models, fields, api, _
 from openerp.addons.connector.session import ConnectorSession
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import mapping, ImportMapper
-from ..unit.backend_adapter import GenericAdapter
 from ..unit.import_synchronizer import (import_batch,
-                                       DirectBatchImporter,
-                                       CarepointImporter,
-                                       )
+                                        DirectBatchImporter,
+                                        CarepointImporter,
+                                        )
 from ..backend import carepoint
 from ..connector import add_checkpoint
 

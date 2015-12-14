@@ -20,15 +20,24 @@
 ##############################################################################
 
 import logging
-from openerp import models, fields, _
-from openerp.addons.connector.queue.job import job, related_action
-from openerp.addons.connector.unit.synchronizer import Exporter
-from openerp.addons.connector.event import on_record_create
+from collections import namedtuple
+from openerp import models, fields, api
+from openerp.addons.connector.queue.job import job
+from openerp.addons.connector.connector import ConnectorUnit
+from openerp.addons.connector.exception import MappingError
+from openerp.addons.connector.unit.backend_adapter import BackendAdapter
+from openerp.addons.connector.unit.mapper import (mapping,
+                                                  only_create,
+                                                  ImportMapper
+                                                  )
 from openerp.addons.connector.exception import IDMissingInBackend
-from .unit.backend_adapter import CarepointCRUDAdapter
-from .connector import get_environment
-from .backend import carepoint
-from .related_action import unwrap_binding
+from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..connector import get_environment
+from ..backend import carepoint
+from ..related_action import unwrap_binding
+from ..unit.import_synchronizer import (DelayedBatchImporter,
+                                        CarepointImporter,
+                                        )
 
 _logger = logging.getLogger(__name__)
 
@@ -66,7 +75,7 @@ class ResCompany(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'account.invoice'
+    _inherit = 'res.company'
 
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.res.company',
@@ -83,7 +92,7 @@ class ResCompanyAdapter(CarepointCRUDAdapter):
 
 @carepoint
 class ResCompanyBatchImporter(DelayedBatchImporter):
-    """ Import the Carepoint Partners.
+    """ Import the Carepoint Stores.
     For every partner in the list, a delayed job is created.
     """
     _model_name = ['carepoint.res.company']

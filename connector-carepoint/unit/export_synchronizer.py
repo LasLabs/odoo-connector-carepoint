@@ -31,7 +31,8 @@ from openerp.tools.translate import _
 from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.connector.exception import (IDMissingInBackend,
-                                                RetryableJobError)
+                                                RetryableJobError,
+                                                )
 from .import_synchronizer import import_record
 from ..connector import get_environment
 from ..related_action import unwrap_binding

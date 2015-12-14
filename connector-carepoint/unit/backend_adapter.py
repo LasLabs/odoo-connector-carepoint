@@ -26,7 +26,8 @@ import xmlrpclib
 from carepoint import Carepoint
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
 from openerp.addons.connector.exception import (NetworkRetryableError,
-                                                RetryableJobError)
+                                                RetryableJobError,
+                                                )
 
 from datetime import datetime
 _logger = logging.getLogger(__name__)
