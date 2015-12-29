@@ -39,7 +39,6 @@ from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
 
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -159,7 +158,10 @@ class CarepointImporter(Importer):
         self._validate_data(data)
         model = self.model.with_context(connector_no_export=True)
         binding = model.create(data)
-        _logger.debug('%d created from carepoint %s', binding, self.carepoint_id)
+        _logger.debug(
+            '%d created from carepoint %s',
+            binding,
+            self.carepoint_id)
         return binding
 
     def _update_data(self, map_record, **kwargs):
@@ -170,7 +172,10 @@ class CarepointImporter(Importer):
         # special check on data before import
         self._validate_data(data)
         binding.with_context(connector_no_export=True).write(data)
-        _logger.debug('%d updated from carepoint %s', binding, self.carepoint_id)
+        _logger.debug(
+            '%d updated from carepoint %s',
+            binding,
+            self.carepoint_id)
         return
 
     def _after_import(self, binding):

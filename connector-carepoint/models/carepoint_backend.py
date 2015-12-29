@@ -52,7 +52,7 @@ class CarepointBackend(models.Model):
         to redefine the ``version`` field in the ``_inherit`` model.
         """
         return [('2.99', '2.99+')]
-    
+
     version = fields.Selection(
         selection='select_versions',
         required=True
@@ -97,7 +97,7 @@ class CarepointBackend(models.Model):
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
     )
-    # 
+    #
     # product_binding_ids = fields.One2many(
     #     comodel_name='carepoint.medical.medicament',
     #     inverse_name='backend_id',
@@ -160,7 +160,7 @@ class CarepointBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
-    # 
+    #
     # @api.multi
     # def import_partners(self):
     #     """ Import partners from all store """
@@ -168,7 +168,7 @@ class CarepointBackend(models.Model):
     #         backend.check_carepoint_structure()
     #         backend.store_ids.import_partners()
     #     return True
-    # 
+    #
     # @api.multi
     # def import_prescription_order(self):
     #     """ Import prescription orders from associated stores """
@@ -176,13 +176,13 @@ class CarepointBackend(models.Model):
     #     stores = store_obj.search([('backend_id', 'in', self.ids)])
     #     stores.import_prescription_orders()
     #     return True
-    # 
+    #
     # @api.multi
     # def import_medical_medicament(self):
     #     self._import_from_date('carepoint.product.product',
     #                            'import_products_from_date')
     #     return True
-    # 
+    #
     # @api.multi
     # def _domain_for_update_product_stock_qty(self):
     #     return [
@@ -190,7 +190,7 @@ class CarepointBackend(models.Model):
     #         ('type', '!=', 'service'),
     #         ('no_stock_sync', '=', False),
     #     ]
-    # 
+    #
     # @api.multi
     # def update_product_stock_qty(self):
     #     mag_product_obj = self.env['carepoint.product.product']
@@ -198,7 +198,7 @@ class CarepointBackend(models.Model):
     #     carepoint_products = mag_product_obj.search(domain)
     #     carepoint_products.recompute_carepoint_qty()
     #     return True
-    # 
+    #
     # @api.model
     # def _carepoint_backend(self, callback, domain=None):
     #     if domain is None:
@@ -206,27 +206,27 @@ class CarepointBackend(models.Model):
     #     backends = self.search(domain)
     #     if backends:
     #         getattr(backends, callback)()
-    # 
+    #
     # @api.model
     # def _scheduler_import_sale_orders(self, domain=None):
     #     self._carepoint_backend('import_sale_orders', domain=domain)
-    # 
+    #
     # @api.model
     # def _scheduler_import_customer_groups(self, domain=None):
     #     self._carepoint_backend('import_customer_groups', domain=domain)
-    # 
+    #
     # @api.model
     # def _scheduler_import_partners(self, domain=None):
     #     self._carepoint_backend('import_partners', domain=domain)
-    # 
+    #
     # @api.model
     # def _scheduler_import_product_categories(self, domain=None):
     #     self._carepoint_backend('import_product_categories', domain=domain)
-    # 
+    #
     # @api.model
     # def _scheduler_import_product_product(self, domain=None):
     #     self._carepoint_backend('import_product_product', domain=domain)
-    # 
+    #
     # @api.model
     # def _scheduler_update_product_stock_qty(self, domain=None):
     #     self._carepoint_backend('update_product_stock_qty', domain=domain)

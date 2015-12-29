@@ -88,7 +88,8 @@ class ResCompany(models.Model):
 class ResCompanyAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.res.company'
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
+
 
 @carepoint
 class ResCompanyBatchImporter(DelayedBatchImporter):
@@ -96,7 +97,7 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
     For every partner in the list, a delayed job is created.
     """
     _model_name = ['carepoint.res.company']
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -116,7 +117,7 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
 @carepoint
 class ResCompanyImportMapper(ImportMapper):
     _model_name = 'carepoint.res.company'
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     direct = [
         ('name', 'name'),
@@ -126,7 +127,7 @@ class ResCompanyImportMapper(ImportMapper):
         ('nabp', 'nabp_num'),
         ('medcaid_no', 'medicaid_num'),
         ('NPI', 'npi_num'),
-        
+
         #   Magic cols @TODO: uids
         ('add_date', 'create_date'),
         ('chg_date', 'write_date'),
@@ -150,14 +151,14 @@ class ResCompanyImporter(CarepointImporter):
     _model_name = ['carepoint.res.company']
 
     _base_mapper = ResCompanyImportMapper
-    
+
     def _create(self, data):
         binding = super(StoreImporter, self)._create(data)
         checkpoint = self.unit_for(ResCompanyAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
-    # 
+    #
     # def _after_import(self, partner_binding):
     #     """ Import the addresses """
     #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
@@ -168,14 +169,13 @@ class ResCompanyImporter(CarepointImporter):
 class ResCompanyAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.res.company record """
     _model_name = ['carepoint.res.company', ]
-    _cp_lib = 'store' # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,
                        binding_id,
                        self.backend_record.id)
-
 
 
 @job(default_channel='root.carepoint')

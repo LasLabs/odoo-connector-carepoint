@@ -88,7 +88,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
             user=backend.username,
             passwd=backend.password,
         )
-        
+
     def __to_camel_case(self, snake_case, ):
         """
         Convert the snake_case to CamelCase
@@ -98,7 +98,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         """
         parts = snake_case.split('_')
         return "".join(x.title() for x in components)
-        
+
     def __get_cp_model(self, ):
         """
         Get the correct model object by name from Carepoint lib
