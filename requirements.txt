@@ -1,1 +1,2 @@
-git+https://github.com/laslabs/Python-Carepoint.git
+git+https://github.com/laslabs/Python-Carepoint.git@feature/SMD-50-bootstrap-carepoint-connector-2
+
