@@ -1,1 +1,1 @@
-git+https://dlasley@repo.laslabs.com/scm/cp/python-carepoint.git
+git+https://github.com/laslabs/Python-Carepoint.git
