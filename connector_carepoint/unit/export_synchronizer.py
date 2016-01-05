@@ -22,13 +22,12 @@
 import logging
 
 from contextlib import contextmanager
-from datetime import datetime
 
 import psycopg2
 
 import openerp
 from openerp.tools.translate import _
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.connector.exception import (IDMissingInBackend,
                                                 RetryableJobError,
@@ -92,7 +91,7 @@ class CarepointBaseExporter(Exporter):
         if not record['chg_date']:
             # in rare case it can be empty, in doubt, import it
             return False
-        sync_date = odoo.fields.Datetime.from_string(sync)
+        sync_date = openerp.fields.Datetime.from_string(sync)
         carepoint_date = record['chg_date']
         return sync_date < carepoint_date
 
@@ -391,7 +390,9 @@ class CarepointExporter(CarepointBaseExporter):
             if not record:
                 return _('Nothing to export.')
             self.carepoint_id = self._create(record)
-        return _('Record exported with ID %s on Carepoint.') % self.carepoint_id
+        return _(
+            'Record exported with ID %s on Carepoint.'
+        ) % self.carepoint_id
 
 
 @job(default_channel='root.carepoint')

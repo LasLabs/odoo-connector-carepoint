@@ -31,7 +31,7 @@ are already bound, to update the last sync date.
 
 import logging
 from openerp import fields, _
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.synchronizer import Importer
 from openerp.addons.connector.exception import IDMissingInBackend

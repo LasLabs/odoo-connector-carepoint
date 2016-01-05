@@ -19,20 +19,12 @@
 #
 ##############################################################################
 
-import socket
 import logging
-import xmlrpclib
-
 from carepoint import Carepoint
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
-from openerp.addons.connector.exception import (NetworkRetryableError,
-                                                RetryableJobError,
-                                                )
 
-from datetime import datetime
+
 _logger = logging.getLogger(__name__)
-
-
 recorder = {}
 
 
@@ -81,7 +73,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """
-        super(CarepointDbAdapter, self).__init__(connector_env)
+        super(CarepointCRUDAdapter, self).__init__(connector_env)
         backend = self.backend_record
         self.carepoint = Carepoint(
             server=backend.server,
@@ -97,7 +89,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :rtype: str
         """
         parts = snake_case.split('_')
-        return "".join(x.title() for x in components)
+        return "".join(x.title() for x in parts)
 
     def __get_cp_model(self, ):
         """

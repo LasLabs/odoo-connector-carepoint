@@ -20,24 +20,20 @@
 ##############################################################################
 
 import logging
-from collections import namedtuple
-from openerp import models, fields, api
+from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.exception import MappingError
-from openerp.addons.connector.unit.backend_adapter import BackendAdapter
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   ImportMapper
                                                   )
-from openerp.addons.connector.exception import IDMissingInBackend
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
 from ..backend import carepoint
-from ..related_action import unwrap_binding
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -153,7 +149,7 @@ class ResCompanyImporter(CarepointImporter):
     _base_mapper = ResCompanyImportMapper
 
     def _create(self, data):
-        binding = super(StoreImporter, self)._create(data)
+        binding = super(ResCompanyImporter, self)._create(data)
         checkpoint = self.unit_for(ResCompanyAddCheckpoint)
         checkpoint.run(binding.id)
         return binding

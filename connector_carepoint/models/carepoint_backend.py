@@ -21,16 +21,12 @@
 
 import logging
 from datetime import datetime, timedelta
-from openerp import models, fields, api, _
+from openerp import models, fields, api
 from openerp.addons.connector.session import ConnectorSession
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import mapping, ImportMapper
 from ..unit.import_synchronizer import (import_batch,
                                         DirectBatchImporter,
-                                        CarepointImporter,
                                         )
 from ..backend import carepoint
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 

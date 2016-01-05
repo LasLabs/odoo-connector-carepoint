@@ -21,7 +21,7 @@
 
 
 from openerp.tools.translate import _
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.unit.synchronizer import Deleter
 from ..connector import get_environment
 
