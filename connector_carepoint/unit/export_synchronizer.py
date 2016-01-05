@@ -27,7 +27,7 @@ import psycopg2
 
 import openerp
 from openerp.tools.translate import _
-from openerp.addons.connector.queue.job import job
+from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.connector.exception import (IDMissingInBackend,
                                                 RetryableJobError,
