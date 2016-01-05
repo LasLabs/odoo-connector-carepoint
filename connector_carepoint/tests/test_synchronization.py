@@ -19,14 +19,9 @@
 #
 ##############################################################################
 
-from openerp.addons.connector.exception import InvalidDataError
-from openerp.addons.carepoint.unit.import_synchronizer import (
-    import_batch,
-    import_record)
+from openerp.addons.carepoint.unit.import_synchronizer import (import_batch,)
 from .common import (mock_api,
-                     mock_urlopen_image,
                      SetUpCarepointBase,
-                     SetUpCarepointSynchronized,
                      )
 from .data_base import carepoint_base_responses
 
@@ -45,15 +40,15 @@ class TestBaseCarepoint(SetUpCarepointBase):
 
 # class TestImportCarepoint(SetUpCarepointSynchronized):
 #     """ Test the imports from a Carepoint Mock. """
-# 
+#
 #     def test_import_product_category(self):
 #         """ Import of a product category """
 #         backend_id = self.backend_id
 #         with mock_api(carepoint_base_responses):
 #             import_record(self.session, 'carepoint.product.category',
 #                           backend_id, 1)
-# 
+#
 #         category_model = self.env['carepoint.product.category']
 #         category = category_model.search([('backend_id', '=', backend_id)])
 #         self.assertEqual(len(category), 1)
-#         
+#
