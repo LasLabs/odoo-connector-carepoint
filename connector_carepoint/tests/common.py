@@ -182,31 +182,36 @@ class SetUpCarepointBase(common.TransactionCase):
     def setUp(self):
         super(SetUpCarepointBase, self).setUp()
         self.backend_model = self.env['carepoint.backend']
-        self.session = ConnectorSession(self.env.cr, self.env.uid,
-                                        context=self.env.context)
-        warehouse = self.env.ref('stock.warehouse0')
-        self.backend = self.backend_model.create(
-            {'name': 'Test Carepoint',
-             'version': '2.99',
-             'location': 'http://anyurl',
-             'username': 'laslabs',
-             'warehouse_id': warehouse.id,
-             'password': '42'}
+        self.session = ConnectorSession(
+            self.env.cr, self.env.uid, context=self.env.context
         )
+        warehouse = self.env.ref('stock.warehouse0')
+        self.backend = self.backend_model.create({
+            'name': 'Test Carepoint',
+            'version': '2.99',
+            'server': '127.0.0.1',
+            'username': 'laslabs',
+            'warehouse_id': warehouse.id,
+            'password': '42',
+            'sale_prefix': 'CPTST',
+        })
         self.backend_id = self.backend.id
         # payment method needed to import a sale order
         workflow = self.env.ref(
-            'sale_automatic_workflow.manual_validation')
+            'sale_automatic_workflow.manual_validation'
+        )
         journal = self.env.ref('account.check_journal')
-        self.payment_term = self.env.ref('account.'
-                                         'account_payment_term_advance')
-        self.env['payment.method'].create(
-            {'name': 'checkmo',
-             'workflow_process_id': workflow.id,
-             'import_rule': 'always',
-             'days_before_cancel': 0,
-             'payment_term_id': self.payment_term.id,
-             'journal_id': journal.id})
+        self.payment_term = self.env.ref(
+            'account.account_payment_term_advance'
+        )
+        self.env['payment.method'].create({
+            'name': 'checkmo',
+            'workflow_process_id': workflow.id,
+            'import_rule': 'always',
+            'days_before_cancel': 0,
+            'payment_term_id': self.payment_term.id,
+            'journal_id': journal.id
+        })
 
     def get_carepoint_helper(self, model_name):
         return CarepointHelper(self.cr, self.registry, model_name)
@@ -217,4 +222,4 @@ class SetUpCarepointSynchronized(SetUpCarepointBase):
     def setUp(self):
         super(SetUpCarepointSynchronized, self).setUp()
         with mock_api(carepoint_base_responses):
-            import_batch(self.session, 'carepoint.store', self.backend_id)
+            import_batch(self.session, 'carepoint.res.company', self.backend_id)
