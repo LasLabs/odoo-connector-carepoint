@@ -31,9 +31,9 @@ class TestBaseCarepoint(SetUpCarepointBase):
     def test_import_backend(self):
         """ Synchronize initial metadata """
         with mock_api(carepoint_base_responses):
-            import_batch(self.session, 'carepoint.store', self.backend_id)
+            import_batch(self.session, 'carepoint.res.company', self.backend_id)
 
-        store_model = self.env['carepoint.store']
+        store_model = self.env['carepoint.res.company']
         stores = store_model.search([('backend_id', '=', self.backend_id)])
         self.assertEqual(len(stores), 2)
 

@@ -95,7 +95,6 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
     For every partner in the list, a delayed job is created.
     """
     _model_name = ['carepoint.res.company']
-    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -115,7 +114,6 @@ class ResCompanyBatchImporter(DelayedBatchImporter):
 @carepoint
 class ResCompanyImportMapper(ImportMapper):
     _model_name = 'carepoint.res.company'
-    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     direct = [
         ('name', 'name'),
@@ -165,7 +163,6 @@ class ResCompanyImporter(CarepointImporter):
 class ResCompanyAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.res.company record """
     _model_name = ['carepoint.res.company', ]
-    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     def run(self, binding_id):
         add_checkpoint(self.session,
