@@ -60,6 +60,8 @@ class CarepointResCompany(models.Model):
         # override 'carepoint.binding', can't be INSERTed if True:
         required=False,
     )
+    created_at = fields.Date('Created At (on Carepoint)')
+    updated_at = fields.Date('Updated At (on Carepoint)')
 
     _sql_constraints = [
         ('odoo_uniq', 'unique(backend_id, odoo_id)',
@@ -117,22 +119,20 @@ class ResCompanyImportMapper(ImportMapper):
 
     direct = [
         ('name', 'name'),
-        ('fed_tax_id', 'vat'),
-        ('url', 'website'),
+        ('vat', 'fed_tax_id'),
+        ('website', 'url'),
         ('email', 'email'),
-        ('nabp', 'nabp_num'),
-        ('medcaid_no', 'medicaid_num'),
-        ('NPI', 'npi_num'),
-
-        #   Magic cols @TODO: uids
-        ('add_date', 'create_date'),
-        ('chg_date', 'write_date'),
+        ('nabp_num', 'nabp'),
+        ('medicaid_num', 'medcaid_no'),
+        ('npi_num', 'NPI'),
+        ('created_at', 'add_date'),
+        ('updated_at', 'chg_date'),
     ]
 
     @only_create
     @mapping
     def odoo_id(self, record):
-        """ Will bind the customer on a existing partner
+        """ Will bind the company on a existing company
         with the same email """
         company_id = self.env['res.company'].search(
             [('email', '=', record['email'])],
