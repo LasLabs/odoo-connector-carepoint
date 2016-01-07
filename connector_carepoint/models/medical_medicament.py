@@ -20,33 +20,26 @@
 ##############################################################################
 
 import logging
-import urllib2
-import base64
-import xmlrpclib
-import sys
 from collections import defaultdict
-from openerp import models, fields, api, _
-from openerp.addons.connector.queue.job import job, related_action
-from openerp.addons.connector.event import on_record_write
-from openerp.addons.connector.unit.synchronizer import (Importer,
-                                                        Exporter,
-                                                        )
-from openerp.addons.connector.exception import (MappingError,
-                                                InvalidDataError,
-                                                IDMissingInBackend
-                                                )
+from openerp import models, fields, api
+# from openerp.addons.connector.queue.job import job, related_action
+# from openerp.addons.connector.event import on_record_write
+# from openerp.addons.connector.unit.synchronizer import (Importer,
+#                                                         Exporter,
+#                                                         )
+
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.import_synchronizer import (DelayedBatchImporter,
-                                       CarepointImporter,
-                                       TranslationImporter,
-                                       AddCheckpoint,
-                                       )
-from ..connector import get_environment
+                                        CarepointImporter,
+                                        TranslationImporter,
+                                        AddCheckpoint,
+                                        )
+# from ..connector import get_environment
 from ..backend import carepoint
-from ..related_action import unwrap_binding
+# from ..related_action import unwrap_binding
 
 _logger = logging.getLogger(__name__)
 
@@ -127,7 +120,7 @@ class CarepointMedicalMedicament(models.Model):
 
     @api.multi
     def _recompute_carepoint_qty_backend(self, backend, products,
-                                       read_fields=None):
+                                         read_fields=None):
         """ Recompute the products quantity for one backend.
         If field names are passed in ``read_fields`` (as a list), they
         will be read in the product that is used in
@@ -179,17 +172,6 @@ class MedicalMedicament(models.Model):
 class MedicalMedicamentAdapter(CarepointCRUDAdapter):
     _model_name = 'carepoint.medical.medicament'
     _cp_lib = 'item'  # Name of model in Carepoint lib (snake_case)
-
-    def _call(self, method, arguments):
-        try:
-            return super(MedicalMedicamentAdapter, self)._call(method, arguments)
-        except xmlrpclib.Fault as err:
-            # this is the error in the Carepoint API
-            # when the product does not exist
-            if err.faultCode == 101:
-                raise IDMissingInBackend
-            else:
-                raise
 
     def search(self, filters=None, from_date=None, to_date=None):
         """ Search records according to some criteria and return results
