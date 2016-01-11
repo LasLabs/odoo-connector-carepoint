@@ -22,7 +22,7 @@
 
 import openerp
 from openerp.addons.connector.connector import Binder
-from ..backend import magento
+from ..backend import carepoint
 
 
 class CarepointBinder(Binder):
@@ -40,7 +40,7 @@ class CarepointModelBinder(CarepointBinder):
     fields belonging to the Carepoint instance.
     """
     _model_name = [
-        'carepoint.store',
+        'carepoint.res.company',
     ]
 
     def to_odoo(self, external_id, unwrap=False, browse=False):
@@ -76,7 +76,7 @@ class CarepointModelBinder(CarepointBinder):
         :return: backend identifier of the record
         """
         record = self.model.browse()
-        if isinstance(record_id, odoo.models.BaseModel):
+        if isinstance(record_id, openerp.models.BaseModel):
             record_id.ensure_one()
             record = record_id
             record_id = record_id.id
@@ -110,8 +110,8 @@ class CarepointModelBinder(CarepointBinder):
             "got: %s, %s" % (external_id, binding_id)
         )
         # avoid to trigger the export when we modify the `carepoint_id`
-        now_fmt = odoo.fields.Datetime.now()
-        if not isinstance(binding_id, odoo.models.BaseModel):
+        now_fmt = openerp.fields.Datetime.now()
+        if not isinstance(binding_id, openerp.models.BaseModel):
             binding_id = self.model.browse(binding_id)
         binding_id.with_context(connector_no_export=True).write(
             {'carepoint_id': str(external_id),
@@ -125,7 +125,7 @@ class CarepointModelBinder(CarepointBinder):
         :param browse: when True, returns a browse_record instance
                        rather than an ID
         """
-        if isinstance(binding_id, odoo.models.BaseModel):
+        if isinstance(binding_id, openerp.models.BaseModel):
             binding = binding_id
         else:
             binding = self.model.browse(binding_id)

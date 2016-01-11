@@ -22,7 +22,6 @@
 import logging
 
 from contextlib import contextmanager
-from datetime import datetime
 
 import psycopg2
 
@@ -31,9 +30,9 @@ from openerp.tools.translate import _
 from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.unit.synchronizer import Exporter
 from openerp.addons.connector.exception import (IDMissingInBackend,
-                                                RetryableJobError)
+                                                RetryableJobError,
+                                                )
 from .import_synchronizer import import_record
-from .backend_adapter import MAGENTO_DATETIME_FORMAT
 from ..connector import get_environment
 from ..related_action import unwrap_binding
 
@@ -62,7 +61,8 @@ class CarepointBaseExporter(Exporter):
         self.carepoint_id = None
 
     def _delay_import(self):
-        """ Schedule an import of the record.
+        """
+        Schedule an import of the record.
         Adapt in the sub-classes when the model is not imported
         using ``import_record``.
         """
@@ -74,7 +74,8 @@ class CarepointBaseExporter(Exporter):
                             force=True)
 
     def _should_import(self):
-        """ Before the export, compare the update date
+        """
+        Before the export, compare the update date
         in Carepoint and the last sync date in Odoo,
         if the former is more recent, schedule an import
         to not miss changes done in Carepoint.
@@ -90,9 +91,8 @@ class CarepointBaseExporter(Exporter):
         if not record['chg_date']:
             # in rare case it can be empty, in doubt, import it
             return False
-        sync_date = odoo.fields.Datetime.from_string(sync)
-        carepoint_date = datetime.strptime(record['chg_date'],
-                                         MAGENTO_DATETIME_FORMAT)
+        sync_date = openerp.fields.Datetime.from_string(sync)
+        carepoint_date = record['chg_date']
         return sync_date < carepoint_date
 
     def _get_odoo_data(self):
@@ -100,7 +100,8 @@ class CarepointBaseExporter(Exporter):
         return self.model.browse(self.binding_id)
 
     def run(self, binding_id, *args, **kwargs):
-        """ Run the synchronization
+        """
+        Run the synchronization
         :param binding_id: identifier of the binding record to export
         """
         self.binding_id = binding_id
@@ -148,7 +149,8 @@ class CarepointExporter(CarepointBaseExporter):
         self.binding_record = None
 
     def _lock(self):
-        """ Lock the binding record.
+        """
+        Lock the binding record.
         Lock the binding record so we are sure that only one export
         job is running for this record if concurrent jobs have to export the
         same record.
@@ -179,7 +181,8 @@ class CarepointExporter(CarepointBaseExporter):
 
     @contextmanager
     def _retry_unique_violation(self):
-        """ Context manager: catch Unique constraint error and retry the
+        """
+        Context manager: catch Unique constraint error and retry the
         job later.
         When we execute several jobs workers concurrently, it happens
         that 2 jobs are creating the same record at the same time (binding
@@ -305,7 +308,8 @@ class CarepointExporter(CarepointBaseExporter):
         return self.mapper.map_record(self.binding_record)
 
     def _validate_data(self, data):
-        """ Check if the values to import are correct
+        """
+        Check if the values to import are correct
         Kept for retro-compatibility. To remove in 8.0
         Pro-actively check before the ``Model.create`` or ``Model.update``
         if some fields are missing or invalid
@@ -318,7 +322,8 @@ class CarepointExporter(CarepointBaseExporter):
         self._validate_update_data(data)
 
     def _validate_create_data(self, data):
-        """ Check if the values to import are correct
+        """
+        Check if the values to import are correct
         Pro-actively check before the ``Model.create`` if some fields
         are missing or invalid
         Raise `InvalidDataError`
@@ -326,7 +331,8 @@ class CarepointExporter(CarepointBaseExporter):
         return
 
     def _validate_update_data(self, data):
-        """ Check if the values to import are correct
+        """
+        Check if the values to import are correct
         Pro-actively check before the ``Model.update`` if some fields
         are missing or invalid
         Raise `InvalidDataError`
@@ -384,7 +390,9 @@ class CarepointExporter(CarepointBaseExporter):
             if not record:
                 return _('Nothing to export.')
             self.carepoint_id = self._create(record)
-        return _('Record exported with ID %s on Carepoint.') % self.carepoint_id
+        return _(
+            'Record exported with ID %s on Carepoint.'
+        ) % self.carepoint_id
 
 
 @job(default_channel='root.carepoint')

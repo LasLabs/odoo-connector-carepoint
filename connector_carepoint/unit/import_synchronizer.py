@@ -31,14 +31,12 @@ are already bound, to update the last sync date.
 
 import logging
 from openerp import fields, _
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.synchronizer import Importer
 from openerp.addons.connector.exception import IDMissingInBackend
 from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
-from ..related_action import link
-
 
 
 _logger = logging.getLogger(__name__)
@@ -160,7 +158,10 @@ class CarepointImporter(Importer):
         self._validate_data(data)
         model = self.model.with_context(connector_no_export=True)
         binding = model.create(data)
-        _logger.debug('%d created from carepoint %s', binding, self.carepoint_id)
+        _logger.debug(
+            '%d created from carepoint %s',
+            binding,
+            self.carepoint_id)
         return binding
 
     def _update_data(self, map_record, **kwargs):
@@ -171,7 +172,10 @@ class CarepointImporter(Importer):
         # special check on data before import
         self._validate_data(data)
         binding.with_context(connector_no_export=True).write(data)
-        _logger.debug('%d updated from carepoint %s', binding, self.carepoint_id)
+        _logger.debug(
+            '%d updated from carepoint %s',
+            binding,
+            self.carepoint_id)
         return
 
     def _after_import(self, binding):
@@ -353,7 +357,6 @@ def import_batch(session, model_name, backend_id, filters=None):
 
 
 @job(default_channel='root.carepoint')
-@related_action(action=link)
 def import_record(session, model_name, backend_id, carepoint_id, force=False):
     """ Import a record from Carepoint """
     env = get_environment(session, model_name, backend_id)

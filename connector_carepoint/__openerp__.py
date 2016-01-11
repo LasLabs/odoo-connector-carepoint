@@ -18,8 +18,19 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import odoo.addons.connector.backend as backend
-
-
-carepoint = backend.Backend('carepoint')
-carepoint299 = backend.Backend(parent=carepoint, version='2.99')
+{
+    'name': 'CarePoint Connector',
+    'description': 'Two-Way Sync With CarePoint',
+    'version': '8.0.0.0.0',
+    'category': 'Connector',
+    'author': "LasLabs",
+    'license': 'AGPL-3',
+    'website': 'https://laslabs.com',
+    'depends': [
+        'connector',
+    ],
+    'data': [
+    ],
+    'installable': True,
+    'application': False,
+}

@@ -19,18 +19,12 @@
 #
 ##############################################################################
 
-import socket
 import logging
-import xmlrpclib
-
 from carepoint import Carepoint
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
-from openerp.addons.connector.exception import (NetworkRetryableError,
-                                                RetryableJobError)
-from datetime import datetime
+
+
 _logger = logging.getLogger(__name__)
-
-
 recorder = {}
 
 
@@ -74,12 +68,12 @@ def output_recorder(filename):
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
-    def __init__(self, connector_env):
+    def __init__(self, connector_env, ):
         """
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """
-        super(CarepointDbAdapter, self).__init__(connector_env)
+        super(CarepointCRUDAdapter, self).__init__(connector_env)
         backend = self.backend_record
         self.carepoint = Carepoint(
             server=backend.server,
@@ -87,28 +81,75 @@ class CarepointCRUDAdapter(CRUDAdapter):
             passwd=backend.password,
         )
 
-    def search(self, filters=None):
-        """ Search records according to some criterias
-        and returns a list of ids """
-        raise self.carepoint.query()
+    def __to_camel_case(self, snake_case, ):
+        """
+        Convert the snake_case to CamelCase
+        :param snake_case: To convert
+        :type snake_case: str
+        :rtype: str
+        """
+        parts = snake_case.split('_')
+        return "".join(x.title() for x in parts)
 
-    def read(self, id, attributes=None):
-        """ Returns the information of a record """
-        raise NotImplementedError
+    def __get_cp_model(self, ):
+        """
+        Get the correct model object by name from Carepoint lib
+        :rtype: :class:`sqlalchemy.schema.Table`
+        """
+        name = self.connector_env.model._cp_lib
+        camel_name = self.__to_camel_case(name)
+        return getattr(self.carepoint, camel_name)
 
-    def search_read(self, filters=None):
-        """ Search records according to some criterias
-        and returns their information"""
-        raise NotImplementedError
+    def search(self, filters=None, ):
+        """
+        Search table by filters and return records
+        :param filters: Filters to apply to search
+        :type filters: dict or None
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        """
+        model_obj = self.__get_cp_model()
+        return self.carepoint.search(model_obj, filters)
 
-    def create(self, data):
-        """ Create a record on the external system """
-        raise NotImplementedError
+    def read(self, _id, attributes=None, ):
+        """
+        Gets record by id and returns the object
+        :param _id: Id of record to get from Db
+        :type _id: int
+        :param attributes: Attributes to rcv from db. None for *
+        :type attributes: list or None
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        """
+        model_obj = self.__get_cp_model()
+        return self.carepoint.read(model_obj, _id)
 
-    def write(self, id, data):
-        """ Update records on the external system """
-        raise NotImplementedError
+    def create(self, data, ):
+        """
+        Wrapper to create a record on the external system
+        :param data: Data to create record with
+        :type data: dict
+        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        """
+        model_obj = self.__get_cp_model()
+        return self.carepoint.create(model_obj, data)
 
-    def delete(self, id):
-        """ Delete a record on the external system """
-        raise NotImplementedError
+    def write(self, _id, data, ):
+        """
+        Update record on the external system
+        :param _id: Id of record to manipulate
+        :type _id: int
+        :param data: Data to create record with
+        :type data: dict
+        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        """
+        model_obj = self.__get_cp_model()
+        return self.carepoint.update(model_obj, _id, data)
+
+    def delete(self, _id, ):
+        """
+        Delete record on the external system
+        :param _id: Id of record to manipulate
+        :type _id: int
+        :rtype: bool
+        """
+        model_obj = self.__get_cp_model()
+        return self.carepoint.delete(model_obj, _id)
