@@ -20,6 +20,7 @@
 ##############################################################################
 {
     'name': 'CarePoint Connector',
+    'description': 'Two-Way Sync With CarePoint',
     'version': '8.0.0.0.0',
     'category': 'Connector',
     'author': "LasLabs",
