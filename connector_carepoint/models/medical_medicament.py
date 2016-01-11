@@ -34,7 +34,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
-#                                         TranslationImporter,
+                                        # TranslationImporter,
                                         AddCheckpoint,
                                         )
 # from ..connector import get_environment
@@ -416,13 +416,13 @@ class IsActiveMedicamentImportMapper(ImportMapper):
 # @carepoint
 # class MedicamentInventoryExporter(Exporter):
 #     _model_name = ['carepoint.medical.medicament']
-# 
+#
 #     _map_backorders = {'use_default': 0,
 #                        'no': 0,
 #                        'yes': 1,
 #                        'yes-and-notification': 2,
 #                        }
-# 
+#
 #     def _get_data(self, product, fields):
 #         result = {}
 #         if 'carepoint_qty' in fields:
