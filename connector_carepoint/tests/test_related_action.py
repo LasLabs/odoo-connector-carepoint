@@ -53,7 +53,9 @@ class TestRelatedActionStorage(common.TransactionCase):
         })
         # import the base informations
         with mock_api(carepoint_base_responses):
-            import_batch(self.session, 'carepoint.res.company', self.backend.id)
+            import_batch(
+                self.session, 'carepoint.res.company', self.backend.id
+            )
         self.CarepointProduct = self.env['carepoint.product.product']
         self.QueueJob = self.env['queue.job']
 

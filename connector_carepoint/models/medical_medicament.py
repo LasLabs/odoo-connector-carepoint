@@ -34,7 +34,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
-                                        TranslationImporter,
+#                                         TranslationImporter,
                                         AddCheckpoint,
                                         )
 # from ..connector import get_environment
@@ -190,12 +190,13 @@ class MedicalMedicamentAdapter(CarepointCRUDAdapter):
         return super(MedicalMedicamentAdapter, self).search(filters)
 
     # def get_images(self, id, storeview_id=None):
-    #     return self._call('product_media.list', [int(id), storeview_id, 'id'])
-    # 
+    #     return self._call('product_media.list',
+    #                       [int(id), storeview_id, 'id'])
+    #
     # def read_image(self, id, image_name, storeview_id=None):
     #     return self._call('product_media.info',
     #                       [int(id), image_name, storeview_id, 'id'])
-    # 
+    #
     # def update_inventory(self, id, data):
     #     # product_stock.update is too slow
     #     return self._call('oerp_cataloginventory_stock_item.update',
@@ -222,20 +223,21 @@ class MedicamentBatchImporter(DelayedBatchImporter):
         for record_id in record_ids:
             self._import_record(record_id)
 
-# 
+#
 # @carepoint
 # class CatalogImageImporter(Importer):
 #     """ Import images for a record.
 #     Usually called from importers, in ``_after_import``.
 #     For instance from the products importer.
 #     """
-# 
+#
 #     _model_name = ['carepoint.medical.medicament',
 #                    ]
-# 
+#
 #     def _get_images(self, storeview_id=None):
-#         return self.backend_adapter.get_images(self.carepoint_id, storeview_id)
-# 
+#         return self.backend_adapter.get_images(
+#             self.carepoint_id, storeview_id)
+#
 #     def _sort_images(self, images):
 #         """ Returns a list of images sorted by their priority.
 #         An image with the 'image' type is the the primary one.
@@ -248,7 +250,7 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 #         # place the images where the type is 'image' first then
 #         # sort them by the reverse priority (last item of the list has
 #         # the the higher priority)
-# 
+#
 #         def priority(image):
 #             primary = 'image' in image['types']
 #             try:
@@ -257,7 +259,7 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 #                 position = sys.maxint
 #             return (primary, -position)
 #         return sorted(images, key=priority)
-# 
+#
 #     def _get_binary_image(self, image_data):
 #         url = image_data['url'].encode('utf8')
 #         try:
@@ -267,7 +269,8 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 #                 base64string = base64.encodestring(
 #                     '%s:%s' % (self.backend_record.auth_basic_username,
 #                                self.backend_record.auth_basic_password))
-#                 request.add_header("Authorization", "Basic %s" % base64string)
+#                 request.add_header(
+#                     "Authorization", "Basic %s" % base64string)
 #             binary = urllib2.urlopen(request)
 #         except urllib2.HTTPError as err:
 #             if err.code == 404:
@@ -280,7 +283,7 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 #                 raise
 #         else:
 #             return binary.read()
-# 
+#
 #     def run(self, carepoint_id, binding_id):
 #         self.carepoint_id = carepoint_id
 #         images = self._get_images()
@@ -322,11 +325,6 @@ class MedicamentImportMapper(ImportMapper):
 
     @mapping
     def store_ids(self, record):
-        website_ids = []
-        binder = self.binder_for('carepoint.website')
-        for cp_store_id in record['websites']:
-            website_id = binder.to_odoo(mag_website_id)
-            website_ids.append((4, website_id))
         # @TODO: somehow combine the products for stores
         return {'store_ids': [record['store_id']]}
 
@@ -446,23 +444,23 @@ class IsActiveMedicamentImportMapper(ImportMapper):
 #                 'use_config_backorders': int(backorders == 'use_default'),
 #             })
 #         return result
-# 
+#
 #     def run(self, binding_id, fields):
 #         """ Export the product inventory to Carepoint """
 #         product = self.model.browse(binding_id)
 #         carepoint_id = self.binder.to_backend(product.id)
 #         data = self._get_data(product, fields)
 #         self.backend_adapter.update_inventory(carepoint_id, data)
-# 
-# 
+#
+#
 # # fields which should not trigger an export of the products
 # # but an export of their inventory
 # INVENTORY_FIELDS = ('manage_stock',
 #                     'backorders',
 #                     'carepoint_qty',
 #                     )
-# 
-# 
+#
+#
 # @on_record_write(model_names='carepoint.medical.medicament')
 # def carepoint_product_modified(session, model_name, record_id, vals):
 #     if session.context.get('connector_no_export'):
@@ -474,8 +472,8 @@ class IsActiveMedicamentImportMapper(ImportMapper):
 #         export_product_inventory.delay(session, model_name,
 #                                        record_id, fields=inventory_fields,
 #                                        priority=20)
-# 
-# 
+#
+#
 # @job(default_channel='root.carepoint')
 # @related_action(action=unwrap_binding)
 # def export_product_inventory(session, model_name, record_id, fields=None):

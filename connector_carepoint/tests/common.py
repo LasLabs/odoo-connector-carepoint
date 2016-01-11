@@ -222,4 +222,6 @@ class SetUpCarepointSynchronized(SetUpCarepointBase):
     def setUp(self):
         super(SetUpCarepointSynchronized, self).setUp()
         with mock_api(carepoint_base_responses):
-            import_batch(self.session, 'carepoint.res.company', self.backend_id)
+            import_batch(
+                self.session, 'carepoint.res.company', self.backend_id
+            )
