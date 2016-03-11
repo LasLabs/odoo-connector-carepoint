@@ -29,6 +29,11 @@
     'depends': [
         'connector',
     ],
+    "external_dependencies": {
+        "python": [
+            'carepoint',
+        ],
+    },
     'data': [
     ],
     'installable': True,
