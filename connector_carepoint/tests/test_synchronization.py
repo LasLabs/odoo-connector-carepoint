@@ -19,7 +19,9 @@
 #
 ##############################################################################
 
-from openerp.addons.carepoint.unit.import_synchronizer import (import_batch,)
+from openerp.addons.connector_carepoint.unit.import_synchronizer import (
+    import_batch,
+)
 from .common import (mock_api,
                      SetUpCarepointBase,
                      )

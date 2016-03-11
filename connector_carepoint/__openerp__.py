@@ -28,6 +28,7 @@
     'website': 'https://laslabs.com',
     'depends': [
         'connector',
+        'sale_stock',
     ],
     "external_dependencies": {
         "python": [

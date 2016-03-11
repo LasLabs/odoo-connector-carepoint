@@ -28,10 +28,12 @@ import mock
 from contextlib import contextmanager
 import openerp.tests.common as common
 from openerp.addons.connector.session import ConnectorSession
-from openerp.addons.carepoint.unit.import_synchronizer import (
+from openerp.addons.connector_carepoint.unit.import_synchronizer import (
     import_batch,
 )
-from openerp.addons.carepoint.unit.backend_adapter import call_to_key
+from openerp.addons.connector_carepoint.unit.backend_adapter import (
+    call_to_key,
+)
 from .data_base import carepoint_base_responses
 
 
