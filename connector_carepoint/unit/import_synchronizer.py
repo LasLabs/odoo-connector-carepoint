@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
 """
@@ -56,6 +39,7 @@ class CarepointImporter(Importer):
 
     def _get_carepoint_data(self):
         """ Return the raw Carepoint data for ``self.carepoint_id`` """
+        _logger.debug('Getting CP data for %s', self.carepoint_id)
         return self.backend_adapter.read(self.carepoint_id)
 
     def _before_import(self):
@@ -75,7 +59,7 @@ class CarepointImporter(Importer):
             return
         from_string = fields.Datetime.from_string
         sync_date = from_string(sync)
-        carepoint_date = from_string(self.carepoint_record['updated_at'])
+        carepoint_date = self.carepoint_record.get('chg_date')
         # if the last synchronization date is greater than the last
         # update in carepoint, we skip the import.
         # Important: at the beginning of the exporters flows, we have to
@@ -157,6 +141,7 @@ class CarepointImporter(Importer):
         # special check on data before import
         self._validate_data(data)
         model = self.model.with_context(connector_no_export=True)
+        _logger.debug('Creating with %s', data)
         binding = model.create(data)
         _logger.debug(
             '%d created from carepoint %s',
@@ -187,6 +172,8 @@ class CarepointImporter(Importer):
         :param carepoint_id: identifier of the record on Carepoint
         """
         self.carepoint_id = carepoint_id
+        self.carepoint_record = self._get_carepoint_data()
+        _logger.info('self.carepoint_record - %s', self.carepoint_record)
         lock_name = 'import({}, {}, {}, {})'.format(
             self.backend_record._name,
             self.backend_record.id,
@@ -195,11 +182,6 @@ class CarepointImporter(Importer):
         )
         # Keep a lock on this import until the transaction is committed
         self.advisory_lock_or_retry(lock_name)
-
-        try:
-            self.carepoint_record = self._get_carepoint_data()
-        except IDMissingInBackend:
-            return _('Record does no longer exist in Carepoint')
 
         skip = self._must_skip()
         if skip:
@@ -215,6 +197,7 @@ class CarepointImporter(Importer):
         self._import_dependencies()
 
         map_record = self._map_data()
+        _logger.debug('Mapped to %s', map_record)
 
         if binding:
             record = self._update_data(map_record)
@@ -361,4 +344,5 @@ def import_record(session, model_name, backend_id, carepoint_id, force=False):
     """ Import a record from Carepoint """
     env = get_environment(session, model_name, backend_id)
     importer = env.get_connector_unit(CarepointImporter)
+    _logger.debug('Importing CP Record %s from %s', carepoint_id, model_name)
     importer.run(carepoint_id, force=force)

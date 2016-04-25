@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from openerp import models, fields
@@ -38,22 +21,22 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-class CarepointResCompany(models.Model):
+class CarepointMedicalPharmacy(models.Model):
     """ Binding Model for the Carepoint Store """
-    _name = 'carepoint.res.company'
+    _name = 'carepoint.medical.pharmacy'
     _inherit = 'carepoint.binding'
-    _inherits = {'res.company': 'odoo_id'}
-    _description = 'Carepoint Company'
+    _inherits = {'medical.pharmacy': 'odoo_id'}
+    _description = 'Carepoint Pharmacy (Store)'
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        comodel_name='res.company',
+        comodel_name='medical.pharmacy',
         string='Company',
         required=True,
         ondelete='cascade'
     )
     backend_id = fields.Many2one(
         comodel_name='carepoint.backend',
-        inverse_name='store_ids',
         string='Carepoint Backend',
         store=True,
         readonly=True,
@@ -69,86 +52,90 @@ class CarepointResCompany(models.Model):
     ]
 
 
-class ResCompany(models.Model):
+class MedicalPharmacy(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'res.company'
+    _inherit = 'medical.pharmacy'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.res.company',
+        comodel_name='carepoint.medical.pharmacy',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class ResCompanyAdapter(CarepointCRUDAdapter):
+class MedicalPharmacyAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Store """
-    _model_name = 'carepoint.res.company'
-    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
+    _model_name = 'carepoint.medical.pharmacy'
 
 
 @carepoint
-class ResCompanyBatchImporter(DelayedBatchImporter):
+class MedicalPharmacyBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Stores.
-    For every partner in the list, a delayed job is created.
+    For every company in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.res.company']
+    _model_name = ['carepoint.medical.pharmacy']
 
     def run(self, filters=None):
         """ Run the synchronization """
-        from_date = filters.pop('from_date', None)
-        to_date = filters.pop('to_date', None)
-        record_ids = self.backend_adapter.search(
-            filters,
-            from_date=from_date,
-            to_date=to_date,
-        )
-        _logger.info('search for carepoint partners %s returned %s',
+        if filters is None:
+            filters = {}
+        record_ids = self.backend_adapter.search(**filters)
+        _logger.info('Search for carepoint companies %s returned %s\n',
                      filters, record_ids)
         for record_id in record_ids:
+            _logger.info('In record loop with %s', record_id)
             self._import_record(record_id)
 
 
 @carepoint
-class ResCompanyImportMapper(ImportMapper):
-    _model_name = 'carepoint.res.company'
+class MedicalPharmacyImportMapper(ImportMapper):
+    _model_name = 'carepoint.medical.pharmacy'
 
     direct = [
         ('name', 'name'),
-        ('vat', 'fed_tax_id'),
-        ('website', 'url'),
+        ('fed_tax_id', 'vat'),
+        ('url', 'website'),
         ('email', 'email'),
-        ('nabp_num', 'nabp'),
-        ('medicaid_num', 'medcaid_no'),
-        ('npi_num', 'NPI'),
-        ('created_at', 'add_date'),
-        ('updated_at', 'chg_date'),
+        ('nabp', 'nabp_num'),
+        ('medcaid_no', 'medicaid_num'),
+        ('NPI', 'npi_num'),
+        ('add_date', 'created_at'),
+        ('chg_date', 'updated_at'),
     ]
 
     @only_create
     @mapping
     def odoo_id(self, record):
         """ Will bind the company on a existing company
-        with the same email """
-        company_id = self.env['res.company'].search(
-            [('email', '=', record['email'])],
+        with the same name """
+        company_id = self.env['medical.pharmacy'].search(
+            [('name', 'ilike', record.get('name', ''))],
             limit=1,
         )
         if company_id:
             return {'odoo_id': company_id.id}
 
+    @mapping
+    def carepoint_id(self, record):
+        return {'carepoint_id': record['store_id']}
+
+    @mapping
+    def backend_id(self, record):
+        return {'backend_id': self.backend_record.id}
+
 
 @carepoint
-class ResCompanyImporter(CarepointImporter):
-    _model_name = ['carepoint.res.company']
+class MedicalPharmacyImporter(CarepointImporter):
+    _model_name = ['carepoint.medical.pharmacy']
 
-    _base_mapper = ResCompanyImportMapper
+    _base_mapper = MedicalPharmacyImportMapper
 
     def _create(self, data):
-        binding = super(ResCompanyImporter, self)._create(data)
-        checkpoint = self.unit_for(ResCompanyAddCheckpoint)
+        binding = super(MedicalPharmacyImporter, self)._create(data)
+        checkpoint = self.unit_for(MedicalPharmacyAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
@@ -160,9 +147,9 @@ class ResCompanyImporter(CarepointImporter):
 
 
 @carepoint
-class ResCompanyAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.res.company record """
-    _model_name = ['carepoint.res.company', ]
+class MedicalPharmacyAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.medical.pharmacy record """
+    _model_name = ['carepoint.medical.pharmacy', ]
 
     def run(self, binding_id):
         add_checkpoint(self.session,
@@ -177,5 +164,5 @@ def company_import_batch(session, model_name, backend_id, filters=None):
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(ResCompanyBatchImporter)
+    importer = env.get_connector_unit(MedicalPharmacyBatchImporter)
     importer.run(filters=filters)

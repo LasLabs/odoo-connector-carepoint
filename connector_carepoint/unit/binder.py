@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
 import openerp
@@ -31,8 +14,7 @@ class CarepointBinder(Binder):
 
 @carepoint
 class CarepointModelBinder(CarepointBinder):
-    """
-    Bindings are done directly on the binding model.
+    """ Bindings are done directly on the binding model.
     Binding models are models called ``carepoint.{normal_model}``,
     like ``carepoint.res.partner`` or ``carepoint.product.product``.
     They are ``_inherits`` of the normal models and contains
@@ -40,7 +22,17 @@ class CarepointModelBinder(CarepointBinder):
     fields belonging to the Carepoint instance.
     """
     _model_name = [
-        'carepoint.res.company',
+        'carepoint.medical.pharmacy',
+        'carepoint.medical.medicament',
+        'carepoint.medical.physician',
+        'carepoint.medical.patient',
+        'carepoint.res.users',
+        'carepoint.fdb.ndc',
+        'carepoint.fdb.gcn',
+        'carepoint.fdb.gcn.seq',
+        'carepoint.fdb.lbl.rid',
+        'carepoint.fdb.route',
+        'carepoint.fdb.form',
     ]
 
     def to_odoo(self, external_id, unwrap=False, browse=False):
@@ -53,10 +45,10 @@ class CarepointModelBinder(CarepointBinder):
                  or an empty recordset if no binding is found
         :rtype: recordset
         """
-        bindings = self.model.with_context(active_test=False).search(
-            [('carepoint_id', '=', str(external_id)),
-             ('backend_id', '=', self.backend_record.id)]
-        )
+        bindings = self.model.with_context(active_test=False).search([
+            ('carepoint_id', '=', str(external_id)),
+            ('backend_id', '=', self.backend_record.id)
+        ])
         if not bindings:
             return self.model.browse() if browse else None
         assert len(bindings) == 1, "Several records found: %s" % (bindings,)
@@ -81,11 +73,10 @@ class CarepointModelBinder(CarepointBinder):
             record = record_id
             record_id = record_id.id
         if wrap:
-            binding = self.model.with_context(active_test=False).search(
-                [('odoo_id', '=', record_id),
-                 ('backend_id', '=', self.backend_record.id),
-                 ]
-            )
+            binding = self.model.with_context(active_test=False).search([
+                ('odoo_id', '=', record_id),
+                ('backend_id', '=', self.backend_record.id),
+            ])
             if binding:
                 binding.ensure_one()
                 return binding.carepoint_id
@@ -113,10 +104,10 @@ class CarepointModelBinder(CarepointBinder):
         now_fmt = openerp.fields.Datetime.now()
         if not isinstance(binding_id, openerp.models.BaseModel):
             binding_id = self.model.browse(binding_id)
-        binding_id.with_context(connector_no_export=True).write(
-            {'carepoint_id': str(external_id),
-             'sync_date': now_fmt,
-             })
+        binding_id.with_context(connector_no_export=True).write({
+            'carepoint_id': str(external_id),
+            'sync_date': now_fmt,
+        })
 
     def unwrap_binding(self, binding_id, browse=False):
         """ For a binding record, gives the normal record.
@@ -129,7 +120,6 @@ class CarepointModelBinder(CarepointBinder):
             binding = binding_id
         else:
             binding = self.model.browse(binding_id)
-
         odoo_record = binding.odoo_id
         if browse:
             return odoo_record

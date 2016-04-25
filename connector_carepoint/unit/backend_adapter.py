@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from carepoint import Carepoint
@@ -65,6 +48,9 @@ def output_recorder(filename):
     _logger.debug('recorder written to file %s', filename)
 
 
+carepoints = {}
+
+
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
@@ -74,16 +60,18 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """
         super(CarepointCRUDAdapter, self).__init__(connector_env)
+        global carepoints  # @TODO: Better way to handle this
         backend = self.backend_record
-        self.carepoint = Carepoint(
-            server=backend.server,
-            user=backend.username,
-            passwd=backend.password,
-        )
+        if carepoints.get(backend.server) is None:
+            carepoints[backend.server] = Carepoint(
+                server=backend.server,
+                user=backend.username,
+                passwd=backend.password,
+            )
+        self.carepoint = carepoints[backend.server]
 
     def __to_camel_case(self, snake_case, ):
-        """
-        Convert the snake_case to CamelCase
+        """ Convert the snake_case to CamelCase
         :param snake_case: To convert
         :type snake_case: str
         :rtype: str
@@ -92,39 +80,75 @@ class CarepointCRUDAdapter(CRUDAdapter):
         return "".join(x.title() for x in parts)
 
     def __get_cp_model(self, ):
-        """
-        Get the correct model object by name from Carepoint lib
+        """ Get the correct model object by name from Carepoint lib
         :rtype: :class:`sqlalchemy.schema.Table`
         """
         name = self.connector_env.model._cp_lib
         camel_name = self.__to_camel_case(name)
-        return getattr(self.carepoint, camel_name)
+        _logger.info('CP Model %s', camel_name)
+        return self.carepoint[camel_name]
 
-    def search(self, filters=None, ):
-        """
-        Search table by filters and return records
+    def search(self, **filters):
+        """ Search table by filters and return record ids
         :param filters: Filters to apply to search
-        :type filters: dict or None
-        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        :rtype: list
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.search(model_obj, filters)
+        _logger.debug('Searching %s for %s', model_obj, filters)
+        pk = self.carepoint.get_pks(model_obj)[0]
+        res = self.carepoint.search(model_obj, filters, [pk])
+        return [getattr(row, pk) for row in res]
 
     def read(self, _id, attributes=None, ):
-        """
-        Gets record by id and returns the object
+        """ Gets record by id and returns the object
         :param _id: Id of record to get from Db
         :type _id: int
         :param attributes: Attributes to rcv from db. None for *
         :type attributes: list or None
+        :rtype: dict
+        """
+        # @TODO: Fix lookup by ident
+        model_obj = self.__get_cp_model()
+        pk = self.carepoint.get_pks(model_obj)[0]
+        rec = self.carepoint.search(model_obj, {pk: _id}, attributes)[0]
+        _logger.info(rec.__dict__)
+        return rec.__dict__
+
+    def read_image(self, path):
+        """ Returns an image resource from CarePoint
+
+        Args:
+            path: :type:`str` SMB path of image
+
+        Returns:
+            :type:`str` Binary string representation of file
+        """
+        return self.carepoint.get_file(path).read()
+
+    def write_image(self, path, file_obj):
+        """ Write a file-like object to CarePoint SMB resource
+
+        Args:
+            path: :type:`str` SMB path to write to
+            file_obj: :type:`file` File like object to send to server
+
+        Returns:
+            :type:`bool`
+        """
+        return self.carepoint.send_file(path, file_obj)
+
+    def search_read(self, attributes=None, **filters):
+        """ Search table by filters and return records
+        :param attributes: Attributes to rcv from db. None for *
+        :type attributes: list or None
+        :param filters: Filters to apply to search
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.read(model_obj, _id)
+        return self.carepoint.search(model_obj, filters, attributes)
 
     def create(self, data, ):
-        """
-        Wrapper to create a record on the external system
+        """ Wrapper to create a record on the external system
         :param data: Data to create record with
         :type data: dict
         :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
@@ -133,8 +157,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         return self.carepoint.create(model_obj, data)
 
     def write(self, _id, data, ):
-        """
-        Update record on the external system
+        """ Update record on the external system
         :param _id: Id of record to manipulate
         :type _id: int
         :param data: Data to create record with
@@ -145,8 +168,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         return self.carepoint.update(model_obj, _id, data)
 
     def delete(self, _id, ):
-        """
-        Delete record on the external system
+        """ Delete record on the external system
         :param _id: Id of record to manipulate
         :type _id: int
         :rtype: bool

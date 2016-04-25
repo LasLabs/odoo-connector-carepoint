@@ -1,1 +1,2 @@
 connector
+vertical-medical https://github.com/laslabs/vertical-medical.git release/9.0

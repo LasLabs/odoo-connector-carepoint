@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from collections import defaultdict
@@ -54,17 +37,18 @@ class CarepointMedicalMedicament(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'medical.medicament': 'odoo_id'}
     _description = 'Carepoint Medicament'
+    _cp_lib = 'item'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
         string='Medicament',
         comodel_name='medical.medicament',
         required=True,
-        ondelete='restrict'
+        ondelete='restrict',
     )
     store_ids = fields.Many2many(
         string='Stores',
-        comodel_name='carepoint.res.company',
-        readonly=True
+        comodel_name='carepoint.medical.pharmacy',
+        readonly=True,
     )
     created_at = fields.Date('Created At (on Carepoint)')
     updated_at = fields.Date('Updated At (on Carepoint)')
@@ -171,23 +155,6 @@ class MedicalMedicament(models.Model):
 @carepoint
 class MedicalMedicamentAdapter(CarepointCRUDAdapter):
     _model_name = 'carepoint.medical.medicament'
-    _cp_lib = 'item'  # Name of model in Carepoint lib (snake_case)
-
-    def search(self, filters=None, from_date=None, to_date=None):
-        """ Search records according to some criteria and return results
-        :param filters: Filters to apply to search
-        :type filters: dict or None
-        :rtype: :class:`sqlalchemy.engine.ResultProxy`
-        """
-        if filters is None:
-            filters = {}
-        if from_date is not None:
-            filters.setdefault('updated_at', {})
-            filters['updated_at']['<='] = from_date
-        if to_date is not None:
-            filters.setdefault('updated_at', {})
-            filters['updated_at']['>='] = to_date
-        return super(MedicalMedicamentAdapter, self).search(filters)
 
     # def get_images(self, id, storeview_id=None):
     #     return self._call('product_media.list',
@@ -213,13 +180,9 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 
     def run(self, filters=None):
         """ Run the synchronization """
-        from_date = filters.pop('from_date', None)
-        to_date = filters.pop('to_date', None)
-        record_ids = self.backend_adapter.search(
-            filters, from_date=from_date, to_date=to_date
-        )
-        _logger.info('Search for carepoint products %s returned %s',
-                     filters, record_ids)
+        if filters is None:
+            filters = {}
+        record_ids = self.backend_adapter.search(**filters)
         for record_id in record_ids:
             self._import_record(record_id)
 
@@ -302,15 +265,12 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 class MedicamentImportMapper(ImportMapper):
     _model_name = 'carepoint.medical.medicament'
     direct = [
-        ('name', 'DESC'),
-        ('description', 'DESC'),
-        ('sku', 'SKU'),
-        ('ean13', 'UPCCODE'),
-        ('ndc', 'NDC'),
-        ('company_id', 'store_id'),
-        ('short_description', 'DESC'),
-        ('created_at', 'add_date'),
-        ('updated_at', 'chg_date'),
+        ('DESCR', 'name'),
+        ('SKU', 'sku'),
+        ('UPCCODE', 'ean13'),
+        ('NDC', 'ndc'),
+        ('add_date', 'created_at'),
+        ('chg_date', 'updated_at'),
     ]
 
     @mapping
@@ -343,19 +303,11 @@ class MedicamentImporter(CarepointImporter):
 
     _base_mapper = MedicamentImportMapper
 
-    def _import_bundle_dependencies(self):
-        """ Import the dependencies for a Bundle """
-        bundle = self.carepoint_record['_bundle_data']
-        for option in bundle['options']:
-            for selection in option['selections']:
-                self._import_dependency(selection['item_id'],
-                                        'carepoint.medical.medicament')
-
     def _import_dependencies(self):
         """ Import the dependencies for the record """
         record = self.carepoint_record
-        if record['type_id'] == 'bundle':
-            self._import_bundle_dependencies()
+        # if record['type_id'] == 'bundle':
+        #     self._import_bundle_dependencies()
 
     def _must_skip(self):
         """ Hook called right after we read the data from the backend.

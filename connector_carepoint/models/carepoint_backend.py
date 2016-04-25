@@ -1,23 +1,6 @@
 # -*- coding: utf-8 -*-
-##############################################################################
-#
-#    Author: Dave Lasley <dave@laslabs.com>
-#    Copyright: 2015 LasLabs, Inc.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from datetime import datetime, timedelta
@@ -40,15 +23,6 @@ class CarepointBackend(models.Model):
 
     _backend_type = 'carepoint'
 
-    @api.model
-    def select_versions(self):
-        """ Available versions in the backend.
-        Can be inherited to add custom versions.  Using this method
-        to add a version from an ``_inherit`` does not constrain
-        to redefine the ``version`` field in the ``_inherit`` model.
-        """
-        return [('2.99', '2.99+')]
-
     version = fields.Selection(
         selection='select_versions',
         required=True
@@ -67,14 +41,22 @@ class CarepointBackend(models.Model):
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
-        default='CP/',
+        default='CP-S/',
         help="A prefix put before the name of imported sales orders.\n"
              "For instance, if the prefix is 'cp-', the sales "
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
              "in Odoo.",
     )
+    # rx_prefix = fields.Char(
+    #     string='Rx Prefix',
+    #     default='CP-RX/',
+    #     help="A prefix put before the name of imported RX orders.\n"
+    #          "For instance, if the prefix is 'cp-', the Rx "
+    #          "order 100000692 in Carepoint, will be named 'cp-100000692' "
+    #          "in Odoo.",
+    # )
     store_ids = fields.One2many(
-        comodel_name='carepoint.res.company',
+        comodel_name='carepoint.medical.pharmacy',
         inverse_name='backend_id',
         string='Store',
         readonly=True,
@@ -93,6 +75,15 @@ class CarepointBackend(models.Model):
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
     )
+    import_medicaments_from_date = fields.Datetime(
+        string='Import medicaments from date',
+    )
+    import_patients_from_date = fields.Datetime(
+        string='Import patients from date',
+    )
+    import_physicians_from_date = fields.Datetime(
+        string='Import physicians from date',
+    )
     #
     # product_binding_ids = fields.One2many(
     #     comodel_name='carepoint.medical.medicament',
@@ -103,8 +94,25 @@ class CarepointBackend(models.Model):
 
     _sql_constraints = [
         ('sale_prefix_uniq', 'unique(sale_prefix)',
-         "A backend with the same sale prefix already exists")
+         "A backend with the same sale prefix already exists"),
+        ('rx_prefix_uniq', 'unique(rx_prefix)',
+         "A backend with the same rx prefix already exists"),
     ]
+
+    @api.model
+    def __get_session(self):
+        return ConnectorSession(
+            self.env.cr, self.env.uid, context=self.env.context
+        )
+
+    @api.model
+    def select_versions(self):
+        """ Available versions in the backend.
+        Can be inherited to add custom versions.  Using this method
+        to add a version from an ``_inherit`` does not constrain
+        to redefine the ``version`` field in the ``_inherit`` model.
+        """
+        return [('2.99', '2.99+')]
 
     @api.multi
     def check_carepoint_structure(self):
@@ -112,16 +120,18 @@ class CarepointBackend(models.Model):
         Verify if a store exists for each backend before starting the import.
         """
         for backend in self:
-            stores = backend.stores
+            stores = backend.store_ids
             if not stores:
                 backend.synchronize_metadata()
         return True
 
     @api.multi
     def synchronize_metadata(self):
-        session = ConnectorSession()
+        session = self.__get_session()
         for backend in self:
-            for model in ('carepoint.res.company',):
+            for model in ('carepoint.medical.pharmacy',
+                          # 'carepoint.res.users',
+                          ):
                 # import directly, do not delay because this
                 # is a fast operation, a direct return is fine
                 # and it is simpler to import them sequentially
@@ -129,21 +139,27 @@ class CarepointBackend(models.Model):
         return True
 
     @api.multi
+    def _import_all(self, model):
+        session = self.__get_session()
+        for backend in self:
+            backend.check_carepoint_structure()
+            import_batch.delay(session, model, backend.id)
+
+    @api.multi
     def _import_from_date(self, model, from_date_field):
-        session = ConnectorSession(self.env.cr, self.env.uid,
-                                   context=self.env.context)
+        session = self.__get_session()
         import_start_time = datetime.now()
         for backend in self:
             backend.check_carepoint_structure()
+            filters = {'chg_date': {'<=': import_start_time}}
             from_date = getattr(backend, from_date_field)
             if from_date:
-                from_date = fields.Datetime.from_string(from_date)
+                filters['chg_date']['>='] = fields.Datetime.from_string(
+                    from_date
+                )
             else:
                 from_date = None
-            import_batch.delay(session, model,
-                               backend.id,
-                               filters={'from_date': from_date,
-                                        'to_date': import_start_time})
+            import_batch.delay(session, model, backend.id, filters=filters)
         # Records from Carepoint are imported based on their `add_date`
         # date.  This date is set on Carepoint at the beginning of a
         # transaction, so if the import is run between the beginning and
@@ -172,13 +188,39 @@ class CarepointBackend(models.Model):
     #     stores = store_obj.search([('backend_id', 'in', self.ids)])
     #     stores.import_prescription_orders()
     #     return True
-    #
-    # @api.multi
-    # def import_medical_medicament(self):
-    #     self._import_from_date('carepoint.product.product',
-    #                            'import_products_from_date')
-    #     return True
-    #
+
+    @api.multi
+    def import_medical_medicament(self):
+        self._import_from_date('carepoint.medical.medicament',
+                               'import_medicaments_from_date')
+        return True
+
+    @api.multi
+    def import_medical_patient(self):
+        self._import_from_date('carepoint.medical.patient',
+                               'import_patients_from_date')
+        return True
+
+    @api.multi
+    def import_medical_physician(self):
+        self._import_from_date('carepoint.medical.physician',
+                               'import_physicians_from_date')
+        return True
+
+    @api.multi
+    def import_fdb(self):
+        # self._import_all('carepoint.fdb.img.mfg')
+        # self._import_all('carepoint.fdb.img.date')
+        # self._import_all('carepoint.fdb.img.id')
+        self._import_all('carepoint.fdb.img')
+        # self._import_all('carepoint.fdb.route')
+        # self._import_all('carepoint.fdb.form')
+        # self._import_all('carepoint.fdb.gcn')
+        # self._import_all('carepoint.fdb.lbl.rid')
+        # self._import_all('carepoint.fdb.ndc')
+        # self._import_all('carepoint.fdb.gcn.seq')
+        return True
+
     # @api.multi
     # def _domain_for_update_product_stock_qty(self):
     #     return [
