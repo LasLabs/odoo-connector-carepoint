@@ -8,7 +8,13 @@ from openerp import models, fields
 class FdbForm(models.Model):
     _name = 'fdb.form'
     _description = 'Fdb Form'
+    _inherits = {'medical.drug.form': 'form_id'}
 
+    form_id = fields.Many2one(
+        string='Form',
+        comodel_name='medical.drug.form',
+        required=True,
+        ondelete='cascade',
+    )
     dose = fields.Char()
-    gcdf_desc = fields.Char()
     update_yn = fields.Boolean()

@@ -27,6 +27,8 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.medical.physician',
         'carepoint.medical.patient',
         'carepoint.medical.prescription.order',
+        'carepoint.sale.order',
+        'carepoint.sale.order.line',
         'carepoint.res.users',
         'carepoint.fdb.ndc',
         'carepoint.fdb.gcn',

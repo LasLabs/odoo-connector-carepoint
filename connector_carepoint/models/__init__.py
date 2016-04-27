@@ -7,6 +7,8 @@ from . import carepoint_backend
 
 # Base Models
 from . import res_users
+from . import sale_order
+from . import sale_order_line
 
 # Medical Models
 from . import medical_pharmacy

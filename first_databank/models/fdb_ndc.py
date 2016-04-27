@@ -14,6 +14,7 @@ class FdbNdc(models.Model):
         string='Medical NDC',
         comodel_name='medical.medicament.ndc',
         ondelete='cascade',
+        required=True,
     )
     lblrid = fields.Char()
     gcn_seqno = fields.Char()

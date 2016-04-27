@@ -80,6 +80,7 @@ class CarepointBackend(models.Model):
     import_patients_from_date = fields.Datetime()
     import_physicians_from_date = fields.Datetime()
     import_prescriptions_from_date = fields.Datetime()
+    import_sales_from_date = fields.Datetime()
     company_id = fields.Many2one(
         string='Company',
         comodel_name='res.company',
@@ -235,16 +236,21 @@ class CarepointBackend(models.Model):
         return True
 
     @api.multi
+    def import_sale_order(self):
+        self._import_from_date('carepoint.sale.order.line',
+                               'import_sales_from_date')
+
+    @api.multi
     def import_fdb(self):
-        # self._import_all('carepoint.fdb.img.mfg')
+        self._import_all('carepoint.fdb.img.mfg')
         # self._import_all('carepoint.fdb.img.date')
         # self._import_all('carepoint.fdb.img.id')
         # self._import_all('carepoint.fdb.img')
-        # self._import_all('carepoint.fdb.route')
-        # self._import_all('carepoint.fdb.form')
+        self._import_all('carepoint.fdb.route')
+        self._import_all('carepoint.fdb.form')
         # self._import_all('carepoint.fdb.gcn')
         # self._import_all('carepoint.fdb.lbl.rid')
-        self._import_all('carepoint.fdb.ndc')
+        # self._import_all('carepoint.fdb.ndc')
         # self._import_all('carepoint.fdb.gcn.seq')
         return True
 

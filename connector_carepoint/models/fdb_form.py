@@ -11,7 +11,11 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import (CarepointImportMapper,
+                           trim,
+                           trim_and_titleize,
+                           to_ord,
+                          )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -77,14 +81,23 @@ class FdbFormBatchImporter(DelayedBatchImporter):
 class FdbFormImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.form'
     direct = [
+        ('gcdf', 'carepoint_id'),
         (trim('dose'), 'dose'),
-        (trim('gcdf_desc'), 'gcdf_desc'),
+        (trim_and_titleize('gcdf_desc'), 'name'),
         ('update_yn', 'update_yn'),
     ]
 
     @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['gcdf']}
+    @only_create
+    def form_id(self, record):
+        """ Will bind the form on a existing form with same name """
+        form_id = self.env['medical.drug.form'].search([
+            ('name', 'ilike', record['gcdf_desc'].strip()),
+        ],
+            limit=1,
+        )
+        if form_id:
+            return {'form_id': form_id.id}
 
 
 @carepoint

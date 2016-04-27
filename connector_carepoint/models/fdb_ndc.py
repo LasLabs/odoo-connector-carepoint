@@ -11,7 +11,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -77,7 +77,7 @@ class FdbNdcBatchImporter(DelayedBatchImporter):
 class FdbNdcImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.ndc'
     direct = [
-        ('ndc', 'name'),
+        (trim('ndc'), 'name'),
         ('lblrid', 'lblrid'),
         ('gcn_seqno', 'gcn_seqno'),
         ('ps', 'ps'),
@@ -159,6 +159,23 @@ class FdbNdcImportMapper(CarepointImportMapper):
         ('active_yn', 'active_yn'),
         ('ln60', 'ln60'),
     ]
+
+    @mapping
+    @only_create
+    def medicament_id(self, record):
+        binder = self.binder_for('carepoint.fdb.ndc')
+        ndc_id = binder.to_odoo(record['id'])
+        medicament_obj = self.env['medical.medicament']
+        medicament_id = medicament_obj.search([
+            ('name', 'ilike', record['ln']),
+        ],
+            limit=1
+        )
+        if not len(medicament_id):
+            medicament_id = medicament_obj.create({
+                'name': record['ln'],
+            })
+        return {'medicament_id': medicament_id.id}
 
     @mapping
     def carepoint_id(self, record):

@@ -200,9 +200,10 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
         return {'patient_id': patient_id}
 
     @mapping
-    def name(self, ):
-        pass
-    
+    def pharmacy_id(self, record):
+        binder = self.binder_for('carepoint.medical.patient')
+        pharmacy_id = binder.to_odoo(record['store_id'])
+        return {'pharmacy_id': pharmacy_id}
 
 
 @carepoint

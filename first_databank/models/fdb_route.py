@@ -8,9 +8,14 @@ from openerp import models, fields
 class FdbRoute(models.Model):
     _name = 'fdb.route'
     _description = 'Fdb Route'
+    _inherits = {'medical.drug.route': 'route_id'}
 
+    route_id = fields.Many2one(
+        string='Route',
+        comodel_name='medical.drug.route',
+        required=True,
+        ondelete='cascade',
+    )
     rt = fields.Char()
-    gcrt2 = fields.Char()
-    gcrt_desc = fields.Char()
     systemic = fields.Char()
     update_yn = fields.Boolean()

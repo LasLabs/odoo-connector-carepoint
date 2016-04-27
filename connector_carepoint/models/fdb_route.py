@@ -11,7 +11,11 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import (CarepointImportMapper,
+                           trim,
+                           trim_and_titleize,
+                           to_ord,
+                          )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -77,16 +81,25 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
 class FdbRouteImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
-        (trim('rt'), 'rt'),
-        (trim('gcrt2'), 'gcrt2'),
-        (trim('gcrt_desc'), 'gcrt_desc'),
+        ('gcrt', 'carepoint_id'),
+        (trim_and_titleize('rt'), 'rt'),
+        (trim('gcrt2'), 'code'),
+        (trim_and_titleize('gcrt_desc'), 'name'),
         (trim('systemic'), 'systemic'),
         ('update_yn', 'update_yn'),
     ]
 
     @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['gcrt']}
+    @only_create
+    def route_id(self, record):
+        """ Will bind the route on a existing route with same code """
+        route_id = self.env['medical.drug.route'].search([
+            ('code', '=', record['gcrt2'].strip()),
+        ],
+            limit=1,
+        )
+        if route_id:
+            return {'route_id': route_id.id}
 
 
 @carepoint

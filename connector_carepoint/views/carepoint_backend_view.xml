@@ -117,6 +117,18 @@
                             </group>
                             <group>
                                 <div>
+                                    <label string="Import sales since" class="oe_inline"/>
+                                    <field name="import_sales_from_date"
+                                           class="oe_inline"
+                                           nolabel="1"/>
+                                </div>
+                                <button name="import_sale_order"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background"/>
+                            </group>
+                            <group>
+                                <div>
                                     <label string="Import all FDB Data" class="oe_inline" />
                                 </div>
                                 <button name="import_fdb"

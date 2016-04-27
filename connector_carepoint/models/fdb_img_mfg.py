@@ -12,7 +12,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -77,7 +77,7 @@ class FdbImgMfgBatchImporter(DelayedBatchImporter):
 class FdbImgMfgImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.img.mfg'
     direct = [
-        ('IMGMFGNAME', 'mfg_name'),
+        (trim_and_titleize('IMGMFGNAME'), 'name'),
     ]
 
     @mapping

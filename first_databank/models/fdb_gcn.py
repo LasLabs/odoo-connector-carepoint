@@ -8,6 +8,12 @@ from openerp import models, fields
 class FdbGcn(models.Model):
     _name = 'fdb.gcn'
     _description = 'Fdb Gcn'
+    _inherits = {'medical.medicament.gcn': 'gcn_id'}
 
-    gcn = fields.Integer()
+    gcn_id = fields.Many2one(
+        string='GCN',
+        comodel_name='medical.medicament.gcn',
+        ondelete='cascade',
+        required=True,
+    )
     update_yn = fields.Boolean()
