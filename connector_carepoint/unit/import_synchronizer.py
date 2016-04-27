@@ -25,6 +25,13 @@ from ..connector import get_environment, add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
+def int_or_str(val):
+    try:
+        return int(val)
+    except:
+        return str(val)
+
+
 class CarepointImporter(Importer):
     """ Base importer for Carepoint """
 
@@ -239,7 +246,7 @@ class DirectBatchImporter(BatchImporter):
         import_record(self.session,
                       self.model._name,
                       self.backend_record.id,
-                      record_id)
+                      int_or_str(record_id))
 
 
 class DelayedBatchImporter(BatchImporter):
@@ -251,7 +258,7 @@ class DelayedBatchImporter(BatchImporter):
         import_record.delay(self.session,
                             self.model._name,
                             self.backend_record.id,
-                            record_id,
+                            int_or_str(record_id),
                             **kwargs)
 
 
