@@ -26,6 +26,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.medical.medicament',
         'carepoint.medical.physician',
         'carepoint.medical.patient',
+        'carepoint.medical.prescription.order',
         'carepoint.res.users',
         'carepoint.fdb.ndc',
         'carepoint.fdb.gcn',
@@ -33,6 +34,11 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.fdb.lbl.rid',
         'carepoint.fdb.route',
         'carepoint.fdb.form',
+        'carepoint.fdb.img',
+        'carepoint.fdb.img.id',
+        'carepoint.fdb.img.date',
+        'carepoint.fdb.img.mfg',
+        'carepoint.fdb.imglbl.rid',
     ]
 
     def to_odoo(self, external_id, unwrap=False, browse=False):

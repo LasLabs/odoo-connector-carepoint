@@ -2,12 +2,20 @@
 # © 2015 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+# Backend
 from . import carepoint_backend
+
+# Base Models
 from . import res_users
+
+# Medical Models
 from . import medical_pharmacy
 from . import medical_patient
 from . import medical_physician
 from . import medical_medicament
+from . import medical_prescription
+
+# FDB
 from . import fdb_ndc
 from . import fdb_route
 from . import fdb_form

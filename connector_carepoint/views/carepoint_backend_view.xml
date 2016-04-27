@@ -37,7 +37,15 @@
                         </notebook>
                     </group>
                     <group name="main_configuration" string="Main Configuration">
-                        <!--<field name="warehouse_id"/>-->
+                        <group>
+                            <field name="company_id" />
+                            <field name="is_default" />
+                        </group>
+                        <group>
+                            <field name="default_category_id" />
+                            <field name="default_lang_id" />
+                            <field name="sale_prefix" />
+                        </group>
                     </group>
                     <notebook>
                         <page name="import" string="Imports">
@@ -91,6 +99,18 @@
                                            nolabel="1"/>
                                 </div>
                                 <button name="import_medical_medicament"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background"/>
+                            </group>
+                            <group>
+                                <div>
+                                    <label string="Import prescriptions since" class="oe_inline"/>
+                                    <field name="import_prescriptions_from_date"
+                                           class="oe_inline"
+                                           nolabel="1"/>
+                                </div>
+                                <button name="import_medical_prescription"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>

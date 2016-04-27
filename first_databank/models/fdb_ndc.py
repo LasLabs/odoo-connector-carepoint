@@ -8,8 +8,13 @@ from openerp import models, fields
 class FdbNdc(models.Model):
     _name = 'fdb.ndc'
     _description = 'Fdb Ndc'
+    _inherits = {'medical.medicament.ndc': 'medical_ndc_id'}
 
-    ndc = fields.Char()
+    medical_ndc_id = fields.Many2one(
+        string='Medical NDC',
+        comodel_name='medical.medicament.ndc',
+        ondelete='cascade',
+    )
     lblrid = fields.Char()
     gcn_seqno = fields.Char()
     ps = fields.Char()

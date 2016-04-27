@@ -3,26 +3,24 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from collections import defaultdict
 from openerp import models, fields, api
-# from openerp.addons.connector.queue.job import job, related_action
-# from openerp.addons.connector.event import on_record_write
-# from openerp.addons.connector.unit.synchronizer import (Importer,
-#                                                         Exporter,
-#                                                         )
-
+from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  ImportMapper,
+                                                  changed_by,
+                                                  only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.mapper import CarepointImportMapper
+from ..connector import get_environment
+from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
-                                        # TranslationImporter,
-                                        AddCheckpoint,
                                         )
-# from ..connector import get_environment
-from ..backend import carepoint
-# from ..related_action import unwrap_binding
+from ..unit.export_synchronizer import (CarepointExporter)
+from ..unit.delete_synchronizer import (CarepointDeleter)
+from ..connector import add_checkpoint, get_environment
+from ..related_action import unwrap_binding
 
 _logger = logging.getLogger(__name__)
 
@@ -262,26 +260,39 @@ class MedicamentBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicamentImportMapper(ImportMapper):
+class MedicamentImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.medical.medicament'
     direct = [
         ('DESCR', 'name'),
         ('SKU', 'sku'),
         ('UPCCODE', 'ean13'),
-        ('NDC', 'ndc'),
         ('add_date', 'created_at'),
         ('chg_date', 'updated_at'),
     ]
 
     @mapping
+    @only_create
+    def ndc_id(self, record):
+        return {'ndc_ids': [(0, 0, {'name': record['NDC']})]}
+
+    @mapping
     def is_active(self, record):
-        mapper = self.unit_for(IsActiveMedicamentImportMapper)
-        return mapper.map_record(record).values(**self.options)
+        """Check if the product is active in Carepoint
+        and set active flag in OpenERP
+        status == 1 in Carepoint means active"""
+        return {'active': (record.get('ACTIVE_YN') == 1)}
 
     @mapping
     def price(self, record):
-        mapper = self.unit_for(PriceMedicamentImportMapper)
-        return mapper.map_record(record).values(**self.options)
+        return {'list_price': record.get('COST', 0.0)}
+
+    @mapping
+    def route_id(self, record):
+        return {'route_id': 1}
+
+    @mapping
+    def drug_form_id(self, record):
+        return {'drug_form_id': 1}
 
     @mapping
     def store_ids(self, record):
@@ -291,10 +302,6 @@ class MedicamentImportMapper(ImportMapper):
     @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['item_id']}
-
-    @mapping
-    def backend_id(self, record):
-        return {'backend_id': self.backend_record.id}
 
 
 @carepoint
@@ -330,7 +337,7 @@ class MedicamentImporter(CarepointImporter):
 
     def _create(self, data):
         odoo_binding = super(MedicamentImporter, self)._create(data)
-        checkpoint = self.unit_for(AddCheckpoint)
+        checkpoint = self.unit_for(MedicalMedicamentAddCheckpoint)
         checkpoint.run(odoo_binding.id)
         return odoo_binding
 
@@ -345,25 +352,15 @@ class MedicamentImporter(CarepointImporter):
 
 
 @carepoint
-class PriceMedicamentImportMapper(ImportMapper):
-    _model_name = 'carepoint.medical.medicament'
+class MedicalMedicamentAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.medical.medicament record """
+    _model_name = ['carepoint.medical.medicament', ]
 
-    @mapping
-    def price(self, record):
-        return {'list_price': record.get('COST', 0.0)}
-
-
-@carepoint
-class IsActiveMedicamentImportMapper(ImportMapper):
-    _model_name = 'carepoint.medical.medicament'
-
-    @mapping
-    def is_active(self, record):
-        """Check if the product is active in Carepoint
-        and set active flag in OpenERP
-        status == 1 in Carepoint means active"""
-        return {'active': (record.get('ACTIVE_YN') == 1)}
-
+    def run(self, binding_id):
+        add_checkpoint(self.session,
+                       self.model._name,
+                       binding_id,
+                       self.backend_record.id)
 
 # @carepoint
 # class MedicamentInventoryExporter(Exporter):

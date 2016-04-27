@@ -12,13 +12,6 @@
     'website': 'https://laslabs.com',
     'depends': [
         'connector',
-        'sale_stock',
-        'medical_prescription_sale',
-        'medical_insurance_us',
-        'medical_medication_us',
-        'medical_patient_us',
-        'medical_physician_us',
-        'medical_pharmacy_us',
         'first_databank',
     ],
     "external_dependencies": {

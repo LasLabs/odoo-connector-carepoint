@@ -77,7 +77,7 @@ class FdbNdcBatchImporter(DelayedBatchImporter):
 class FdbNdcImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.ndc'
     direct = [
-        ('ndc', 'ndc'),
+        ('ndc', 'name'),
         ('lblrid', 'lblrid'),
         ('gcn_seqno', 'gcn_seqno'),
         ('ps', 'ps'),

@@ -4,7 +4,8 @@
 
 import logging
 from datetime import datetime, timedelta
-from openerp import models, fields, api
+from openerp import models, fields, api, _
+from openerp.exceptions import ValidationError
 from openerp.addons.connector.session import ConnectorSession
 from ..unit.import_synchronizer import (import_batch,
                                         DirectBatchImporter,
@@ -75,14 +76,21 @@ class CarepointBackend(models.Model):
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
     )
-    import_medicaments_from_date = fields.Datetime(
-        string='Import medicaments from date',
+    import_medicaments_from_date = fields.Datetime()
+    import_patients_from_date = fields.Datetime()
+    import_physicians_from_date = fields.Datetime()
+    import_prescriptions_from_date = fields.Datetime()
+    company_id = fields.Many2one(
+        string='Company',
+        comodel_name='res.company',
+        default=lambda s: s.env.ref('base.main_company'),
     )
-    import_patients_from_date = fields.Datetime(
-        string='Import patients from date',
-    )
-    import_physicians_from_date = fields.Datetime(
-        string='Import physicians from date',
+    is_default = fields.Boolean(
+        default=True,
+        help='Check this if this is the default connector for the company.'
+        ' All newly created records for this company will be synced to the'
+        ' default system. Only records that originated from non-default'
+        ' systems will be synced with them.',
     )
     #
     # product_binding_ids = fields.One2many(
@@ -98,6 +106,19 @@ class CarepointBackend(models.Model):
         ('rx_prefix_uniq', 'unique(rx_prefix)',
          "A backend with the same rx prefix already exists"),
     ]
+
+    @api.multi
+    @api.constrains('is_default', 'company_id')
+    def _check_default_for_company(self):
+        for rec_id in self:
+            domain = [
+                ('company_id', '=', rec_id.company_id.id),
+                ('is_default', '=', True),
+            ]
+            if len(self.search(domain)) > 1:
+                raise ValidationError(_(
+                    'This company already has a default CarePoint connector.',
+                ))
 
     @api.model
     def __get_session(self):
@@ -208,16 +229,22 @@ class CarepointBackend(models.Model):
         return True
 
     @api.multi
+    def import_medical_prescription(self):
+        self._import_from_date('carepoint.medical.prescription.order',
+                               'import_prescriptions_from_date')
+        return True
+
+    @api.multi
     def import_fdb(self):
         # self._import_all('carepoint.fdb.img.mfg')
         # self._import_all('carepoint.fdb.img.date')
         # self._import_all('carepoint.fdb.img.id')
-        self._import_all('carepoint.fdb.img')
+        # self._import_all('carepoint.fdb.img')
         # self._import_all('carepoint.fdb.route')
         # self._import_all('carepoint.fdb.form')
         # self._import_all('carepoint.fdb.gcn')
         # self._import_all('carepoint.fdb.lbl.rid')
-        # self._import_all('carepoint.fdb.ndc')
+        self._import_all('carepoint.fdb.ndc')
         # self._import_all('carepoint.fdb.gcn.seq')
         return True
 

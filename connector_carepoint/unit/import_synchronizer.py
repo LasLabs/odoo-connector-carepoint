@@ -239,7 +239,7 @@ class DirectBatchImporter(BatchImporter):
         import_record(self.session,
                       self.model._name,
                       self.backend_record.id,
-                      record_id)
+                      int(record_id))
 
 
 class DelayedBatchImporter(BatchImporter):
@@ -251,16 +251,16 @@ class DelayedBatchImporter(BatchImporter):
         import_record.delay(self.session,
                             self.model._name,
                             self.backend_record.id,
-                            record_id,
+                            int(record_id),
                             **kwargs)
 
 
 @carepoint
 class SimpleRecordImporter(CarepointImporter):
-    """ Import one Carepoint Website """
+    """ Import one Carepoint Store """
     _model_name = [
-        'carepoint.website',
-        'carepoint.res.partner.category',
+        'carepoint.store',
+        # 'carepoint.res.partner.category',
     ]
 
 
@@ -271,9 +271,7 @@ class TranslationImporter(Importer):
     For instance from the products and products' categories importers.
     """
 
-    _model_name = ['carepoint.product.category',
-                   'carepoint.product.product',
-                   ]
+    _model_name = []
 
     def _get_carepoint_data(self, storeview_id=None):
         """ Return the raw Carepoint data for ``self.carepoint_id`` """

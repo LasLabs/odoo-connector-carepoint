@@ -54,7 +54,7 @@ carepoints = {}
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
-    def __init__(self, connector_env, ):
+    def __init__(self, connector_env):
         """
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
@@ -70,7 +70,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
             )
         self.carepoint = carepoints[backend.server]
 
-    def __to_camel_case(self, snake_case, ):
+    def __to_camel_case(self, snake_case):
         """ Convert the snake_case to CamelCase
         :param snake_case: To convert
         :type snake_case: str
@@ -79,7 +79,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         parts = snake_case.split('_')
         return "".join(x.title() for x in parts)
 
-    def __get_cp_model(self, ):
+    def __get_cp_model(self):
         """ Get the correct model object by name from Carepoint lib
         :rtype: :class:`sqlalchemy.schema.Table`
         """
@@ -99,7 +99,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         res = self.carepoint.search(model_obj, filters, [pk])
         return [getattr(row, pk) for row in res]
 
-    def read(self, _id, attributes=None, ):
+    def read(self, _id, attributes=None):
         """ Gets record by id and returns the object
         :param _id: Id of record to get from Db
         :type _id: int
@@ -111,8 +111,9 @@ class CarepointCRUDAdapter(CRUDAdapter):
         model_obj = self.__get_cp_model()
         pk = self.carepoint.get_pks(model_obj)[0]
         rec = self.carepoint.search(model_obj, {pk: _id}, attributes)[0]
-        _logger.info(rec.__dict__)
-        return rec.__dict__
+        if attributes is None:
+            return rec.__dict__
+        return {k: getattr(rec, k, None) for k in attributes}
 
     def read_image(self, path):
         """ Returns an image resource from CarePoint
@@ -123,7 +124,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         Returns:
             :type:`str` Binary string representation of file
         """
-        return self.carepoint.get_file(path).read()
+        return self.carepoint.get_file(path).read().encode('base64')
 
     def write_image(self, path, file_obj):
         """ Write a file-like object to CarePoint SMB resource
@@ -147,16 +148,17 @@ class CarepointCRUDAdapter(CRUDAdapter):
         model_obj = self.__get_cp_model()
         return self.carepoint.search(model_obj, filters, attributes)
 
-    def create(self, data, ):
+    def create(self, data):
         """ Wrapper to create a record on the external system
         :param data: Data to create record with
         :type data: dict
         :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
         """
         model_obj = self.__get_cp_model()
+        _logger.debug('Creating with %s', data)
         return self.carepoint.create(model_obj, data)
 
-    def write(self, _id, data, ):
+    def write(self, _id, data):
         """ Update record on the external system
         :param _id: Id of record to manipulate
         :type _id: int
@@ -165,9 +167,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
         """
         model_obj = self.__get_cp_model()
+        _logger.debug('Writing %s with %s', _id, data)
         return self.carepoint.update(model_obj, _id, data)
 
-    def delete(self, _id, ):
+    def delete(self, _id):
         """ Delete record on the external system
         :param _id: Id of record to manipulate
         :type _id: int

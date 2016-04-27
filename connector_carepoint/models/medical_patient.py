@@ -4,20 +4,24 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
+from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
+                                                  changed_by,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PersonImportMapper
+from ..unit.mapper import PersonImportMapper, PersonExportMapper
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
+from ..unit.export_synchronizer import (CarepointExporter)
+from ..unit.delete_synchronizer import (CarepointDeleter)
+from ..connector import add_checkpoint, get_environment
+from ..related_action import unwrap_binding
+
 
 _logger = logging.getLogger(__name__)
 
@@ -138,6 +142,38 @@ class MedicalPatientImporter(CarepointImporter):
     #     """ Import the addresses """
     #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
     #     book.import_addresses(self.carepoint_id, partner_binding.id)
+
+
+@carepoint
+class MedicalPatientExportMapper(PersonExportMapper):
+    _model_name = 'carepoint.medical.patient'
+
+    direct = [
+        ('ref', 'ssn'),
+        ('email', 'email'),
+        ('dob', 'birth_date'),
+        ('dod', 'death_date'),
+    ]
+
+    @mapping
+    def pat_id(self, record):
+        return {'pat_id': record.carepoint_id}
+
+    @changed_by('gender')
+    @mapping
+    def gender_cd(self):
+        return {'gender_cd': record.get('gender').upper()}
+
+
+@carepoint
+class MedicalPatientExporter(CarepointExporter):
+    _model_name = ['carepoint.medical.patient']
+    _base_mapper = MedicalPatientExportMapper
+
+
+@carepoint
+class MedicalPatientDeleteSynchronizer(CarepointDeleter):
+    _model_name = ['carepoint.medical.patient']
 
 
 @carepoint

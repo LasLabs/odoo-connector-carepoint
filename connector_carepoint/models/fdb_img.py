@@ -78,11 +78,12 @@ class FdbImgImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.img'
     direct = [
         ('IMGFILENM', 'file_name'),
+        ('data', 'data'),
     ]
 
     @mapping
     def data(self, record):
-        return {'data': self.backend_adapter.get_file(record['IMAGE_PATH'])}
+        return {'data': record['data'].decode('base64')}
 
     @mapping
     def carepoint_id(self, record):
@@ -94,6 +95,15 @@ class FdbImgImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img']
 
     _base_mapper = FdbImgImportMapper
+
+    def _get_carepoint_data(self):
+        """ Return the raw Carepoint data for ``self.carepoint_id`` """
+        _logger.debug('Getting CP data for %s', self.carepoint_id)
+        record = self.backend_adapter.read(self.carepoint_id, [
+            'IMGFILENM', 'IMAGE_PATH', 'IMGID'
+        ])
+        record['data'] = self.backend_adapter.read_image(record['IMAGE_PATH'])
+        return record
 
     def _create(self, data):
         odoo_binding = super(FdbImgImporter, self)._create(data)
