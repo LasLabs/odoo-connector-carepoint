@@ -135,6 +135,16 @@ class MedicalPharmacyImporter(CarepointImporter):
         checkpoint.run(binding.id)
         return binding
 
+    def _import_dependencies(self):
+        """ Import depends for record """
+        record = self.carepoint_record
+        # @TODO: Fix below error
+        # 'csstore_addr' does not have the identity property.
+        #  Cannot perform SET operation.
+        #
+        # self._import_dependency(record['store_id'],
+        #                         'carepoint.carepoint.address.pharmacy')
+
     #
     # def _after_import(self, partner_binding):
     #     """ Import the addresses """

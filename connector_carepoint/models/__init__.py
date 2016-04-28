@@ -17,6 +17,12 @@ from . import medical_physician
 from . import medical_medicament
 from . import medical_prescription
 
+# Address / Relations
+from . import address
+from . import address_patient
+from . import address_pharmacy
+from . import address_physician
+
 # FDB
 from . import fdb_ndc
 from . import fdb_route

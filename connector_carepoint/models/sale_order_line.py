@@ -33,7 +33,7 @@ class CarepointSaleOrderLine(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'sale.order.line': 'odoo_id'}
     _description = 'Carepoint Rx Dispense'
-    _cp_lib = 'dispense'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'order_line'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
         comodel_name='sale.order.line',
@@ -100,6 +100,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     direct = [
         ('submit_date', 'date_order'),
         ('dispense_qty', 'product_uom_qty'),
+        ('disp_drug_name', 'name'),
     ]
 
     @mapping
@@ -118,6 +119,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     def order_id(self, record):
         binder = self.binder_for('carepoint.sale.order')
         order_id = binder.to_odoo(record['order_id'])
+        return {'order_id': order_id}
 
     @mapping
     def product_data(self, record):
@@ -127,7 +129,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
         )
         return {
             'product_id': med_id.product_id.id,
-            'product_uom': line_id.medicament_id.uom_id.id,
+            'product_uom': med_id.uom_id.id,
         }
 
     @mapping
@@ -156,7 +158,7 @@ class SaleOrderLineImporter(CarepointImporter):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
-                                'carepoint.medical.prescription')
+                                'carepoint.medical.prescription.order')
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
 

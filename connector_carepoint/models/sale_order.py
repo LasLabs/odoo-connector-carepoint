@@ -153,6 +153,10 @@ class SaleOrderImporter(CarepointImporter):
         checkpoint.run(binding.id)
         return binding
 
+    def _import_dependencies(self):
+        """ Import depends for record """
+        record = self.carepoint_record
+
     #
     # def _after_import(self, partner_binding):
     #     """ Import the addresses """

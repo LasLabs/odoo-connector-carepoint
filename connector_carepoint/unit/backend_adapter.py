@@ -99,12 +99,14 @@ class CarepointCRUDAdapter(CRUDAdapter):
         res = self.carepoint.search(model_obj, filters, [pk])
         return [getattr(row, pk) for row in res]
 
-    def read(self, _id, attributes=None):
+    def read(self, _id, attributes=None, create=False):
         """ Gets record by id and returns the object
         :param _id: Id of record to get from Db
         :type _id: int
         :param attributes: Attributes to rcv from db. None for *
         :type attributes: list or None
+        :param create: Create a record if not found
+        :type create: bool
         :rtype: dict
         """
         # @TODO: Fix lookup by ident
