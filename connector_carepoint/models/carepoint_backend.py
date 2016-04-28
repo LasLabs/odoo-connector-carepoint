@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from openerp import models, fields, api, _
 from openerp.exceptions import ValidationError
 from openerp.addons.connector.session import ConnectorSession
+from openerp.addons.base.res.res_partner import _tz_get
 from ..unit.import_synchronizer import (import_batch,
                                         DirectBatchImporter,
                                         )
@@ -69,6 +70,10 @@ class CarepointBackend(models.Model):
              "will be imported in the translation of this language.\n"
              "Note that a similar configuration exists "
              "for each storeview.",
+    )
+    default_tz = fields.Selection(
+        _tz_get,
+        'Default Time Zone',
     )
     default_category_id = fields.Many2one(
         comodel_name='product.category',
@@ -243,15 +248,15 @@ class CarepointBackend(models.Model):
     @api.multi
     def import_fdb(self):
         self._import_all('carepoint.fdb.img.mfg')
-        # self._import_all('carepoint.fdb.img.date')
-        # self._import_all('carepoint.fdb.img.id')
-        # self._import_all('carepoint.fdb.img')
+        self._import_all('carepoint.fdb.img.date')
+        self._import_all('carepoint.fdb.img.id')
+        self._import_all('carepoint.fdb.img')
         self._import_all('carepoint.fdb.route')
         self._import_all('carepoint.fdb.form')
-        # self._import_all('carepoint.fdb.gcn')
-        # self._import_all('carepoint.fdb.lbl.rid')
-        # self._import_all('carepoint.fdb.ndc')
-        # self._import_all('carepoint.fdb.gcn.seq')
+        self._import_all('carepoint.fdb.gcn')
+        self._import_all('carepoint.fdb.lbl.rid')
+        self._import_all('carepoint.fdb.ndc')
+        self._import_all('carepoint.fdb.gcn.seq')
         return True
 
     # @api.multi

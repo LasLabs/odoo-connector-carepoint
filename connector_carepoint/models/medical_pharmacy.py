@@ -8,11 +8,11 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
 from ..backend import carepoint
+from ..unit.mapper import PartnerImportMapper, trim, trim_and_titleize
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -91,7 +91,7 @@ class MedicalPharmacyBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalPharmacyImportMapper(ImportMapper):
+class MedicalPharmacyImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.medical.pharmacy'
 
     direct = [
@@ -109,7 +109,7 @@ class MedicalPharmacyImportMapper(ImportMapper):
     @only_create
     @mapping
     def odoo_id(self, record):
-        """ Will bind the company on a existing company
+        """ Will bind the company on an existing company
         with the same name """
         company_id = self.env['medical.pharmacy'].search(
             [('name', 'ilike', record.get('name', ''))],
@@ -121,10 +121,6 @@ class MedicalPharmacyImportMapper(ImportMapper):
     @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['store_id']}
-
-    @mapping
-    def backend_id(self, record):
-        return {'backend_id': self.backend_record.id}
 
 
 @carepoint

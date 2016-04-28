@@ -16,5 +16,4 @@ class FdbForm(models.Model):
         required=True,
         ondelete='cascade',
     )
-    dose = fields.Char()
     update_yn = fields.Boolean()

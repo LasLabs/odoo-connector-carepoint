@@ -91,8 +91,20 @@ class CarepointImportMapper(ImportMapper):
     def backend_id(self, record):
         return {'backend_id': self.backend_record.id}
 
+    @mapping
+    def company_id(self, record):
+        return {'company_id': self.backend_record.company_id.id}
 
-class PersonImportMapper(CarepointImportMapper):
+
+class PartnerImportMapper(CarepointImportMapper):
+
+    @mapping
+    def tz(self, record):
+        return {'tz': self.backend_record.default_tz}
+
+
+
+class PersonImportMapper(PartnerImportMapper):
 
     def _get_name(self, record):
         # @TODO: Support other name parts (surname)
