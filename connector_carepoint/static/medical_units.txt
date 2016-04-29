@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+# © 2015 LasLabs Inc.
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+
+#
+# Time Abbreviations
+#
+wk = week
+yr = year
+
+#
+# Medical Reference
+#
+
+viral_particle = [viral_particle] = vp
+vial = [vial] = vl
+wafer = [wafer]
+
+# unit = [unit] = u
+
+vaginal_ring = [vaginal_ring] = vag_ring
+vaginal_insert = [vaginal_insert] = vag_insert
+
+#
+# Conversions
+#
+
+thousand_unit = unit * 1000

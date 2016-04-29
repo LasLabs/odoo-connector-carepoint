@@ -45,6 +45,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.fdb.img.date',
         'carepoint.fdb.img.mfg',
         'carepoint.fdb.imglbl.rid',
+        'carepoint.fdb.unit',
     ]
 
     def to_odoo(self, external_id, unwrap=False, browse=False):

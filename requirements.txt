@@ -1,1 +1,2 @@
+pint
 git+https://github.com/laslabs/Python-Carepoint.git

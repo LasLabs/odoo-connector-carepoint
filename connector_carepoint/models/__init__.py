@@ -35,3 +35,4 @@ from . import fdb_img
 from . import fdb_img_id
 from . import fdb_img_mfg
 from . import fdb_img_date
+from . import fdb_unit
