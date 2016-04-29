@@ -111,7 +111,7 @@ class FdbImgIdAddCheckpoint(ConnectorUnit):
                        self.backend_record.id)
 
 
-@job(default_channel='root.carepoint')
+@job(default_channel='root.carepoint.fdb')
 def fdb_img_id_import_batch(session, model_name, backend_id, filters=None):
     """ Prepare the import of NDCs from Carepoint """
     if filters is None:

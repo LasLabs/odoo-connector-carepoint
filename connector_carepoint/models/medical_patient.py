@@ -188,7 +188,7 @@ class MedicalPatientAddCheckpoint(ConnectorUnit):
                        self.backend_record.id)
 
 
-@job(default_channel='root.carepoint')
+@job(default_channel='root.carepoint.patient')
 def patient_import_batch(session, model_name, backend_id, filters=None):
     """ Prepare the import of patients modified on Carepoint """
     if filters is None:

@@ -152,7 +152,7 @@ class MedicalPhysicianAddCheckpoint(ConnectorUnit):
                        self.backend_record.id)
 
 
-@job(default_channel='root.carepoint')
+@job(default_channel='root.carepoint.physician')
 def physician_import_batch(session, model_name, backend_id, filters=None):
     """ Prepare the import of physicians modified on Carepoint """
     if filters is None:

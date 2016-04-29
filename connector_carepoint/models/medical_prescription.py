@@ -219,6 +219,8 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
                                 'carepoint.medical.patient')
         self._import_dependency(record['md_id'],
                                 'carepoint.medical.physician')
+        self._import_dependency(record['ndc'],
+                                'carepoint.fdb.ndc')
 
     def _create(self, data):
         binding = super(MedicalPrescriptionOrderImporter, self)._create(data)
@@ -245,7 +247,7 @@ class MedicalPrescriptionOrderAddCheckpoint(ConnectorUnit):
                        self.backend_record.id)
 
 
-@job(default_channel='root.carepoint')
+@job(default_channel='root.carepoint.prescription')
 def prescription_import_batch(session, model_name, backend_id, filters=None):
     """ Prepare the import of prescriptions modified on Carepoint """
     if filters is None:
