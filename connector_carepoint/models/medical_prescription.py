@@ -175,13 +175,20 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
     @mapping
     def rx_line(self, record):
         """ Perform mappings for computed fields """
-        return {
+        binder = self.binder_for('carepoint.fdb.ndc')
+        ndc_id = binder.to_odoo(record['ndc'])
+        ndc_id = self.env['fdb.ndc'].browse(ndc_id)
+        binder = self.binder_for('carepoint.medical.patient')
+        patient_id = binder.to_odoo(record['pat_id'])
+        return {'prescription_order_line_ids': [(0, 0, {
             'date_start_treatment': record['start_date'],
             'date_stop_treatment': record['expire_date'],
             'qty': record['written_qty'],
             'refill_qty_remain': record['refills_left'],
             'refill_qty_original': record['refills_orig'],
-        }
+            'medicament_id': ndc_id.medicament_id.id,
+            'patient_id': patient_id,
+        })]}
 
     @mapping
     def carepoint_id(self, record):

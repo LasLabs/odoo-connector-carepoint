@@ -81,7 +81,7 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
 class FdbRouteImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
-        ('gcrt', 'carepoint_id'),
+        (trim('gcrt'), 'grct'),
         (trim_and_titleize('rt'), 'rt'),
         (trim('gcrt2'), 'code'),
         (trim_and_titleize('gcrt_desc'), 'name'),
@@ -101,6 +101,9 @@ class FdbRouteImportMapper(CarepointImportMapper):
         if route_id:
             return {'route_id': route_id.id}
 
+    @mapping
+    def carepoint_id(self, record):
+        return {'carepoint_id': record['gcrt'].strip()}
 
 @carepoint
 class FdbRouteImporter(CarepointImporter):

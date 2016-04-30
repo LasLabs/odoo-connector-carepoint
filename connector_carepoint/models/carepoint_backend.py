@@ -257,15 +257,16 @@ class CarepointBackend(models.Model):
     @api.multi
     def import_fdb(self):
         self._import_all('carepoint.fdb.img.mfg')
-        self._import_all('carepoint.fdb.img.date')
-        self._import_all('carepoint.fdb.img.id')
-        self._import_all('carepoint.fdb.img')
+        # self._import_all('carepoint.fdb.img.date')
+        # self._import_all('carepoint.fdb.img.id')
+        # self._import_all('carepoint.fdb.img')
         self._import_all('carepoint.fdb.route')
         self._import_all('carepoint.fdb.form')
-        self._import_all('carepoint.fdb.gcn')
-        self._import_all('carepoint.fdb.lbl.rid')
-        self._import_all('carepoint.fdb.ndc')
-        self._import_all('carepoint.fdb.gcn.seq')
+        self._import_all('carepoint.fdb.unit')
+        # self._import_all('carepoint.fdb.gcn')
+        # self._import_all('carepoint.fdb.lbl.rid')
+        # self._import_all('carepoint.fdb.ndc')
+        # self._import_all('carepoint.fdb.gcn.seq')
         return True
 
     # @api.multi
@@ -335,8 +336,7 @@ class CarepointBackend(models.Model):
 
 @carepoint
 class MetadataBatchImporter(DirectBatchImporter):
-    """
-    Import the records directly, without delaying the jobs.
+    """ Import the records directly, without delaying the jobs.
     Import the Carepoint Stores
     They are imported directly because this is a rare and fast operation,
     and we don't really bother if it blocks the UI during this time.

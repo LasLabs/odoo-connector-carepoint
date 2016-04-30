@@ -22,11 +22,6 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
-
-
 class CarepointFdbNdc(models.Model):
     _name = 'carepoint.fdb.ndc'
     _inherit = 'carepoint.binding'
@@ -49,7 +44,6 @@ class FdbNdc(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
-
 
 @carepoint
 class FdbNdcAdapter(CarepointCRUDAdapter):
@@ -83,7 +77,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
         ('ps', 'ps'),
         ('df', 'df'),
         ('ad', 'ad'),
-        ('ln', 'ln'),
+        (trim('ln'), 'ln'),
         ('bn', 'bn'),
         ('pndc', 'pndc'),
         ('repndc', 'repndc'),
@@ -163,23 +157,39 @@ class FdbNdcImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def medicament_id(self, record):
-        binder = self.binder_for('carepoint.fdb.ndc')
-        ndc_id = binder.to_odoo(record['id'])
         medicament_obj = self.env['medical.medicament']
+        medicament_name = record['ln'].strip()
+        binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
+        cs_ext_id = binder.to_odoo(record['ndc'])
+        _logger.debug('ORIGIN FUCKING EXT %s', cs_ext_id)
+        cs_ext_id = self.env['fdb.ndc.cs.ext'].browse(cs_ext_id)
+        _logger.debug('GOT FUCKING EXT %s', cs_ext_id)
+        _logger.debug('GOT FUCKING EXT ATTRS %s, %s, %s',
+                      cs_ext_id.route_id, cs_ext_id.form_id, cs_ext_id.gpi)
         medicament_id = medicament_obj.search([
-            ('name', 'ilike', record['ln']),
+            ('name', 'ilike', medicament_name),
+            ('drug_route_id', '=', cs_ext_id.route_id.id),
+            ('drug_form_id', '=', cs_ext_id.form_id.id),
+            ('gpi', '=', cs_ext_id.gpi),
         ],
-            limit=1
+            limit=1,
         )
         if not len(medicament_id):
+            code = record['dea']
+            if not code or code <= 0 or code > 5:
+                code = 1
             medicament_id = medicament_obj.create({
-                'name': record['ln'],
+                'name': medicament_name,
+                'drug_route_id': cs_ext_id.route_id.id,
+                'drug_form_id': cs_ext_id.form_id.id,
+                'gpi': cs_ext_id.gpi,
+                'control_code': str(code),
             })
         return {'medicament_id': medicament_id.id}
 
     @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['id']}
+        return {'carepoint_id': record['ndc'].strip()}
 
 
 @carepoint
@@ -193,6 +203,12 @@ class FdbNdcImporter(CarepointImporter):
         checkpoint = self.unit_for(FdbNdcAddCheckpoint)
         checkpoint.run(odoo_binding.id)
         return odoo_binding
+
+    def _import_dependencies(self):
+        """ Import depends for record """
+        record = self.carepoint_record
+        self._import_dependency(record['ndc'],
+                                'carepoint.fdb.ndc.cs.ext')
 
 
 @carepoint
@@ -214,4 +230,3 @@ def fdb_ndc_import_batch(session, model_name, backend_id, filters=None):
     env = get_environment(session, model_name, backend_id)
     importer = env.get_connector_unit(FdbNdcBatchImporter)
     importer.run(filters=filters)
-

@@ -124,7 +124,7 @@ class FdbUnitImportMapper(CarepointImportMapper):
             return {'uom_id': uom_id.id}
 
         vals = {
-            'name': record['str'],
+            'name': record['str'].strip(),
             'category_id': categ_id.id,
         }
 
@@ -134,13 +134,13 @@ class FdbUnitImportMapper(CarepointImportMapper):
             factor = float(unit_base.m) / float(unit_converted.m)
             vals.update({
                 'uom_type': 'smaller',
-                'factor': factor,
+                'factor': factor, # + float(unit_base.m),
             })
         else:
             factor = float(unit_converted.m) / float(unit_base.m)
             vals.update({
                 'uom_type': 'bigger',
-                'factor_inv': factor,
+                'factor_inv': factor, # + float(unit_base.m),
             })
         return vals
 

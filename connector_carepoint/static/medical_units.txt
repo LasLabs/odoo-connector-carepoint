@@ -5,24 +5,149 @@
 #
 # Time Abbreviations
 #
+
 wk = week
 yr = year
+
+#
+# Missing From Core
+#
+
+cm2 = centimeter ** 2
+Gallon = gallon
+
+#
+# Modifiers
+#
+
+thousand = 1e3
+million = 1e4
+percent = 1e-2
+Percent = percent
 
 #
 # Medical Reference
 #
 
-viral_particle = [viral_particle] = vp
-vial = [vial] = vl
-wafer = [wafer]
+# Prefixes
 
-# unit = [unit] = u
+bio- = 1
 
-vaginal_ring = [vaginal_ring] = vag_ring
-vaginal_insert = [vaginal_insert] = vag_insert
+# Specific to Location
+
+vaginal = [vaginal] = vag
+vag ring = vaginal
+vaginal ring = vaginal
+vaginal insert = vaginal
+vag insert = vaginal
+
+# Generic Unit Types
+# @TODO: Figure out more of these relations
+
+unit = [unit]
+capsule = unit
+vial = unit
+vl unit
+applicator = unit
+gauge = unit
+lozenge = unit
+inhalation = unit
+patch = unit
+patche = unit
+dose = unit
+spray = unit
+pad = unit
+towelette = unit
+puff = unit
+bead = unit
+X = unit
+pellet = unit
+insert = unit
+drop = unit
+each = unit
+tablet = unit
+packet = unit
+scoop = unit
+ring = unit
+melt = unit
+pump = unit
+suppository = unit
+suppositorie = unit
+of = unit
+strip = unit
+part = unit
+piece = unit
+lollipop = unit
+Lollipop = lollipop
+caplet = unit
+tissue = unit
+device = unit
+gum = unit
+particle = unit
 
 #
-# Conversions
+# @TODO: Need to add suffix support to library.
 #
 
-thousand_unit = unit * 1000
+applicatorsful = unit
+applicatorful = unit
+tablespoonsful = tablespoon
+tablespoonful = tablespoon
+teaspoonsful = teaspoon
+teaspoonful = teaspoon
+
+# Over Specific; Likely Under Used
+# @TODO: Figure out more of these
+
+viral particle = [viral_particle] = vp
+viral = [viral]
+pollen = [pollen]
+kyowa = [kyowa]
+irrigation = [irrigation]
+tuberculin = [tuberculin]
+elisa = [elisa]
+index = [index]
+nebule = [nebule]
+cell = [cell]
+equivalent = [equivalent]
+french = [french]
+culture = [culture]
+reactivity = [reactivity]
+protective = [protective]
+testing = [testing]
+buccal = [buccal]
+histamine = [histamine]
+colony = [colony]
+marker = [marker]
+sachet = [sachet]
+osmole = [osmole]
+carbohydrate = [carbohydrate]
+prick = [prick]
+film = [film]
+Amb = [Amb]
+application = [application]
+ampule = [ampule]
+genome = [genome]
+implant = [implant]
+NS = [NS]
+CK = [CK]
+LF = [LF]
+forming = [forming]
+pastille = [pastille]
+ophthalmic = [ophthalmic]
+sun = [sun]
+MCK = [MCK]
+MIU = [MIU]
+MMIU = [MMIU]
+stoke = [stoke]
+plaque = [plaque]
+or = [or]
+weight = [weight]
+allergy = [allergy]
+lesion = [lesion]
+package = [package]
+phenytoin = [phenytoin]
+copy = [copy]
+infective = [infective]
+
+Metric = [wtf]

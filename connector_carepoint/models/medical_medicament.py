@@ -270,10 +270,22 @@ class MedicamentImportMapper(CarepointImportMapper):
         ('chg_date', 'updated_at'),
     ]
 
+    # @mapping
+    # @only_create
+    # def ndc_id(self, record):
+    #     return {'ndc_ids': [(0, 0, {'name': record['NDC']})]}
+
     @mapping
     @only_create
-    def ndc_id(self, record):
-        return {'ndc_ids': [(0, 0, {'name': record['NDC']})]}
+    def route_form_and_ndc_ids(self, record):
+        binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
+        ndc_id = binder.to_odoo(record['NDC'])
+        ndc_id = self.env['fdb.ndc.cs.ext'].browse(ndc_id)
+        vals = {
+            'drug_route_id': ndc_id.route_id.id,
+            'drug_form_id': ndc_id.form_id.id,
+        }
+        return vals
 
     @mapping
     def is_active(self, record):
@@ -285,14 +297,6 @@ class MedicamentImportMapper(CarepointImportMapper):
     @mapping
     def price(self, record):
         return {'list_price': record.get('COST', 0.0)}
-
-    @mapping
-    def route_id(self, record):
-        return {'route_id': 1}
-
-    @mapping
-    def drug_form_id(self, record):
-        return {'drug_form_id': 1}
 
     @mapping
     def store_ids(self, record):
@@ -311,10 +315,10 @@ class MedicamentImporter(CarepointImporter):
     _base_mapper = MedicamentImportMapper
 
     def _import_dependencies(self):
-        """ Import the dependencies for the record """
+        """ Import depends for record """
         record = self.carepoint_record
-        # if record['type_id'] == 'bundle':
-        #     self._import_bundle_dependencies()
+        self._import_dependency(record['NDC'],
+                                'carepoint.fdb.ndc.cs.ext')
 
     def _must_skip(self):
         """ Hook called right after we read the data from the backend.
@@ -343,6 +347,8 @@ class MedicamentImporter(CarepointImporter):
 
     def _after_import(self, binding):
         """ Hook called at the end of the import """
+        self._import_dependency(self.carepoint_record['ndc'].strip(),
+                                'carepoint.fdb.ndc')
         pass
         # translation_importer = self.unit_for(TranslationImporter)
         # translation_importer.run(self.carepoint_id, binding.id,

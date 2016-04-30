@@ -37,6 +37,11 @@ To use this module, you need to:
 * Go to ...
 
 
+Known Issues / Roadmap
+======================
+
+* More intelligent PK handling, and allowance of searches without
+
 Credits
 =======
 

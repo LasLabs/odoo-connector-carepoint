@@ -9,6 +9,7 @@ class FdbNdcCsExt(models.Model):
     _name = 'fdb.ndc.cs.ext'
     _description = 'Fdb Ndc Cs Ext'
 
+    ndc = fields.Char()
     short_name = fields.Char()
     lot_no = fields.Char()
     orig_mfg = fields.Char()
@@ -22,9 +23,15 @@ class FdbNdcCsExt(models.Model):
     sup_upd_clin_yn = fields.Boolean()
     sup_upd_fin_yn = fields.Boolean()
     sup_upd_med_yn = fields.Boolean()
-    dn_form = fields.Char()
+    form_id = fields.Many2one(
+        string='Form',
+        comodel_name='fdb.form',
+    )
     dn_str = fields.Char()
-    dn_route = fields.Char()
+    route_id = fields.Many2one(
+        string='Route',
+        comodel_name='fdb.route',
+    )
     rx_only_yn = fields.Boolean()
     manual_yn = fields.Boolean()
     brand_ndc = fields.Char()

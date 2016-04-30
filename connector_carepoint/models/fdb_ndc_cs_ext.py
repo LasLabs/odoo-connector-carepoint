@@ -32,7 +32,7 @@ class CarepointFdbNdcCsExt(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'fdb.ndc.cs.ext': 'odoo_id'}
     _description = 'Carepoint FdbNdcCsExt'
-    _cp_lib = 'fdb_gcn'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'fdb_ndc_cs_ext'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
         string='FdbNdcCsExt',
@@ -77,13 +77,75 @@ class FdbNdcCsExtBatchImporter(DelayedBatchImporter):
 class FdbNdcCsExtImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.ndc.cs.ext'
     direct = [
-        (trim('gcn'), 'gcn'),
-        ('update_yn', 'update_yn'),
+        (trim('ndc'), 'ndc'),
+        (trim('short_name'), 'short_name'),
+        (trim('lot_no'), 'lot_no'),
+        (trim('orig_mfg'), 'orig_mfg'),
+        ('pref_gen_yn', 'pref_gen_yn'),
+        ('active_yn', 'active_yn'),
+        ('drug_expire_days', 'drug_expire_days'),
+        ('formulary_yn', 'formulary_yn'),
+        ('compound_yn', 'compound_yn'),
+        ('sup_upd_gen_yn', 'sup_upd_gen_yn'),
+        ('sup_upd_phys_yn', 'sup_upd_phys_yn'),
+        ('sup_upd_clin_yn', 'sup_upd_clin_yn'),
+        ('sup_upd_fin_yn', 'sup_upd_fin_yn'),
+        ('sup_upd_med_yn', 'sup_upd_med_yn'),
+        (trim('dn_str'), 'dn_str'),
+        ('rx_only_yn', 'rx_only_yn'),
+        ('manual_yn', 'manual_yn'),
+        (trim('brand_ndc'), 'brand_ndc'),
+        ('add_user_id', 'add_user_id'),
+        ('add_date', 'add_date'),
+        ('chg_user_id', 'chg_user_id'),
+        ('app_flags', 'app_flags'),
+        ('timestmp', 'timestmp'),
+        ('comp_yn', 'comp_yn'),
+        (trim('dea'), 'dea'),
+        ('dea_chg_user', 'dea_chg_user'),
+        ('dea_chg_date', 'dea_chg_date'),
+        (trim('ln'), 'ln'),
+        ('ln_chg_user', 'ln_chg_user'),
+        ('ln_chg_date', 'ln_chg_date'),
+        ('fdb_chg_date', 'fdb_chg_date'),
+        ('ud_svc_code', 'ud_svc_code'),
+        ('gpi', 'gpi'),
+        ('gpi_chg_user', 'gpi_chg_user'),
+        ('gpi_chg_date', 'gpi_chg_date'),
+        ('bill_increment', 'bill_increment'),
+        ('formula_id', 'formula_id'),
+        (trim('alt_iptside1'), 'alt_iptside1'),
+        (trim('alt_iptside2'), 'alt_iptside2'),
+        (trim('dose_multiplier'), 'dose_multiplier'),
+        (trim('default_daw_override'), 'default_daw_override'),
+        ('manual_price_yn', 'manual_price_yn'),
+        ('compound_type_cn', 'compound_type_cn'),
+        ('refrig_cn', 'refrig_cn'),
     ]
 
     @mapping
+    # @only_create
+    def form_id(self, record):
+        form_id = self.env['medical.drug.form'].search([
+            ('code', '=', record['dn_form'].strip()),
+        ],
+            limit=1,
+        )
+        return {'form_id': form_id.id}
+
+    @mapping
+    # @only_create
+    def route_id(self, record):
+        route_id = self.env['medical.drug.route'].search([
+            ('name', '=', record['dn_route'].title()),
+        ],
+            limit=1,
+        )
+        return {'route_id': route_id.id}
+
+    @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['gcn_seqno']}
+        return {'carepoint_id': record['ndc'].strip()}
 
 
 @carepoint
@@ -91,6 +153,15 @@ class FdbNdcCsExtImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.ndc.cs.ext']
 
     _base_mapper = FdbNdcCsExtImportMapper
+
+    def _import_dependencies(self):
+        """ Import depends for record """
+        record = self.carepoint_record
+        # @TODO: Don't assume route & form; data vs PK issue
+        # self._import_dependency(record['dn_form'].strip(),
+        #                         'carepoint.fdb.form')
+        # self._import_dependency(record['dn_route'].strip(),
+        #                         'carepoint.fdb.route')
 
     def _create(self, data):
         odoo_binding = super(FdbNdcCsExtImporter, self)._create(data)

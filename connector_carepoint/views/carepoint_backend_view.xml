@@ -73,6 +73,15 @@
                                 in the menu 'Connectors > Checkpoint'.
                             </p>
                             <group>
+                            <group>
+                                <div>
+                                    <label string="Import core FDB Data" class="oe_inline" />
+                                </div>
+                                <button name="import_fdb"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background" />
+                            </group>
                                 <div>
                                     <label string="Import patients since" class="oe_inline"/>
                                     <field name="import_patients_from_date"
@@ -143,15 +152,6 @@
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>
-                            </group>
-                            <group>
-                                <div>
-                                    <label string="Import all FDB Data" class="oe_inline" />
-                                </div>
-                                <button name="import_fdb"
-                                        type="object"
-                                        class="oe_highlight"
-                                        string="Import in background" />
                             </group>
                             <!--<group>
                                 <label string="Import all customer groups" class="oe_inline"/>
