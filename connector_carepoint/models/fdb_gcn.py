@@ -98,6 +98,12 @@ class FdbGcnImporter(CarepointImporter):
         checkpoint.run(odoo_binding.id)
         return odoo_binding
 
+    def _import_dependencies(self):
+        """ Import depends for record """
+        record = self.carepoint_record
+        self._import_dependency(record['gcn_seqno'],
+                                'carepoint.fdb.gcn.seq')
+
 
 @carepoint
 class FdbGcnAddCheckpoint(ConnectorUnit):

@@ -18,6 +18,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from ..connector import add_checkpoint
+from .fdb_unit import ureg
 
 _logger = logging.getLogger(__name__)
 
@@ -72,48 +73,49 @@ class FdbNdcImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.ndc'
     direct = [
         (trim('ndc'), 'name'),
-        ('lblrid', 'lblrid'),
+        (trim('lblrid'), 'lblrid'),
         ('gcn_seqno', 'gcn_seqno'),
         ('ps', 'ps'),
         ('df', 'df'),
-        ('ad', 'ad'),
+        (trim('ad'), 'ad'),
         (trim('ln'), 'ln'),
-        ('bn', 'bn'),
+        (trim('bn'), 'bn'),
         ('pndc', 'pndc'),
         ('repndc', 'repndc'),
         ('ndcfi', 'ndcfi'),
         ('daddnc', 'daddnc'),
         ('dupdc', 'dupdc'),
-        ('desi', 'desi'),
+        (trim('desi'), 'desi'),
         ('desdtec', 'desdtec'),
-        ('desi2', 'desi2'),
+        (trim('desi2'), 'desi2'),
         ('des2dtec', 'des2dtec'),
         ('dea', 'dea'),
-        ('cl', 'cl'),
+        (trim('cl'), 'cl'),
         ('gpi', 'gpi'),
         ('hosp', 'hosp'),
         ('innov', 'innov'),
         ('ipi', 'ipi'),
         ('mini', 'mini'),
         ('maint', 'maint'),
-        ('obc', 'obc'),
-        ('obsdtec', 'obsdtec'),
+        (trim('obc'), 'obc'),
+        (trim('obsdtec'), 'obsdtec'),
         ('ppi', 'ppi'),
         ('stpk', 'stpk'),
         ('repack', 'repack'),
         ('top200', 'top200'),
         ('ud', 'ud'),
         ('csp', 'csp'),
-        ('color', 'color'),
-        ('flavor', 'flavor'),
-        ('shape', 'shape'),
+        (trim('color'), 'color'),
+        (trim('flavor'), 'flavor'),
+        (trim('shape'), 'shape'),
         ('ndl_gdge', 'ndl_gdge'),
         ('ndl_lngth', 'ndl_lngth'),
         ('syr_cpcty', 'syr_cpcty'),
         ('shlf_pck', 'shlf_pck'),
         ('shipper', 'shipper'),
-        ('skey', 'skey'),
-        ('hcfa_fda', 'hcfa_fda'),
+        (trim('skey'), 'skey'),
+        (trim('hcfa_fda'), 'hcfa_fda'),
+        (trim('hcfa_unit'), 'hcfa_unit'),
         ('hcfa_ps', 'hcfa_ps'),
         ('hcfa_appc', 'hcfa_appc'),
         ('hcfa_mrkc', 'hcfa_mrkc'),
@@ -122,68 +124,99 @@ class FdbNdcImportMapper(CarepointImportMapper):
         ('hcfa_desc1', 'hcfa_desc1'),
         ('hcfa_desi1', 'hcfa_desi1'),
         ('uu', 'uu'),
-        ('pd', 'pd'),
-        ('ln25', 'ln25'),
+        (trim('pd'), 'pd'),
+        (trim('ln25'), 'ln25'),
         ('ln25i', 'ln25i'),
         ('gpidc', 'gpidc'),
         ('bbdc', 'bbdc'),
         ('home', 'home'),
         ('inpcki', 'inpcki'),
         ('outpcki', 'outpcki'),
-        ('obc_exp', 'obc_exp'),
+        (trim('obc_exp'), 'obc_exp'),
         ('ps_equiv', 'ps_equiv'),
         ('plblr', 'plblr'),
-        ('hcpc', 'hcpc'),
+        (trim('hcpc'), 'hcpc'),
         ('top50gen', 'top50gen'),
-        ('obc3', 'obc3'),
+        (trim('obc3'), 'obc3'),
         ('gmi', 'gmi'),
         ('gni', 'gni'),
         ('gsi', 'gsi'),
         ('gti', 'gti'),
         ('ndcgi1', 'ndcgi1'),
-        ('user_gcdf', 'user_gcdf'),
-        ('user_str', 'user_str'),
+        (trim('user_gcdf'), 'user_gcdf'),
+        (trim('user_str'), 'user_str'),
         ('real_product_yn', 'real_product_yn'),
         ('no_update_yn', 'no_update_yn'),
         ('no_prc_update_yn', 'no_prc_update_yn'),
         ('user_product_yn', 'user_product_yn'),
-        ('cpname_short', 'cpname_short'),
-        ('status_cn', 'status_cn'),
+        (trim('cpname_short'), 'cpname_short'),
+        (trim('status_cn'), 'status_cn'),
         ('update_yn', 'update_yn'),
         ('active_yn', 'active_yn'),
-        ('ln60', 'ln60'),
+        (trim('ln60'), 'ln60'),
     ]
 
     @mapping
     @only_create
     def medicament_id(self, record):
+
+
         medicament_obj = self.env['medical.medicament']
-        medicament_name = record['ln'].strip()
+        medicament_name = record['bn'].strip().title()
+        binder = self.binder_for('carepoint.fdb.gcn')
+        fdb_gcn_id = binder.to_odoo(record['gcn_seqno'])
+        fdb_gcn_id = self.env['fdb.gcn'].browse(fdb_gcn_id)
         binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
         cs_ext_id = binder.to_odoo(record['ndc'])
-        _logger.debug('ORIGIN FUCKING EXT %s', cs_ext_id)
         cs_ext_id = self.env['fdb.ndc.cs.ext'].browse(cs_ext_id)
-        _logger.debug('GOT FUCKING EXT %s', cs_ext_id)
-        _logger.debug('GOT FUCKING EXT ATTRS %s, %s, %s',
-                      cs_ext_id.route_id, cs_ext_id.form_id, cs_ext_id.gpi)
+
+        strength_str = cs_ext_id.dn_str
+        strength_obj = ureg(strength_str)
+        strength_str = strength_str.replace(
+            '%d' % strength_obj.m, ''
+        ).strip()
+        _logger.debug('Got str # %s. Searching for strength_str %s',
+                      strength_obj.m, strength_str)
+        strength_uom_id = self.env['product.uom'].search([
+            ('name', '=', strength_str),
+        ],
+            limit=1,
+        )
+
         medicament_id = medicament_obj.search([
-            ('name', 'ilike', medicament_name),
-            ('drug_route_id', '=', cs_ext_id.route_id.id),
-            ('drug_form_id', '=', cs_ext_id.form_id.id),
+            ('name', '=', medicament_name),
+            ('drug_route_id', '=', cs_ext_id.route_id.route_id.id),
+            ('drug_form_id', '=', cs_ext_id.form_id.form_id.id),
             ('gpi', '=', cs_ext_id.gpi),
+            ('strength', '=', strength_obj.m),
+            ('strength_uom_id', '=', strength_uom_id.id),
         ],
             limit=1,
         )
         if not len(medicament_id):
             code = record['dea']
-            if not code or code <= 0 or code > 5:
-                code = 1
+            if not code:
+                code = '0'
+            binder = self.binder_for('carepoint.fdb.ndc')
+            fdb_ndc_id = binder.to_odoo(record['ndc'])
+            fdb_ndc_id = self.env['fdb.ndc'].browse(fdb_ndc_id)
+            sale_uom_id = self.env['product.uom'].search([
+                ('name', '=', record['hcfa_unit'].strip()),
+            ],
+                limit=1
+            )
             medicament_id = medicament_obj.create({
                 'name': medicament_name,
-                'drug_route_id': cs_ext_id.route_id.id,
-                'drug_form_id': cs_ext_id.form_id.id,
+                'drug_route_id': cs_ext_id.route_id.route_id.id,
+                'drug_form_id': cs_ext_id.form_id.form_id.id,
                 'gpi': cs_ext_id.gpi,
-                'control_code': str(code),
+                'control_code': code,
+                'is_prescription': cs_ext_id.rx_only_yn,
+                'strength': strength_obj.m,
+                'strength_uom_id': strength_uom_id.id,
+                'uom_id': sale_uom_id.id,
+                'uom_po_id': sale_uom_id.id,
+                'gcn_id': fdb_gcn_id.gcn_id.id,
             })
         return {'medicament_id': medicament_id.id}
 
@@ -209,6 +242,8 @@ class FdbNdcImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['ndc'],
                                 'carepoint.fdb.ndc.cs.ext')
+        self._import_dependency(record['gcn_seqno'],
+                                'carepoint.fdb.gcn')
 
 
 @carepoint

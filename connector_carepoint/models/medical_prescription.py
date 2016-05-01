@@ -168,7 +168,7 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [
-        ('script_no', 'name'),
+        # ('script_no', 'name'),
         ('ndc', 'medicament_ndc'),
     ]
 
@@ -181,6 +181,7 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
         binder = self.binder_for('carepoint.medical.patient')
         patient_id = binder.to_odoo(record['pat_id'])
         return {'prescription_order_line_ids': [(0, 0, {
+            'name': record['script_no'],
             'date_start_treatment': record['start_date'],
             'date_stop_treatment': record['expire_date'],
             'qty': record['written_qty'],

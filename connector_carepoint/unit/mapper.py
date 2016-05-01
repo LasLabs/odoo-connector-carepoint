@@ -102,6 +102,22 @@ class PartnerImportMapper(CarepointImportMapper):
     def tz(self, record):
         return {'tz': self.backend_record.default_tz}
 
+    @mapping
+    def currency_id(self, record):
+        return {'currency_id': self.backend_record.company_id.currency_id.id}
+
+    @mapping
+    def accounting_defaults(self, record):
+        return {
+            'property_payment_term_id':
+                self.backend_record.default_customer_payment_term_id.id,
+            'property_supplier_payment_term_id':
+                self.backend_record.default_supplier_payment_term_id,
+            'property_account_receivable_id':
+                self.backend_record.default_account_receivable_id.id,
+            'property_account_payable_id':
+                self.backend_record.default_account_payable_id.id,
+        }
 
 
 class PersonImportMapper(PartnerImportMapper):

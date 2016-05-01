@@ -119,6 +119,10 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
             return {'odoo_id': company_id.id}
 
     @mapping
+    def parent_id(self, record):
+        return {'parent_id': self.backend_record.company_id.partner_id.id}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['store_id']}
 

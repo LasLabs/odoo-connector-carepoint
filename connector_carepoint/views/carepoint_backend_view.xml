@@ -26,12 +26,15 @@
                     <group name="carepoint" string="CarePoint Configuration">
                         <notebook>
                             <page string="DB" name="db">
-                                <group colspan="4" col="4">
-                                    <field name="version" colspan="4"/>
-                                    <field name="server" placeholder="e.g. carepoint.corp.company.com"
-                                           colspan="2"/>
-                                    <field name="username" colspan="2"/>
-                                    <field name="password" password="1" colspan="2"/>
+                                <group string="DB">
+                                    <group>
+                                        <field name="version" />
+                                        <field name="server" placeholder="e.g. carepoint.corp.company.com" />
+                                    </group>
+                                    <group>
+                                        <field name="username" />
+                                        <field name="password" password="1" />
+                                    </group>
                                 </group>
                             </page>
                             <page string="Defaults" name="defaults">
@@ -48,6 +51,12 @@
                                 <group string="Localization" name="preferences">
                                     <field name="default_lang_id"/>
                                     <field name="default_tz" />
+                                </group>
+                                <group string="Accounting" name="accounting">
+                                    <field name="default_account_payable_id" />
+                                    <field name="default_account_receivable_id" />
+                                    <field name="default_customer_payment_term_id" />
+                                    <field name="default_supplier_payment_term_id" />
                                 </group>
                             </page>
                         </notebook>
@@ -73,7 +82,6 @@
                                 in the menu 'Connectors > Checkpoint'.
                             </p>
                             <group>
-                            <group>
                                 <div>
                                     <label string="Import core FDB Data" class="oe_inline" />
                                 </div>
@@ -82,6 +90,21 @@
                                         class="oe_highlight"
                                         string="Import in background" />
                             </group>
+                            <group>
+                                <div>
+                                    <label string="Import prescriptions since" class="oe_inline"/>
+                                    <field name="import_prescriptions_from_date"
+                                           class="oe_inline"
+                                           nolabel="1"/>
+                                </div>
+                                <button name="import_medical_prescription"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background"/>
+                            </group>
+                            
+                            <!-- Hopefully not needed anymore
+                            <group>
                                 <div>
                                     <label string="Import patients since" class="oe_inline"/>
                                     <field name="import_patients_from_date"
@@ -119,18 +142,6 @@
                             </group>
                             <group>
                                 <div>
-                                    <label string="Import prescriptions since" class="oe_inline"/>
-                                    <field name="import_prescriptions_from_date"
-                                           class="oe_inline"
-                                           nolabel="1"/>
-                                </div>
-                                <button name="import_medical_prescription"
-                                        type="object"
-                                        class="oe_highlight"
-                                        string="Import in background"/>
-                            </group>
-                            <group>
-                                <div>
                                     <label string="Import sales since" class="oe_inline"/>
                                     <field name="import_sales_from_date"
                                            class="oe_inline"
@@ -153,6 +164,8 @@
                                         class="oe_highlight"
                                         string="Import in background"/>
                             </group>
+                            -->
+                            
                             <!--<group>
                                 <label string="Import all customer groups" class="oe_inline"/>
                                 <div>
@@ -223,7 +236,11 @@
 
                         <page name="store" string="Stores">
                             <group string="Stores">
-                                <field name="store_ids" nolabel="1"/>
+                                <field name="store_ids" nolabel="1">
+                                    <tree>
+                                        <field name="name" />
+                                    </tree>
+                                </field>
                             </group>
                         </page>
 

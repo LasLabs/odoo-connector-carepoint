@@ -11,10 +11,13 @@ yr = year
 
 #
 # Missing From Core
+# Most of these are due to lack of capitalization handling
 #
 
 cm2 = centimeter ** 2
 Gallon = gallon
+Ton = ton
+MG = mg
 
 #
 # Modifiers
@@ -84,6 +87,7 @@ tissue = unit
 device = unit
 gum = unit
 particle = unit
+wafer = unit
 
 #
 # @TODO: Need to add suffix support to library.
@@ -149,5 +153,6 @@ package = [package]
 phenytoin = [phenytoin]
 copy = [copy]
 infective = [infective]
+factor = [factor]
 
 Metric = [wtf]

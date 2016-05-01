@@ -74,12 +74,34 @@ class CarepointBackend(models.Model):
     default_tz = fields.Selection(
         _tz_get,
         'Default Time Zone',
+        required=True,
     )
     default_category_id = fields.Many2one(
         comodel_name='product.category',
         string='Default Product Category',
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
+        required=True,
+    )
+    default_account_payable_id = fields.Many2one(
+        string='Default Account Payable',
+        comodel_name='account.account',
+        required=True,
+    )
+    default_account_receivable_id = fields.Many2one(
+        string='Default Account Receivable',
+        comodel_name='account.account',
+        required=True,
+    )
+    default_customer_payment_term_id = fields.Many2one(
+        string='Default Customer Payment Term',
+        comodel_name='account.payment.term',
+        required=True,
+    )
+    default_supplier_payment_term_id = fields.Many2one(
+        string='Default Vendor Payment Term',
+        comodel_name='account.payment.term',
+        required=True,
     )
     import_medicaments_from_date = fields.Datetime()
     import_patients_from_date = fields.Datetime()

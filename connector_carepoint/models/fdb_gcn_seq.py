@@ -77,18 +77,19 @@ class FdbGcnSeqBatchImporter(DelayedBatchImporter):
 class FdbGcnSeqImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.gcn.seq'
     direct = [
-        ('hic3', 'hic3'),
+        ('gcn_seqno', 'gcn_seqno'),
+        (trim('hic3'), 'hic3'),
         ('hicl_seqno', 'hicl_seqno'),
-        ('gcdf', 'gcdf'),
+        (trim('gcdf'), 'gcdf'),
         ('gcrt', 'gcrt'),
-        ('str', 'str'),
+        (trim('str'), 'str'),
         ('gtc', 'gtc'),
         ('tc', 'tc'),
         ('dcc', 'dcc'),
         ('gcnseq_gi', 'gcnseq_gi'),
         ('gender', 'gender'),
         ('hic3_seqn', 'hic3_seqn'),
-        ('str60', 'str60'),
+        (trim('str60'), 'str60'),
         ('update_yn', 'update_yn'),
     ]
 

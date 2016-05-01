@@ -128,19 +128,23 @@ class FdbUnitImportMapper(CarepointImportMapper):
             'category_id': categ_id.id,
         }
 
-        if unit_base == unit_root or unit_converted.m == unit_base.m:
+        if unit_base == unit_root:
             vals['uom_type'] = 'reference'
         elif unit_converted.m < 0:
             factor = float(unit_base.m) / float(unit_converted.m)
+            if unit_base.m != 1:
+                factor *= unit_base.m
             vals.update({
                 'uom_type': 'smaller',
-                'factor': factor, # + float(unit_base.m),
+                'factor': factor,
             })
         else:
             factor = float(unit_converted.m) / float(unit_base.m)
+            if unit_base.m != 1:
+                factor *= unit_base.m
             vals.update({
                 'uom_type': 'bigger',
-                'factor_inv': factor, # + float(unit_base.m),
+                'factor': factor,
             })
         return vals
 

@@ -124,9 +124,9 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
     ]
 
     @mapping
-    # @only_create
+    @only_create
     def form_id(self, record):
-        form_id = self.env['medical.drug.form'].search([
+        form_id = self.env['fdb.form'].search([
             ('code', '=', record['dn_form'].strip()),
         ],
             limit=1,
@@ -134,10 +134,10 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
         return {'form_id': form_id.id}
 
     @mapping
-    # @only_create
+    @only_create
     def route_id(self, record):
-        route_id = self.env['medical.drug.route'].search([
-            ('name', '=', record['dn_route'].title()),
+        route_id = self.env['fdb.route'].search([
+            ('name', '=', record['dn_route'].strip().title()),
         ],
             limit=1,
         )

@@ -159,8 +159,8 @@ class MedicalPatientExportMapper(PersonExportMapper):
     def pat_id(self, record):
         return {'pat_id': record.carepoint_id}
 
-    @changed_by('gender')
     @mapping
+    @changed_by('gender')
     def gender_cd(self):
         return {'gender_cd': record.get('gender').upper()}
 

@@ -8,11 +8,19 @@ from openerp import models, fields
 class FdbGcn(models.Model):
     _name = 'fdb.gcn'
     _description = 'Fdb Gcn'
-    _inherits = {'medical.medicament.gcn': 'gcn_id'}
+    _inherits = {'medical.medicament.gcn': 'gcn_id',
+                 'fdb.gcn.seq': 'gcn_seq_id',
+                 }
 
     gcn_id = fields.Many2one(
         string='GCN',
         comodel_name='medical.medicament.gcn',
+        ondelete='cascade',
+        required=True,
+    )
+    gcn_seq_id = fields.Many2one(
+        string='GCN Seq',
+        comodel_name='fdb.gcn.seq',
         ondelete='cascade',
         required=True,
     )
