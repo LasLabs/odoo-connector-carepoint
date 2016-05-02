@@ -102,10 +102,11 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         ('start_date', 'date_start_treatment'),
         ('expire_date', 'date_stop_treatment'),
         ('written_qty', 'qty'),
-        ('refills_left', 'refill_qty_remain'),
-        ('refills_orig', 'refill_qty_original'),
         ('freq_of_admin', 'frequency'),
         ('units_per_dose', 'quantity'),
+        # Note that the col naming seems to be reversed *shrug*
+        ('refills_left', 'refill_qty_original'),
+        ('refills_orig', 'refill_qty_remain'),
     ]
 
     @mapping
