@@ -26,7 +26,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.medical.medicament',
         'carepoint.medical.physician',
         'carepoint.medical.patient',
-        'carepoint.medical.prescription.order',
+        'carepoint.medical.prescription.order.line',
         'carepoint.carepoint.address',
         'carepoint.carepoint.address.patient',
         'carepoint.carepoint.address.physician',

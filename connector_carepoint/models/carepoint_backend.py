@@ -259,7 +259,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_medical_prescription(self):
-        self._import_from_date('carepoint.medical.prescription.order',
+        self._import_from_date('carepoint.medical.prescription.order.line',
                                'import_prescriptions_from_date')
         return True
 

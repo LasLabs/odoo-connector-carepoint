@@ -26,17 +26,17 @@ from ..related_action import unwrap_binding
 _logger = logging.getLogger(__name__)
 
 
-class CarepointMedicalPrescriptionOrder(models.Model):
+class CarepointMedicalPrescriptionOrderLine(models.Model):
     """ Binding Model for the Carepoint Prescription """
-    _name = 'carepoint.medical.prescription.order'
+    _name = 'carepoint.medical.prescription.order.line'
     _inherit = 'carepoint.binding'
-    _inherits = {'medical.prescription.order': 'odoo_id'}
+    _inherits = {'medical.prescription.order.line': 'odoo_id'}
     _description = 'Carepoint Prescription'
     _cp_lib = 'prescription'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        comodel_name='medical.prescription.order',
-        string='Company',
+        comodel_name='medical.prescription.order.line',
+        string='Prescription Line',
         required=True,
         ondelete='cascade'
     )
@@ -51,108 +51,37 @@ class CarepointMedicalPrescriptionOrder(models.Model):
     created_at = fields.Date('Created At (on Carepoint)')
     updated_at = fields.Date('Updated At (on Carepoint)')
 
-    # Pass-thru first Rx Line to Rx
-    # @TODO: Better solution
-    medicament_name = fields.Char(
-        help='Medicament name in CarePoint (includes strength, etc.)',
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-    medicament_ndc = fields.Char(
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-    date_start_treatment = fields.Datetime(
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-    date_stop_treatment = fields.Datetime(
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-    refill_qty_original = fields.Float(
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-    refill_qty_remain = fields.Float(
-        compute=lambda s: s._compute_rx_line_properties(),
-        inverse=lambda s: s._set_rx_line_properties(),
-    )
-
     _sql_constraints = [
         ('odoo_uniq', 'unique(backend_id, odoo_id)',
          'A Carepoint binding for this prescription already exists.'),
     ]
 
-    @api.multi
-    def _compute_rx_line_properties(self):
-        for rec_id in self:
-            if not len(rec_id.prescription_order_line_ids):
-                continue
-            rx_line_id = rec_id.prescription_order_line_ids[0]
-            rec_id.date_start_treatment = rx_line_id.date_start_treatment
-            rec_id.date_stop_treatment = rx_line_id.date_stop_treatment
-            rec_id.refill_qty_original = rx_line_id.refill_qty_original
-            rec_id.refill_qty_remain = rx_line_id.refill_qty_remain
-            rec_id.medicament_name = rx_line_id.medicament_id.display_name
 
-    @api.multi
-    def _set_rx_line_properties(self):
-        for rec_id in self:
-            ndc_id = self.env['medical.medicament.ndc'].search([
-                ('name', '=', rec_id.medicament_ndc),
-            ],
-                limit=1
-            )
-            if not len(ndc_id):
-                raise ValidationError(
-                    'Could not find NDC %s in database.' % (
-                        rec_id.medicament_ndc
-                    )
-                )
-            vals = {
-                'patient_id': rec_id.patient_id.id,
-                'date_start_treatment': rec_id.date_start_treatment,
-                'date_stop_treatment': rec_id.date_stop_treatment,
-                'refill_qty_original': rec_id.refill_qty_original,
-                'refill_qty_remain': rec_id.refill_qty_remain,
-                'medicament_id': ndc_id.medicament_id.id,
-            }
-            if not len(rec_id.prescription_order_line_ids):
-                write_vals = [(0, 0, vals)]
-            else:
-                rx_line_id = rec_id.prescription_order_line_ids[0]
-                write_vals = [(1, rx_line_id.id, vals)]
-            rec_id.write({
-                'prescription_order_line_ids': write_vals,
-            })
-
-
-class MedicalPrescriptionOrder(models.Model):
+class MedicalPrescriptionOrderLine(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'medical.prescription.order'
+    _inherit = 'medical.prescription.order.line'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.medical.prescription.order',
+        comodel_name='carepoint.medical.prescription.order.line',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class MedicalPrescriptionOrderAdapter(CarepointCRUDAdapter):
+class MedicalPrescriptionOrderLineAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Prescription """
-    _model_name = 'carepoint.medical.prescription.order'
+    _model_name = 'carepoint.medical.prescription.order.line'
 
 
 @carepoint
-class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
+class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Prescriptions.
     For every prescription in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.medical.prescription.order']
+    _model_name = ['carepoint.medical.prescription.order.line']
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -164,42 +93,39 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
-    _model_name = 'carepoint.medical.prescription.order'
+class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
+    _model_name = 'carepoint.medical.prescription.order.line'
 
     direct = [
         # ('script_no', 'name'),
-        ('ndc', 'medicament_ndc'),
+        ('script_no', 'name'),
+        ('start_date', 'date_start_treatment'),
+        ('expire_date', 'date_stop_treatment'),
+        ('written_qty', 'qty'),
+        ('refills_left', 'refill_qty_remain'),
+        ('refills_orig', 'refill_qty_original'),
+        ('freq_of_admin', 'frequency'),
+        ('units_per_dose', 'quantity'),
     ]
 
     @mapping
-    def rx_line(self, record):
-        """ Perform mappings for computed fields """
+    @only_create
+    def duration(self, record):
+        days_supply = record.get('days_supply', 0)
+        refills = record.get('refills_orig', 1)
+        duration = days_supply * refills
+        return {'duration': duration}
+
+    @mapping
+    @only_create
+    def medicament_and_meta(self, record):
         binder = self.binder_for('carepoint.fdb.ndc')
         ndc_id = binder.to_odoo(record['ndc'])
         ndc_id = self.env['fdb.ndc'].browse(ndc_id)
-        binder = self.binder_for('carepoint.medical.patient')
-        patient_id = binder.to_odoo(record['pat_id'])
-        return {'prescription_order_line_ids': [(0, 0, {
-            'name': record['script_no'],
-            'date_start_treatment': record['start_date'],
-            'date_stop_treatment': record['expire_date'],
-            'qty': record['written_qty'],
-            'refill_qty_remain': record['refills_left'],
-            'refill_qty_original': record['refills_orig'],
-            'medicament_id': ndc_id.medicament_id.id,
-            'patient_id': patient_id,
-        })]}
-
-    @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['rx_id']}
-
-    @mapping
-    def physician_id(self, record):
-        binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'])
-        return {'physician_id': physician_id}
+        return {'medicament_id': ndc_id.medicament_id.id,
+                'dose_uom_id': ndc_id.medicament_id.uom_id.id,
+                'dispense_uom_id': ndc_id.medicament_id.uom_id.id,
+                }
 
     @mapping
     def patient_id(self, record):
@@ -208,17 +134,72 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
         return {'patient_id': patient_id}
 
     @mapping
-    def pharmacy_id(self, record):
+    @only_create
+    def ndc_id(self, record):
+        binder = self.binder_for('carepoint.fdb.ndc')
+        ndc_id = binder.to_odoo(record['ndc'].strip())
+        ndc_id = self.env['carepoint.fdb.ndc'].browse(ndc_id)
+        return {'ndc_id': ndc_id.ndc_id.id}
+
+    @mapping
+    @only_create
+    def gcn_id(self, record):
+        binder = self.binder_for('carepoint.fdb.gcn')
+        gcn_id = binder.to_odoo(record['gcn_seqno'])
+        gcn_id = self.env['carepoint.fdb.gcn'].browse(gcn_id)
+        return {'gcn_id': gcn_id.gcn_id.id}
+
+    @mapping
+    @only_create
+    def medication_dosage_id(self, record):
+        # @TODO: Find sig codes table & integrate instead of search
+        dose_obj = self.env['medical.medication.dosage']
+        dose_id = dose_obj.search([
+            ('code', '=', record['sig_code'].strip()),
+        ],
+            limit=1,
+        )
+        if not len(dose_id):
+            dose_id = dose_obj.create({
+                'name': record['sig_text'].strip(),
+                'code': record['sig_code'].strip(),
+            })
+        return {'medication_dosage_id': dose_id.id}
+
+    @mapping
+    @only_create
+    def duration_uom_id(self, record):
+        uom_id = self.env['product.uom'].search(
+            [('name', '=', 'DAYS')], limit=1,
+        )
+        return {'duration_uom_id': uom_id.id}
+
+    @mapping
+    @only_create
+    def prescription_order_id(self, record):
+        binder = self.binder_for('carepoint.medical.physician')
+        physician_id = binder.to_odoo(record['md_id'])
+        binder = self.binder_for('carepoint.medical.patient')
+        patient_id = binder.to_odoo(record['pat_id'])
         binder = self.binder_for('carepoint.medical.pharmacy')
         pharmacy_id = binder.to_odoo(record['store_id'])
-        return {'pharmacy_id': pharmacy_id}
+        rx_id = self.env['medical.prescription.order'].create({
+            'patient_id': patient_id,
+            'physician_id': physician_id,
+            'partner_id': pharmacy_id,
+        })
+        return {'prescription_order_id': rx_id.id}
+
+    @mapping
+    def carepoint_id(self, record):
+        return {'carepoint_id': record['rx_id']}
 
 
 @carepoint
-class MedicalPrescriptionOrderImporter(CarepointImporter):
-    _model_name = ['carepoint.medical.prescription.order']
+class MedicalPrescriptionOrderLineImporter(CarepointImporter):
+    _model_name = ['carepoint.medical.prescription.order.line']
 
-    _base_mapper = MedicalPrescriptionOrderImportMapper
+    _base_mapper = MedicalPrescriptionOrderLineImportMapper
 
     def _import_dependencies(self):
         """ Import depends for record """
@@ -231,8 +212,8 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
                                 'carepoint.fdb.ndc')
 
     def _create(self, data):
-        binding = super(MedicalPrescriptionOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(MedicalPrescriptionOrderAddCheckpoint)
+        binding = super(MedicalPrescriptionOrderLineImporter, self)._create(data)
+        checkpoint = self.unit_for(MedicalPrescriptionOrderLineAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
@@ -244,9 +225,9 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.prescription.order record """
-    _model_name = ['carepoint.medical.prescription.order', ]
+class MedicalPrescriptionOrderLineAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.medical.prescription.order.line record """
+    _model_name = ['carepoint.medical.prescription.order.line', ]
 
     def run(self, binding_id):
         add_checkpoint(self.session,
@@ -261,5 +242,5 @@ def prescription_import_batch(session, model_name, backend_id, filters=None):
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(MedicalPrescriptionOrderBatchImporter)
+    importer = env.get_connector_unit(MedicalPrescriptionOrderLineBatchImporter)
     importer.run(filters=filters)
