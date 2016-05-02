@@ -160,7 +160,6 @@ class FdbNdcImportMapper(CarepointImportMapper):
     @only_create
     def medicament_id(self, record):
 
-
         medicament_obj = self.env['medical.medicament']
         medicament_name = record['bn'].strip().title()
         binder = self.binder_for('carepoint.fdb.gcn')

@@ -113,7 +113,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @only_create
     def duration(self, record):
         days_supply = record.get('days_supply', 0)
-        refills = record.get('refills_orig', 1)
+        refills = record.get('refills_left', 1)
         duration = days_supply * refills
         return {'duration': duration}
 

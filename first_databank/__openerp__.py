@@ -11,7 +11,6 @@
     'license': 'AGPL-3',
     'website': 'https://laslabs.com',
     'depends': [
-        'sale_stock',
         'medical_prescription_sale_stock',
         'medical_insurance_us',
         'medical_medication_us',
