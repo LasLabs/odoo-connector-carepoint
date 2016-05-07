@@ -62,7 +62,6 @@ class CarepointAddress(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherits = {'res.partner': 'partner_id'}
     _name = 'carepoint.address'
     _description = 'Carepoint Address'
 
@@ -72,6 +71,19 @@ class CarepointAddress(models.Model):
         required=True,
         ondelete='cascade',
     )
+    street = fields.Char()
+    street2 = fields.Char()
+    zip = fields.Char()
+    city = fields.Char()
+    state_id = fields.Many2one(
+        string='State',
+        comodel_name='res.country.state',
+    )
+    country_id = fields.Many2one(
+        string='Country',
+        comodel_name='res.country',
+    )
+    
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.carepoint.address',
         inverse_name='odoo_id',
@@ -110,14 +122,6 @@ class CarepointAddressImportMapper(CarepointImportMapper):
         (trim_and_titleize('addr2'), 'street2'),
         (trim_and_titleize('city'), 'city'),
     ]
-
-    @mapping
-    def type(self, record):
-        return {'type': 'delivery'}
-
-    @mapping
-    def customer(self, record):
-        return {'customer': False}
 
     @mapping
     def zip(self, record):

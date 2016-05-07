@@ -32,7 +32,7 @@ _logger = logging.getLogger(__name__)
 
 ureg = LazyRegistry()
 ureg.load_definitions(path.abspath(path.join(
-    path.dirname(__file__), '..', 'static', 'medical_units.txt',
+    path.dirname(__file__), '..', 'data', 'medical_units.txt',
 )))
 
 

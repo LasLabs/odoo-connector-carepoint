@@ -10,6 +10,7 @@ from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
                                                   only_create,
+                                                  ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -103,17 +104,19 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         ('expire_date', 'date_stop_treatment'),
         ('written_qty', 'qty'),
         ('freq_of_admin', 'frequency'),
-        ('units_per_dose', 'quantity'),
-        # Note that the col naming seems to be reversed *shrug*
-        ('refills_left', 'refill_qty_original'),
-        ('refills_orig', 'refill_qty_remain'),
+        ('units_entered', 'quantity'),
+        ('refills_left', 'refill_qty_remain'),
     ]
+
+    @mapping
+    def refill_qty_original(self, record):
+        return {'refill_qty_original': record['refills_orig'] + 1}
 
     @mapping
     @only_create
     def duration(self, record):
         days_supply = record.get('days_supply', 0)
-        refills = record.get('refills_left', 1)
+        refills = record.get('refills_orig', 0) + 1
         duration = days_supply * refills
         return {'duration': duration}
 
@@ -176,20 +179,16 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         return {'duration_uom_id': uom_id.id}
 
     @mapping
-    @only_create
-    def prescription_order_id(self, record):
+    def physician_id(self, record):
         binder = self.binder_for('carepoint.medical.physician')
         physician_id = binder.to_odoo(record['md_id'])
-        binder = self.binder_for('carepoint.medical.patient')
-        patient_id = binder.to_odoo(record['pat_id'])
-        binder = self.binder_for('carepoint.medical.pharmacy')
-        pharmacy_id = binder.to_odoo(record['store_id'])
-        rx_id = self.env['medical.prescription.order'].create({
-            'patient_id': patient_id,
-            'physician_id': physician_id,
-            'partner_id': pharmacy_id,
-        })
-        return {'prescription_order_id': rx_id.id}
+        return {'physician_id': physician_id}
+
+    @mapping
+    def prescription_order_id(self, record):
+        binder = self.binder_for('carepoint.medical.prescription.order')
+        prescription_order_id = binder.to_odoo(record['rx_id'])
+        return {'prescription_order_id': prescription_order_id}
 
     @mapping
     def carepoint_id(self, record):
@@ -205,10 +204,8 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter):
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
-        self._import_dependency(record['pat_id'],
-                                'carepoint.medical.patient')
-        self._import_dependency(record['md_id'],
-                                'carepoint.medical.physician')
+        self._import_dependency(record['rx_id'],
+                                'carepoint.medical.prescription.order')
         self._import_dependency(record['ndc'],
                                 'carepoint.fdb.ndc')
 
@@ -223,6 +220,37 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter):
     #     """ Import the addresses """
     #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
     #     book.import_addresses(self.carepoint_id, partner_binding.id)
+
+
+@carepoint
+class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
+    _model_name = 'carepoint.medical.prescription.order.line'
+
+    direct = [
+        ('date_start_treatment', 'start_date'),
+        ('date_stop_treatment', 'expire_date'),
+        ('qty', 'written_qty'),
+        ('frequency', 'freq_of_admin'),
+        ('quantity', 'units_per_dose'),
+        # Note that the col naming seems to be reversed *shrug*
+        # ('refill_qty_original', 'refills_left'),
+        # ('refill_qty_remain', 'refills_orig'),
+    ]
+
+    @mapping
+    def pat_id(self, record):
+        return {'pat_id': record.carepoint_id}
+
+    @mapping
+    @changed_by('gender')
+    def gender_cd(self):
+        return {'gender_cd': record.get('gender').upper()}
+
+
+@carepoint
+class MedicalPrescriptionOrderLineExporter(CarepointExporter):
+    _model_name = ['carepoint.medical.prescription.order.line']
+    _base_mapper = MedicalPrescriptionOrderLineExportMapper
 
 
 @carepoint

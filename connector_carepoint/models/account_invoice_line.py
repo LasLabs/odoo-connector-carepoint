@@ -22,23 +22,21 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
-from .procurement_order import ProcurementOrderUnit
-from .sale_order_line import SaleOrderLineUnit
 
 
 _logger = logging.getLogger(__name__)
 
 
-class CarepointSaleOrder(models.Model):
-    """ Binding Model for the Carepoint Patient """
-    _name = 'carepoint.sale.order'
+class CarepointAccountInvoiceLine(models.Model):
+    """ Binding Model for the Carepoint Invoice Line """
+    _name = 'carepoint.account.invoice.line'
     _inherit = 'carepoint.binding'
-    _inherits = {'sale.order': 'odoo_id'}
-    _description = 'Carepoint Patient'
-    _cp_lib = 'order'  # Name of model in Carepoint lib (snake_case)
+    _inherits = {'account.invoice.line': 'odoo_id'}
+    _description = 'Carepoint Account Invoice Line'
+    _cp_lib = 'dispense_price'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        comodel_name='sale.order',
+        comodel_name='account.invoice.line',
         string='Company',
         required=True,
         ondelete='cascade'
@@ -60,31 +58,31 @@ class CarepointSaleOrder(models.Model):
     ]
 
 
-class SaleOrder(models.Model):
+class AccountInvoiceLine(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'sale.order'
+    _inherit = 'account.invoice.line'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.sale.order',
+        comodel_name='carepoint.account.invoice.line',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class SaleOrderAdapter(CarepointCRUDAdapter):
+class AccountInvoiceLineAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Patient """
-    _model_name = 'carepoint.sale.order'
+    _model_name = 'carepoint.account.invoice.line'
 
 
 @carepoint
-class SaleOrderBatchImporter(DelayedBatchImporter):
+class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Patients.
     For every order in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.sale.order']
+    _model_name = ['carepoint.account.invoice.line']
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -96,83 +94,79 @@ class SaleOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderImportMapper(CarepointImportMapper):
-    _model_name = 'carepoint.sale.order'
+class AccountInvoiceLineImportMapper(CarepointImportMapper):
+    _model_name = 'carepoint.account.invoice.line'
 
     direct = [
-        ('submit_date', 'date_order'),
+        # ('submit_date', 'date_order'),
     ]
 
-    @mapping
-    def partner_data(self, record):
-        binder = self.binder_for('carepoint.carepoint.account')
-        if record['acct_id']:
-            acct_id = binder.to_odoo(record['acct_id'])
-            acct_id = self.env['carepoint.account'].browse(acct_id)
-            patient_id = acct_id.patient_id
-        else:
-            patient_id = self.env.ref('connector_carepoint.patient_null')
-        partner_id = patient_id.commercial_partner_id
-        return {'partner_id': partner_id.id,
-                'payment_term_id': partner_id.property_payment_term_id.id,
-                }
+    # @mapping
+    # @only_create
+    # def state(self, record):
+    #     state_id = self.env.ref(
+    #         'connector_carepoint.state_%d' % record['order_state_cn']
+    #     )
+    #     return {'state': state_id.order_state}
 
     @mapping
-    def pharmacy_id(self, record):
-        binder = self.binder_for('carepoint.medical.pharmacy')
-        store_id = binder.to_odoo(record['store_id'])
-        return {'pharmacy_id': store_id}
-    
+    @only_create
+    def invoice_id(self, record):
+        binder = self.binder_for('carepoint.procurement.order')
+        proc_id = binder.to_odoo(record['rxdisp_id'])
+        proc_id = self.env['procurement.order'].browse(proc_id)
+        invoice_id = proc_id.sale_line_id.order_id.invoice_ids
+        if len(invoice_id):
+            invoice_id = invoice_id[0]
+        else:
+            invoice_id = self.env['account.invoice'].create(
+                proc_id.sale_line_id.order_id._prepare_invoice()
+            )
+        return {'invoice_id': invoice_id.id}
+
     @mapping
-    # @only_create
-    def state(self, record):
-        state_id = self.env.ref(
-            'connector_carepoint.state_%d' % record['order_state_cn']
-        )
-        return {'state': state_id.order_state}
+    def invoice_lines(self, record):
+        binder = self.binder_for('carepoint.procurement.order')
+        proc_id = binder.to_odoo(record['rxdisp_id'])
+        proc_id = self.env['procurement.order'].browse(proc_id)
+        line_id = proc_id.sale_line_id
+        qty = line_id.product_uom_qty
+        line_id.price_unit = record['t_patient_pay_paid'] / qty
+        return line_id._prepare_invoice_line(qty)
 
     @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['order_id']}
+        return {'carepoint_id': record['rxdisp_id']}
 
 
 @carepoint
-class SaleOrderImporter(CarepointImporter):
-    _model_name = ['carepoint.sale.order']
+class AccountInvoiceLineImporter(CarepointImporter):
+    _model_name = ['carepoint.account.invoice.line']
 
-    _base_mapper = SaleOrderImportMapper
+    _base_mapper = AccountInvoiceLineImportMapper
 
     def _create(self, data):
-        binding = super(SaleOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(SaleOrderAddCheckpoint)
+        binding = super(AccountInvoiceLineImporter, self)._create(data)
+        checkpoint = self.unit_for(AccountInvoiceLineAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
-        self._import_dependency(record['acct_id'],
-                                'carepoint.carepoint.account')
+        self._import_dependency(record['rxdisp_id'],
+                                'carepoint.procurement.order')
 
-    def _after_import(self, binding):
-        """ Import the sale lines & procurements """
-        line_unit = self.unit_for(
-            SaleOrderLineUnit, model='carepoint.sale.order.line',
-        )
-        line_unit._import_sale_order_lines(
-            self.carepoint_id, binding.id,
-        )
-        proc_unit = self.unit_for(
-            ProcurementOrderUnit, model='carepoint.procurement.order',
-        )
-        proc_unit._import_procurements_for_sale(
-            self.carepoint_id, binding.id,
-        )
+    #
+    # def _after_import(self, partner_binding):
+    #     """ Import the addresses """
+    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
+    #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
 @carepoint
-class SaleOrderExportMapper(ExportMapper):
-    _model_name = 'carepoint.sale.order'
+class AccountInvoiceLineExportMapper(ExportMapper):
+    _model_name = 'carepoint.account.invoice.line'
 
     direct = [
         ('ref', 'ssn'),
@@ -192,20 +186,20 @@ class SaleOrderExportMapper(ExportMapper):
 
 
 @carepoint
-class SaleOrderExporter(CarepointExporter):
-    _model_name = ['carepoint.sale.order']
-    _base_mapper = SaleOrderExportMapper
+class AccountInvoiceLineExporter(CarepointExporter):
+    _model_name = ['carepoint.account.invoice.line']
+    _base_mapper = AccountInvoiceLineExportMapper
 
 
 @carepoint
-class SaleOrderDeleteSynchronizer(CarepointDeleter):
-    _model_name = ['carepoint.sale.order']
+class AccountInvoiceLineDeleteSynchronizer(CarepointDeleter):
+    _model_name = ['carepoint.account.invoice.line']
 
 
 @carepoint
-class SaleOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.sale.order record """
-    _model_name = ['carepoint.sale.order', ]
+class AccountInvoiceLineAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.account.invoice.line record """
+    _model_name = ['carepoint.account.invoice.line', ]
 
     def run(self, binding_id):
         add_checkpoint(self.session,

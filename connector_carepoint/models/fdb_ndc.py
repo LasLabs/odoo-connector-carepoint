@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+import re
 from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
@@ -19,6 +20,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..connector import add_checkpoint
 from .fdb_unit import ureg
+from pint.errors import DimensionalityError, UndefinedUnitError
 
 _logger = logging.getLogger(__name__)
 
@@ -166,11 +168,28 @@ class FdbNdcImportMapper(CarepointImportMapper):
         fdb_gcn_id = binder.to_odoo(record['gcn_seqno'])
         fdb_gcn_id = self.env['fdb.gcn'].browse(fdb_gcn_id)
         binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
-        cs_ext_id = binder.to_odoo(record['ndc'])
+        cs_ext_id = binder.to_odoo(record['ndc'].strip())
         cs_ext_id = self.env['fdb.ndc.cs.ext'].browse(cs_ext_id)
 
         strength_str = cs_ext_id.dn_str
-        strength_obj = ureg(strength_str)
+        try:
+            strength_obj = ureg(strength_str.lower())
+        except DimensionalityError:
+            strength_parts = strength_str.split('-', 1)
+            strength_re = re.compile(r'(?P<unit>\d+\.?\d?)\s?(?P<uom>\w+)')
+            left_match = strength_re.match(strength_parts[0])
+            right_match = strength_re.match(strength_parts[1])
+            unit_arr = [left_match.group('unit')]
+            if not left_match.group('uom'):
+                unit_arr.append(right_match.group('uom'))
+            else:
+                unit_arr.append(left_match.group('uom'))
+            unit_arr.extend(['/', right_match.group('unit')])
+            if not right_match.group('uom'):
+                unit_arr.append(left_match.group('uom'))
+            else:
+                unit_arr.append(right_match.group('uom'))
+            strength_obj = ureg(strength_str.lower())
         strength_str = strength_str.replace(
             '%d' % strength_obj.m, ''
         ).strip()

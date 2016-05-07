@@ -113,9 +113,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         model_obj = self.__get_cp_model()
         pk = self.carepoint.get_pks(model_obj)[0]
         rec = self.carepoint.search(model_obj, {pk: _id}, attributes)[0]
-        if attributes is None:
-            return rec.__dict__
-        return {k: getattr(rec, k, None) for k in attributes}
+        return rec
 
     def read_image(self, path):
         """ Returns an image resource from CarePoint

@@ -11,7 +11,11 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PersonImportMapper, PersonExportMapper
+from ..unit.mapper import (PersonImportMapper,
+                           PersonExportMapper,
+                           trim,
+                           trim_and_titleize,
+                          )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -36,7 +40,7 @@ class CarepointMedicalPatient(models.Model):
 
     odoo_id = fields.Many2one(
         comodel_name='medical.patient',
-        string='Company',
+        string='Patient',
         required=True,
         ondelete='cascade'
     )
@@ -97,15 +101,18 @@ class MedicalPatientImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.patient'
 
     direct = [
-        ('ssn', 'ref'),
-        ('email', 'email'),
+        (trim('ssn'), 'ref'),
+        (trim('email'), 'email'),
         ('birth_date', 'dob'),
         ('death_date', 'dod'),
     ]
 
     @mapping
     def gender(self, record):
-        return {'gender': record.get('gender_cd').lower()}
+        gender = record.get('gender_cd')
+        if not gender:
+            return {'gender': None}
+        return {'gender': gender.lower()}
 
     @mapping
     def carepoint_id(self, record):
@@ -144,36 +151,31 @@ class MedicalPatientImporter(CarepointImporter):
     #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
-@carepoint
-class MedicalPatientExportMapper(PersonExportMapper):
-    _model_name = 'carepoint.medical.patient'
-
-    direct = [
-        ('ref', 'ssn'),
-        ('email', 'email'),
-        ('dob', 'birth_date'),
-        ('dod', 'death_date'),
-    ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
-
-    @mapping
-    @changed_by('gender')
-    def gender_cd(self):
-        return {'gender_cd': record.get('gender').upper()}
-
-
-@carepoint
-class MedicalPatientExporter(CarepointExporter):
-    _model_name = ['carepoint.medical.patient']
-    _base_mapper = MedicalPatientExportMapper
-
-
-@carepoint
-class MedicalPatientDeleteSynchronizer(CarepointDeleter):
-    _model_name = ['carepoint.medical.patient']
+# @carepoint
+# class MedicalPatientExportMapper(PersonExportMapper):
+#     _model_name = 'carepoint.medical.patient'
+# 
+#     direct = [
+#         ('ref', 'ssn'),
+#         ('email', 'email'),
+#         ('dob', 'birth_date'),
+#         ('dod', 'death_date'),
+#     ]
+# 
+#     @mapping
+#     def pat_id(self, record):
+#         return {'pat_id': record.carepoint_id}
+# 
+#     @mapping
+#     @changed_by('gender')
+#     def gender_cd(self):
+#         return {'gender_cd': record.get('gender').upper()}
+# 
+# 
+# @carepoint
+# class MedicalPatientExporter(CarepointExporter):
+#     _model_name = ['carepoint.medical.patient']
+#     _base_mapper = MedicalPatientExportMapper
 
 
 @carepoint

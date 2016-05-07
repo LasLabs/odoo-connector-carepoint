@@ -17,8 +17,9 @@ class CarepointDeleter(Deleter):
         Run the synchronization, delete the record on Carepoint
         :param carepoint_id: identifier of the record to delete
         """
-        self.backend_adapter.delete(carepoint_id)
-        return _('Record %s deleted on Carepoint') % carepoint_id
+        raise NotImplementedError('Cannot delete records from CarePoint.')
+        # self.backend_adapter.delete(carepoint_id)
+        # return _('Record %s deleted on Carepoint') % carepoint_id
 
 
 @job(default_channel='root.carepoint')

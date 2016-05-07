@@ -150,7 +150,6 @@ class CarepointAddressPatientImporter(CarepointImporter):
         checkpoint.run(binding.id)
         return binding
 
-
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
@@ -161,6 +160,18 @@ class CarepointAddressPatientImporter(CarepointImporter):
     #     """ Import the addresses """
     #     book = self.unit_for(PartnerAddressBook, model='carepoint.address.patient')
     #     book.import_addresses(self.carepoint_id, partner_binding.id)
+
+
+@carepoint
+class CarepointAddressPatientUnit(ConnectorUnit):
+    _model_name = 'carepoint.carepoint.address.patient'
+
+    def _import_addresses(self, patient_id, binding_id):
+        adapter = self.unit_for(CarepointCRUDAdapter)
+        importer = self.unit_for(CarepointAddressPatientImporter)
+        address_ids = adapter.search(pat_id=patient_id)
+        for address_id in address_ids:
+            importer.run(address_id)
 
 
 @carepoint

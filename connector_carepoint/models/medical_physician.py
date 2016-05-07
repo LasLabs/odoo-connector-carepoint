@@ -11,7 +11,11 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PersonImportMapper
+from ..unit.mapper import (PersonImportMapper,
+                           PersonExportMapper,
+                           trim,
+                           trim_and_titleize,
+                          )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -93,12 +97,12 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.physician'
 
     direct = [
-        ('email', 'email'),
-        ('url', 'website'),
-        ('dea_no', 'dea_num'),
-        ('fed_tax_id', 'vat'),
-        ('stat_lic_id', 'license_num'),
-        ('npi_id', 'npi_num'),
+        (trim('email'), 'email'),
+        (trim('url'), 'website'),
+        (trim('dea_no'), 'dea_num'),
+        (trim('fed_tax_id'), 'vat'),
+        (trim('stat_lic_id'), 'license_num'),
+        (trim('npi_id'), 'npi_num'),
     ]
 
     @mapping

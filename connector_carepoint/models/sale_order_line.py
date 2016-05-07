@@ -78,6 +78,17 @@ class SaleOrderLineAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
+class SaleOrderLineUnit(ConnectorUnit):
+    _model_name = 'carepoint.sale.order.line'
+
+    def _import_sale_order_lines(self, sale_order_id, sale_order_binding_id):
+        adapter = self.unit_for(CarepointCRUDAdapter)
+        importer = self.unit_for(SaleOrderLineImporter)
+        sale_line_ids = adapter.search(order_id=sale_order_id)
+        for rec_id in sale_line_ids:
+            importer.run(rec_id)
+
+@carepoint
 class SaleOrderLineBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Order Lines.
     For every order in the list, a delayed job is created.
@@ -97,23 +108,20 @@ class SaleOrderLineBatchImporter(DelayedBatchImporter):
 class SaleOrderLineImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.sale.order.line'
 
-    direct = [
-        ('submit_date', 'date_order'),
-        ('dispense_qty', 'product_uom_qty'),
-        ('disp_drug_name', 'name'),
-    ]
+    direct = []
 
     @mapping
     def prescription_data(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order')
-        rx_id = self.env['carepoint.medical.prescription.order'].browse(
+        binder = self.binder_for('carepoint.medical.prescription.order.line')
+        line_id = self.env['medical.prescription.order.line'].browse(
             binder.to_odoo(record['rx_id'])
         )
-        line_id = rx_id.prescription_order_line_ids[0]
-        return {
-            'prescription_order_line_id': line_id.id,
-            'patient_id': rx_id.patient_id.id,
-        }
+        return {'prescription_order_line_id': line_id.id,
+                'product_id': line_id.medicament_id.product_id.id,
+                'product_uom': line_id.dispense_uom_id.id,
+                'product_uom_qty': line_id.qty,
+                'name': line_id.medicament_id.display_name,
+                }
 
     @mapping
     def order_id(self, record):
@@ -122,24 +130,13 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
         return {'order_id': order_id}
 
     @mapping
-    def product_data(self, record):
-        binder = self.binder_for('carepoint.medical.medicament')
-        med_id = self.env['carepoint.medical.medicament'].browse(
-            binder.to_odoo(record['item_id'])
-        )
-        return {
-            'product_id': med_id.product_id.id,
-            'product_uom': med_id.uom_id.id,
-        }
-
-    @mapping
     def price_unit(self, record):
         # @TODO: Figure out where the prices are
         return {'price_unit': 0}
 
     @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['rxdisp_id']}
+        return {'carepoint_id': record['line_id']}
 
 
 @carepoint
@@ -158,15 +155,9 @@ class SaleOrderLineImporter(CarepointImporter):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
-                                'carepoint.medical.prescription.order')
+                                'carepoint.medical.prescription.order.line')
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
-
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
 @carepoint
@@ -211,13 +202,3 @@ class SaleOrderLineAddCheckpoint(ConnectorUnit):
                        self.model._name,
                        binding_id,
                        self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.sale')
-def order_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of orders modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(SaleOrderLineBatchImporter)
-    importer.run(filters=filters)

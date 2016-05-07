@@ -126,8 +126,10 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def form_id(self, record):
-        form_id = self.env['fdb.form'].search([
-            ('code', '=', record['dn_form'].strip()),
+        form_str = record['dn_form'].strip()
+        form_id = self.env['fdb.form'].search(['|',
+            ('code', '=', form_str),
+            ('name', '=', form_str.title()),
         ],
             limit=1,
         )

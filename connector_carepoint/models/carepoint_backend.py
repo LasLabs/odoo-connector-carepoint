@@ -109,6 +109,8 @@ class CarepointBackend(models.Model):
     import_prescriptions_from_date = fields.Datetime()
     import_sales_from_date = fields.Datetime()
     import_addresses_from_date = fields.Datetime()
+    import_procurements_from_date = fields.Datetime()
+    import_invoices_from_date = fields.Datetime()
     company_id = fields.Many2one(
         string='Company',
         comodel_name='res.company',
@@ -196,15 +198,16 @@ class CarepointBackend(models.Model):
             import_batch.delay(session, model, backend.id)
 
     @api.multi
-    def _import_from_date(self, model, from_date_field):
+    def _import_from_date(self, model, from_date_field,
+                          chg_date_field='chg_date'):
         session = self.__get_session()
         import_start_time = datetime.now()
         for backend in self:
             backend.check_carepoint_structure()
-            filters = {'chg_date': {'<=': import_start_time}}
+            filters = {chg_date_field: {'<=': import_start_time}}
             from_date = getattr(backend, from_date_field)
             if from_date:
-                filters['chg_date']['>='] = fields.Datetime.from_string(
+                filters[chg_date_field]['>='] = fields.Datetime.from_string(
                     from_date
                 )
             else:
@@ -222,6 +225,7 @@ class CarepointBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
+
     #
     # @api.multi
     # def import_partners(self):
@@ -265,8 +269,19 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_sale_order(self):
-        self._import_from_date('carepoint.sale.order.line',
+        self._import_from_date('carepoint.sale.order',
                                'import_sales_from_date')
+
+    @api.multi
+    def import_procurement_order(self):
+        self._import_from_date('carepoint.procurement.order',
+                               'import_procurements_from_date')
+
+    @api.multi
+    def import_account_invoice(self):
+        self._import_from_date('carepoint.account.invoice.line',
+                               'import_invoices_from_date',
+                               'primary_pay_date')
 
     @api.multi
     def import_address(self):
@@ -278,7 +293,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_fdb(self):
-        self._import_all('carepoint.fdb.img.mfg')
+        # self._import_all('carepoint.fdb.img.mfg')
         # self._import_all('carepoint.fdb.img.date')
         # self._import_all('carepoint.fdb.img.id')
         # self._import_all('carepoint.fdb.img')

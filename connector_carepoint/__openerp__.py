@@ -23,6 +23,8 @@
         'views/carepoint_backend_view.xml',
         'views/connector_menu.xml',
         'data/medical_drug_form_data.xml',
+        'data/carepoint_state_data.xml',
+        'data/carepoint_carepoint_account_data.xml',
     ],
     'installable': True,
     'application': False,
