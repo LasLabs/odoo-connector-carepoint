@@ -81,7 +81,6 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
 class FdbRouteImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
-        (trim('gcrt'), 'grct'),
         (trim_and_titleize('rt'), 'rt'),
         (trim('gcrt2'), 'code'),
         (trim_and_titleize('gcrt_desc'), 'name'),

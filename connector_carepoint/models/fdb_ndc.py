@@ -165,34 +165,57 @@ class FdbNdcImportMapper(CarepointImportMapper):
         medicament_obj = self.env['medical.medicament']
         medicament_name = record['bn'].strip().title()
         binder = self.binder_for('carepoint.fdb.gcn')
-        fdb_gcn_id = binder.to_odoo(record['gcn_seqno'])
-        fdb_gcn_id = self.env['fdb.gcn'].browse(fdb_gcn_id)
+        fdb_gcn_id = binder.to_odoo(record['gcn_seqno'], browse=True)
         binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
-        cs_ext_id = binder.to_odoo(record['ndc'].strip())
-        cs_ext_id = self.env['fdb.ndc.cs.ext'].browse(cs_ext_id)
+        cs_ext_id = binder.to_odoo(record['ndc'].strip(), browse=True)
+        binder = self.binder_for('carepoint.fdb.gcn.seq')
+        fdb_gcn_seq_id = binder.to_odoo(record['gcn_seqno'], browse=True)
 
-        strength_str = cs_ext_id.dn_str
+        strength_str = ''
+        route_id = 0
+        form_id = 0
+        gpi = 0
+        is_prescription = False
+
+        if cs_ext_id:
+            strength_str = cs_ext_id.dn_str.lower().strip()
+            route_id = cs_ext_id.route_id.route_id
+            form_id = cs_ext_id.form_id.form_id
+            gpi = cs_ext_id.gpi
+            is_prescription = cs_ext_id.rx_only_yn
+
+        if not strength_str:
+            strength_str = fdb_gcn_seq_id.str.lower().strip()
+        if not route_id:
+            route_id = fdb_gcn_seq_id.route_id.route_id
+        if not form_id:
+            form_id = fdb_gcn_seq_id.form_id.form_id
+
+        strength_str = strength_str.replace('%', 'percent')
+
         try:
-            strength_obj = ureg(strength_str.lower())
+            strength_obj = ureg(strength_str)
         except DimensionalityError:
-            strength_parts = strength_str.split('-', 1)
-            strength_re = re.compile(r'(?P<unit>\d+\.?\d?)\s?(?P<uom>\w+)')
-            left_match = strength_re.match(strength_parts[0])
-            right_match = strength_re.match(strength_parts[1])
-            unit_arr = [left_match.group('unit')]
-            if not left_match.group('uom'):
-                unit_arr.append(right_match.group('uom'))
-            else:
-                unit_arr.append(left_match.group('uom'))
-            unit_arr.extend(['/', right_match.group('unit')])
-            if not right_match.group('uom'):
-                unit_arr.append(left_match.group('uom'))
-            else:
-                unit_arr.append(right_match.group('uom'))
-            strength_obj = ureg(strength_str.lower())
+            strength_parts = strength_str.split('-')
+            unit_arr = []
+            uom_str = 'unit'
+            strength_re = re.compile(r'(?P<unit>\d+\.?\d?)\s?(?P<uom>[a-z]?)')
+            # Iter in reverse because UOM is typically last if only one
+            for strength_part in reversed(strength_parts):
+                if len(unit_arr):
+                    unit_arr.append('/')
+                match = strength_re.match(strength_part)
+                if match:
+                    unit_arr.append(match.group('unit'))
+                    if match.group('uom'):
+                        uom_str = match.group('uom')
+                    if uom_str:
+                        unit_arr.append(uom_str)
+            strength_obj = ureg(' '.join(unit_arr))
+        _logger.debug('%s, %s, %s, %s', route_id, form_id, fdb_gcn_seq_id, cs_ext_id)
         strength_str = strength_str.replace(
             '%d' % strength_obj.m, ''
-        ).strip()
+        ).strip().upper()
         _logger.debug('Got str # %s. Searching for strength_str %s',
                       strength_obj.m, strength_str)
         strength_uom_id = self.env['product.uom'].search([
@@ -203,9 +226,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         medicament_id = medicament_obj.search([
             ('name', '=', medicament_name),
-            ('drug_route_id', '=', cs_ext_id.route_id.route_id.id),
-            ('drug_form_id', '=', cs_ext_id.form_id.form_id.id),
-            ('gpi', '=', cs_ext_id.gpi),
+            ('drug_route_id', '=', route_id.id),
+            ('drug_form_id', '=', form_id.id),
+            ('gpi', '=', gpi),
             ('strength', '=', strength_obj.m),
             ('strength_uom_id', '=', strength_uom_id.id),
         ],
@@ -218,18 +241,25 @@ class FdbNdcImportMapper(CarepointImportMapper):
             binder = self.binder_for('carepoint.fdb.ndc')
             fdb_ndc_id = binder.to_odoo(record['ndc'])
             fdb_ndc_id = self.env['fdb.ndc'].browse(fdb_ndc_id)
+            hcfa_unit = record['hcfa_unit'] or ''
             sale_uom_id = self.env['product.uom'].search([
-                ('name', '=', record['hcfa_unit'].strip()),
+                ('name', '=', hcfa_unit.strip()),
             ],
-                limit=1
+                limit=1,
             )
+            if not sale_uom_id:
+                sale_uom_id = self.env['product.uom'].search([
+                    ('name', '=', 'UNIT'),
+                ],
+                    limit=1,
+                )
             medicament_id = medicament_obj.create({
                 'name': medicament_name,
-                'drug_route_id': cs_ext_id.route_id.route_id.id,
-                'drug_form_id': cs_ext_id.form_id.form_id.id,
-                'gpi': cs_ext_id.gpi,
+                'drug_route_id': route_id.id,
+                'drug_form_id': form_id.id,
+                'gpi': gpi,
                 'control_code': code,
-                'is_prescription': cs_ext_id.rx_only_yn,
+                'is_prescription': is_prescription,
                 'strength': strength_obj.m,
                 'strength_uom_id': strength_uom_id.id,
                 'uom_id': sale_uom_id.id,
@@ -258,8 +288,12 @@ class FdbNdcImporter(CarepointImporter):
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
-        self._import_dependency(record['ndc'],
-                                'carepoint.fdb.ndc.cs.ext')
+        try:
+            self._import_dependency(record['ndc'],
+                                    'carepoint.fdb.ndc.cs.ext')
+        except IndexError:
+            # Won't exist in cs_ext if user_product_yn == 0
+            pass
         self._import_dependency(record['gcn_seqno'],
                                 'carepoint.fdb.gcn')
 

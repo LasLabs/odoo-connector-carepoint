@@ -81,7 +81,7 @@ class FdbFormBatchImporter(DelayedBatchImporter):
 class FdbFormImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.form'
     direct = [
-        ('gcdf', 'carepoint_id'),
+        (trim('gcdf'), 'gcdf'),
         (trim('dose'), 'code'),
         (trim_and_titleize('gcdf_desc'), 'name'),
         ('update_yn', 'update_yn'),

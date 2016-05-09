@@ -138,7 +138,9 @@ class CarepointImporter(Importer):
         return
 
     def _get_binding(self):
-        return self.binder.to_odoo(self.carepoint_id, browse=True)
+        return self.binder.to_odoo(self.carepoint_id,
+                                   unwrap=False,
+                                   browse=True)
 
     def _create_data(self, map_record, **kwargs):
         return map_record.values(for_create=True, **kwargs)

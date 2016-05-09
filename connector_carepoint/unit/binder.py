@@ -53,7 +53,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.fdb.ndc.cs.ext',
     ]
 
-    def to_odoo(self, external_id, unwrap=False, browse=False):
+    def to_odoo(self, external_id, unwrap=True, browse=False):
         """ Give the Odoo ID for an external ID
         :param external_id: external ID for which we want the Odoo ID
         :param unwrap: if True, returns the normal record (the one

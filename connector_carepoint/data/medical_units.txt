@@ -32,6 +32,8 @@ Percent = percent
 # Medical Reference
 #
 
+mcg = microgram
+
 # Prefixes
 
 bio- = 1
@@ -114,6 +116,7 @@ index = [index]
 nebule = [nebule]
 cell = [cell]
 equivalent = [equivalent]
+meq = milliequivalent
 french = [french]
 culture = [culture]
 reactivity = [reactivity]

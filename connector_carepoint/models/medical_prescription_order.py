@@ -103,8 +103,6 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
     def patient_id(self, record):
         binder = self.binder_for('carepoint.medical.patient')
         patient_id = binder.to_odoo(record['pat_id'])
-        _logger.debug(self.env['medical.patient'].browse(patient_id))
-        _logger.debug(self.env['medical.patient'].browse(patient_id).name)
         return {'patient_id': patient_id}
 
     @mapping
