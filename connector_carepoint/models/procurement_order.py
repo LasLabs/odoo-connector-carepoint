@@ -191,8 +191,11 @@ class ProcurementOrderImporter(CarepointImporter):
         picking_unit = self.unit_for(
             StockPickingUnit, model='carepoint.stock.picking',
         )
+        order_bind_id = self.env['carepoint.sale.order'].search([
+            ('odoo_id', '=', binding.sale_line_id.order_id.id),
+        ])
         picking_unit._import_pickings_for_sale(
-            binding.sale_line_id.order_id.id, binding.id,
+            order_bind_id.carepoint_id, binding.id,
         )
 
 
