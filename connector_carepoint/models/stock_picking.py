@@ -22,22 +22,22 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
-from .stock_picking import StockPickingUnit
+from .address import AddressUnit
 
 
 _logger = logging.getLogger(__name__)
 
 
-class CarepointProcurementOrder(models.Model):
-    """ Binding Model for the Carepoint Patient """
-    _name = 'carepoint.procurement.order'
+class CarepointStockPicking(models.Model):
+    """ Binding Model for the Carepoint Shipment """
+    _name = 'carepoint.stock.picking'
     _inherit = 'carepoint.binding'
-    _inherits = {'procurement.order': 'odoo_id'}
-    _description = 'Carepoint Dispense'
-    _cp_lib = 'dispense'  # Name of model in Carepoint lib (snake_case)
+    _inherits = {'stock.picking': 'odoo_id'}
+    _description = 'Carepoint Shipment'
+    _cp_lib = 'order_ship'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        comodel_name='procurement.order',
+        comodel_name='stock.picking',
         string='Company',
         required=True,
         ondelete='cascade',
@@ -59,43 +59,43 @@ class CarepointProcurementOrder(models.Model):
     ]
 
 
-class ProcurementOrder(models.Model):
+class StockPicking(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'procurement.order'
+    _inherit = 'stock.picking'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.procurement.order',
+        comodel_name='carepoint.stock.picking',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class ProcurementOrderAdapter(CarepointCRUDAdapter):
+class StockPickingAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Patient """
-    _model_name = 'carepoint.procurement.order'
+    _model_name = 'carepoint.stock.picking'
 
 
 @carepoint
-class ProcurementOrderUnit(ConnectorUnit):
-    _model_name = 'carepoint.procurement.order'
+class StockPickingUnit(ConnectorUnit):
+    _model_name = 'carepoint.stock.picking'
 
-    def _import_procurements_for_sale(self, sale_order_id, binding_id):
+    def _import_pickings_for_sale(self, sale_order_id, binding_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
-        importer = self.unit_for(ProcurementOrderImporter)
+        importer = self.unit_for(StockPickingImporter)
         rec_ids = adapter.search(order_id=sale_order_id)
         for rec_id in rec_ids:
             importer.run(rec_id)
 
 
 @carepoint
-class ProcurementOrderBatchImporter(DelayedBatchImporter):
+class StockPickingBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Patients.
     For every patient in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.procurement.order']
+    _model_name = ['carepoint.stock.picking']
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -107,72 +107,35 @@ class ProcurementOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class ProcurementOrderImportMapper(CarepointImportMapper):
-    _model_name = 'carepoint.procurement.order'
+class StockPickingImportMapper(CarepointImportMapper):
+    _model_name = 'carepoint.stock.picking'
 
     direct = [
-        ('dispense_qty', 'product_qty'),
-        ('dispense_date', 'date_planned'),
+        ('tracking_code', 'carrier_tracking_ref'),
     ]
 
     @mapping
-    def product_data(self, record):
-        binder = self.binder_for('carepoint.fdb.ndc')
-        ndc_id = binder.to_odoo(record['disp_ndc'].strip())
-        return {'ndc_id': ndc_id}
-
-    @mapping
-    def prescription_data(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
-        rx_id = binder.to_odoo(record['rx_id'])
-        rx_id = self.env['medical.prescription.order.line'].browse(rx_id)
-        name = 'RX %s - %s' % (record['rx_id'],
-                               rx_id.medicament_id.display_name)
-        return {'product_id': rx_id.medicament_id.product_id.id,
-                'name': name,
-                }
-
-    @mapping
     @only_create
-    def order_line_procurement_data(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
-        rx_id = binder.to_odoo(record['rx_id'], browse=True)
+    def odoo_id(self, record):
         binder = self.binder_for('carepoint.sale.order')
-        sale_id = binder.to_odoo(record['order_id'], browse=True)
-        line_id = sale_id.order_line.filtered(
-            lambda r: r.prescription_order_line_id.id == rx_id.id
-        )
-        line_id = line_id[0]
-        procurement_group_id = self.env['procurement.group'].search([
-            ('name', '=', sale_id.name),
-        ],
-            limit=1,
-        )
-        if not len(procurement_group_id):
-            procurement_group_id = self.env['procurement.group'].create(
-                sale_id._prepare_procurement_group()
-            )
-        res = line_id._prepare_order_line_procurement(procurement_group_id.id)
-        line_id.product_uom_qty = record['dispense_qty']
-        res.update({'origin': sale_id.name,
-                    'product_uom': line_id.product_uom.id,
-                    })
-        return res
+        order_id = binder.to_odoo(record['order_id'], browse=True)
+        _logger.debug('FUCK %s', order_id.picking_ids)
+        return {'odoo_id': order_id.picking_ids[0]}
 
     @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['rxdisp_id']}
+        return {'carepoint_id': record['order_id']}
 
 
 @carepoint
-class ProcurementOrderImporter(CarepointImporter):
-    _model_name = ['carepoint.procurement.order']
+class StockPickingImporter(CarepointImporter):
+    _model_name = ['carepoint.stock.picking']
 
-    _base_mapper = ProcurementOrderImportMapper
+    _base_mapper = StockPickingImportMapper
 
     def _create(self, data):
-        binding = super(ProcurementOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(ProcurementOrderAddCheckpoint)
+        binding = super(StockPickingImporter, self)._create(data)
+        checkpoint = self.unit_for(StockPickingAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
@@ -181,24 +144,33 @@ class ProcurementOrderImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
                                 'carepoint.medical.prescription.order.line')
-        self._import_dependency(record['disp_ndc'].strip(),
-                                'carepoint.fdb.ndc')
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
+        # unit = self.unit_for(
+        #     AddressUnit, model='carepoint.carepoint.address.patient',
+        # )
+        # unit._import_by_filter(
+        #     addr1=record['bill_addr1'],
+        #     addr2=record['bill_addr2'],
+        #     city=record['bill_city'],
+        #     state_cd=record['bill_state_cd'],
+        #     zip=record['bill_zip'],
+        # )
+        # unit._import_by_filter(
+        #     addr1=record['ship_addr1'],
+        #     addr2=record['ship_addr2'],
+        #     city=record['ship_city'],
+        #     state_cd=record['ship_state_cd'],
+        #     zip=record['ship_zip'],
+        # )
 
     def _after_import(self, binding):
-        """ Import the stock pickings """
-        picking_unit = self.unit_for(
-            StockPickingUnit, model='carepoint.stock.picking',
-        )
-        picking_unit._import_pickings_for_sale(
-            binding.sale_line_id.order_id.id, binding.id,
-        )
+        binding.action_done()
 
 
 @carepoint
-class ProcurementOrderExportMapper(ExportMapper):
-    _model_name = 'carepoint.procurement.order'
+class StockPickingExportMapper(ExportMapper):
+    _model_name = 'carepoint.stock.picking'
 
     direct = [
         ('ref', 'ssn'),
@@ -218,15 +190,15 @@ class ProcurementOrderExportMapper(ExportMapper):
 
 
 @carepoint
-class ProcurementOrderExporter(CarepointExporter):
-    _model_name = ['carepoint.procurement.order']
-    _base_mapper = ProcurementOrderExportMapper
+class StockPickingExporter(CarepointExporter):
+    _model_name = ['carepoint.stock.picking']
+    _base_mapper = StockPickingExportMapper
 
 
 @carepoint
-class ProcurementOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.procurement.order record """
-    _model_name = ['carepoint.procurement.order', ]
+class StockPickingAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.stock.picking record """
+    _model_name = ['carepoint.stock.picking', ]
 
     def run(self, binding_id):
         add_checkpoint(self.session,
@@ -241,5 +213,5 @@ def patient_import_batch(session, model_name, backend_id, filters=None):
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(ProcurementOrderBatchImporter)
+    importer = env.get_connector_unit(StockPickingBatchImporter)
     importer.run(filters=filters)

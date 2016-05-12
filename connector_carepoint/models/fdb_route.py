@@ -104,6 +104,7 @@ class FdbRouteImportMapper(CarepointImportMapper):
     def carepoint_id(self, record):
         return {'carepoint_id': record['gcrt'].strip()}
 
+
 @carepoint
 class FdbRouteImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.route']

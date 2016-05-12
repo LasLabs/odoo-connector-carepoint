@@ -265,6 +265,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 'uom_id': sale_uom_id.id,
                 'uom_po_id': sale_uom_id.id,
                 'gcn_id': fdb_gcn_id.gcn_id.id,
+                'type': 'product',
             })
         return {'medicament_id': medicament_id.id}
 

@@ -13,6 +13,7 @@
     'depends': [
         'connector',
         'first_databank',
+        'delivery',
     ],
     "external_dependencies": {
         "python": [

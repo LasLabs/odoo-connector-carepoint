@@ -34,7 +34,7 @@ class CarepointSaleOrder(models.Model):
     _name = 'carepoint.sale.order'
     _inherit = 'carepoint.binding'
     _inherits = {'sale.order': 'odoo_id'}
-    _description = 'Carepoint Patient'
+    _description = 'Carepoint Sale'
     _cp_lib = 'order'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
@@ -99,9 +99,11 @@ class SaleOrderBatchImporter(DelayedBatchImporter):
 class SaleOrderImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.sale.order'
 
-    direct = [
-        ('submit_date', 'date_order'),
-    ]
+    @mapping
+    def date_order(self, record):
+        if record['submit_date']:
+            return {'date_order': record['submit_date']}
+        return {'date_order': record['add_date']}
 
     @mapping
     def partner_data(self, record):

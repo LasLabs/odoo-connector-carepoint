@@ -116,12 +116,12 @@
                             </group>
                             <group>
                                 <div>
-                                    <label string="Import dispenses since" class="oe_inline"/>
-                                    <field name="import_procurements_from_date"
+                                    <label string="Import pickings since" class="oe_inline"/>
+                                    <field name="import_pickings_from_date"
                                            class="oe_inline"
                                            nolabel="1"/>
                                 </div>
-                                <button name="import_procurement_order"
+                                <button name="import_stock_picking"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>
@@ -170,18 +170,6 @@
                                            nolabel="1"/>
                                 </div>
                                 <button name="import_medical_medicament"
-                                        type="object"
-                                        class="oe_highlight"
-                                        string="Import in background"/>
-                            </group>
-                            <group>
-                                <div>
-                                    <label string="Import sales since" class="oe_inline"/>
-                                    <field name="import_sales_from_date"
-                                           class="oe_inline"
-                                           nolabel="1"/>
-                                </div>
-                                <button name="import_sale_order"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>

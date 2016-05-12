@@ -37,6 +37,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.sale.order',
         'carepoint.sale.order.line',
         'carepoint.procurement.order',
+        'carepoint.stock.picking',
         'carepoint.res.users',
         'carepoint.fdb.ndc',
         'carepoint.fdb.gcn',

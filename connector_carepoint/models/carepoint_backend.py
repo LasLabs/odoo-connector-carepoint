@@ -109,7 +109,7 @@ class CarepointBackend(models.Model):
     import_prescriptions_from_date = fields.Datetime()
     import_sales_from_date = fields.Datetime()
     import_addresses_from_date = fields.Datetime()
-    import_procurements_from_date = fields.Datetime()
+    import_pickings_from_date = fields.Datetime()
     import_invoices_from_date = fields.Datetime()
     company_id = fields.Many2one(
         string='Company',
@@ -273,9 +273,9 @@ class CarepointBackend(models.Model):
                                'import_sales_from_date')
 
     @api.multi
-    def import_procurement_order(self):
-        self._import_from_date('carepoint.procurement.order',
-                               'import_procurements_from_date')
+    def import_stock_picking(self):
+        self._import_from_date('carepoint.stock.picking',
+                               'import_pickings_from_date')
 
     @api.multi
     def import_account_invoice(self):
