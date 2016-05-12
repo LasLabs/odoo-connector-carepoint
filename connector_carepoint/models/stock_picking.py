@@ -119,9 +119,7 @@ class StockPickingImportMapper(CarepointImportMapper):
     def odoo_id(self, record):
         binder = self.binder_for('carepoint.sale.order')
         order_id = binder.to_odoo(record['order_id'], browse=True)
-        picking_ids = self.env['stock.picking'].search([
-            ('origin', '=', order_id.name),
-        ])
+        picking_ids = order_id.picking_ids
         return {'odoo_id': picking_ids[0].id}
 
     @mapping
@@ -167,7 +165,8 @@ class StockPickingImporter(CarepointImporter):
         # )
 
     def _after_import(self, binding):
-        binding.odoo_id.action_done()
+        binding.odoo_id.force_assign()
+        binding.odoo_id.do_transfer()
 
 
 @carepoint

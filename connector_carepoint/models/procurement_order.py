@@ -152,6 +152,7 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
             procurement_group_id = self.env['procurement.group'].create(
                 sale_id._prepare_procurement_group()
             )
+            sale_id.procurement_group_id = procurement_group_id.id
         res = line_id._prepare_order_line_procurement(procurement_group_id.id)
         line_id.product_uom_qty = record['dispense_qty']
         res.update({'origin': sale_id.name,
