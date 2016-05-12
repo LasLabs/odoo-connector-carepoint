@@ -163,7 +163,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
     def medicament_id(self, record):
 
         medicament_obj = self.env['medical.medicament']
-        medicament_name = record['bn'].strip().title()
+        medicament_name = record['bn'].strip()
         binder = self.binder_for('carepoint.fdb.gcn')
         fdb_gcn_id = binder.to_odoo(record['gcn_seqno'], browse=True)
         binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
