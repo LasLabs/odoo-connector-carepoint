@@ -166,7 +166,10 @@ class StockPickingImporter(CarepointImporter):
 
     def _after_import(self, binding):
         binding.odoo_id.force_assign()
-        binding.odoo_id.do_transfer()
+        wiz_id = self.env['stock.immediate.transfer'].create({
+            'pick_id': binding.odoo_id.id
+        })
+        wiz_id.process()
 
 
 @carepoint
