@@ -266,6 +266,11 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 'uom_po_id': sale_uom_id.id,
                 'gcn_id': fdb_gcn_id.gcn_id.id,
                 'type': 'product',
+                'property_account_income_id':
+                    self.backend_record.default_product_income_account_id.id,
+                'property_account_expense_id':
+                    self.backend_record.default_product_expense_account_id.id,
+                'categ_id': self.backend_record.default_category_id.id,
             })
         return {'medicament_id': medicament_id.id}
 

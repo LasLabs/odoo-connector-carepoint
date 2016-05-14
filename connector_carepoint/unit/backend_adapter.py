@@ -55,7 +55,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
     def __init__(self, connector_env):
-        """
+        """ Ready the DB adapter
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """

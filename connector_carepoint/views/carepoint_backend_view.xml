@@ -37,31 +37,40 @@
                                     </group>
                                 </group>
                             </page>
-                            <page string="Defaults" name="defaults">
-                                <group name="main_configuration" string="Main Configuration">
-                                    <group>
-                                        <field name="company_id" />
-                                        <field name="is_default" />
-                                    </group>
-                                    <group>
-                                        <field name="default_category_id" />
-                                        <field name="sale_prefix" />
-                                    </group>
-                                </group>
-                                <group string="Localization" name="preferences">
-                                    <field name="default_lang_id"/>
-                                    <field name="default_tz" />
-                                </group>
-                                <group string="Accounting" name="accounting">
-                                    <field name="default_account_payable_id" />
-                                    <field name="default_account_receivable_id" />
-                                    <field name="default_customer_payment_term_id" />
-                                    <field name="default_supplier_payment_term_id" />
-                                </group>
-                            </page>
                         </notebook>
                     </group>
                     <notebook>
+
+                        <page string="Defaults" name="defaults">
+                            <group name="main_configuration" string="Main Configuration">
+                                <group>
+                                    <field name="company_id" />
+                                    <field name="is_default" />
+                                </group>
+                                <group>
+                                    <field name="default_category_id" />
+                                    <field name="sale_prefix" />
+                                </group>
+                            </group>
+                            <group string="Localization" name="preferences">
+                                <field name="default_lang_id"/>
+                                <field name="default_tz" />
+                            </group>
+                            <group string="Accounting" name="accounting">
+                                <group string="Customer">
+                                    <field name="default_account_payable_id" />
+                                    <field name="default_account_receivable_id" />
+                                    <field name="default_payment_journal" />
+                                    <field name="default_customer_payment_term_id" />
+                                    <field name="default_supplier_payment_term_id" />
+                                </group>
+                                <group string="Product">
+                                    <field name="default_product_income_account_id" />
+                                    <field name="default_product_expense_account_id" />
+                                </group>
+                            </group>
+                        </page>
+
                         <page name="import" string="Imports">
                             <p class="oe_grey oe_inline">
                                 By clicking on the buttons,

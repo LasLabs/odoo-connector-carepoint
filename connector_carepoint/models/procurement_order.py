@@ -23,6 +23,7 @@ from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
 from .stock_picking import StockPickingUnit
+from .account_invoice_line import AccountInvoiceLineUnit
 
 
 _logger = logging.getLogger(__name__)
@@ -116,33 +117,32 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
     ]
 
     @mapping
-    def product_data(self, record):
-        binder = self.binder_for('carepoint.fdb.ndc')
-        ndc_id = binder.to_odoo(record['disp_ndc'].strip())
-        return {'ndc_id': ndc_id}
-
-    @mapping
     def prescription_data(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order.line')
         rx_id = binder.to_odoo(record['rx_id'])
         rx_id = self.env['medical.prescription.order.line'].browse(rx_id)
         name = 'RX %s - %s' % (record['rx_id'],
                                rx_id.medicament_id.display_name)
-        return {'product_id': rx_id.medicament_id.product_id.id,
-                'name': name,
-                }
+        return {'name': name}
 
     @mapping
     @only_create
     def order_line_procurement_data(self, record):
+
         binder = self.binder_for('carepoint.medical.prescription.order.line')
         rx_id = binder.to_odoo(record['rx_id'], browse=True)
         binder = self.binder_for('carepoint.sale.order')
         sale_id = binder.to_odoo(record['order_id'], browse=True)
+        binder = self.binder_for('carepoint.fdb.ndc')
+        ndc_id = binder.to_odoo(record['disp_ndc'].strip(), browse=True)
         line_id = sale_id.order_line.filtered(
             lambda r: r.prescription_order_line_id.id == rx_id.id
         )
         line_id = line_id[0]
+
+        # Set the sale line to what was dispensed
+        line_id.product_id = ndc_id.medicament_id.product_id.id
+
         procurement_group_id = self.env['procurement.group'].search([
             ('name', '=', sale_id.name),
         ],
@@ -153,11 +153,15 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
                 sale_id._prepare_procurement_group()
             )
             sale_id.procurement_group_id = procurement_group_id.id
+
         res = line_id._prepare_order_line_procurement(procurement_group_id.id)
         line_id.product_uom_qty = record['dispense_qty']
         res.update({'origin': sale_id.name,
                     'product_uom': line_id.product_uom.id,
+                    'ndc_id': ndc_id.id,
+                    'product_id': ndc_id.medicament_id.product_id.id,
                     })
+
         return res
 
     @mapping
@@ -188,7 +192,8 @@ class ProcurementOrderImporter(CarepointImporter):
                                 'carepoint.sale.order')
 
     def _after_import(self, binding):
-        """ Import the stock pickings """
+        """ Import the stock pickings & invoice lines """
+        record = self.carepoint_record
         picking_unit = self.unit_for(
             StockPickingUnit, model='carepoint.stock.picking',
         )
@@ -197,6 +202,12 @@ class ProcurementOrderImporter(CarepointImporter):
         ])
         picking_unit._import_pickings_for_sale(
             order_bind_id.carepoint_id, binding.id,
+        )
+        invoice_unit = self.unit_for(
+            AccountInvoiceLineUnit, model='carepoint.account.invoice.line',
+        )
+        invoice_unit._import_invoice_lines_for_procurement(
+            record['rxdisp_id'], binding.id,
         )
 
 

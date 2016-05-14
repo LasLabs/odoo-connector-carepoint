@@ -86,11 +86,30 @@ class CarepointBackend(models.Model):
     default_account_payable_id = fields.Many2one(
         string='Default Account Payable',
         comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Payable')],
         required=True,
     )
     default_account_receivable_id = fields.Many2one(
         string='Default Account Receivable',
         comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Receivable')],
+        required=True,
+    )
+    default_product_income_account_id = fields.Many2one(
+        string='Default Product Income Account',
+        comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Income')],
+        required=True,
+    )
+    default_product_expense_account_id = fields.Many2one(
+        string='Default Product Expense Account',
+        comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Expenses')],
+        required=True,
+    )
+    default_payment_journal = fields.Many2one(
+        string='Default Payment Journal',
+        comodel_name='account.journal',
         required=True,
     )
     default_customer_payment_term_id = fields.Many2one(
@@ -269,7 +288,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_sale_order(self):
-        self._import_from_date('carepoint.sale.order',
+        self._import_from_date('carepoint.sale.order.line',
                                'import_sales_from_date')
 
     @api.multi

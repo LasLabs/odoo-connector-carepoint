@@ -71,6 +71,7 @@ class SaleOrder(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+    carepoint_order_state_cn = fields.Integer('State Code in CP')
 
 
 @carepoint
@@ -98,6 +99,12 @@ class SaleOrderBatchImporter(DelayedBatchImporter):
 @carepoint
 class SaleOrderImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.sale.order'
+
+    direct = [
+        ('order_id', 'origin'),
+        ('comments', 'note'),
+        ('order_state_cn', 'carepoint_order_state_cn'),
+    ]
 
     @mapping
     def date_order(self, record):
@@ -158,18 +165,21 @@ class SaleOrderImporter(CarepointImporter):
 
     def _after_import(self, binding):
         """ Import the sale lines & procurements """
-        line_unit = self.unit_for(
-            SaleOrderLineUnit, model='carepoint.sale.order.line',
-        )
-        line_unit._import_sale_order_lines(
-            self.carepoint_id, binding.id,
-        )
-        proc_unit = self.unit_for(
-            ProcurementOrderUnit, model='carepoint.procurement.order',
-        )
-        proc_unit._import_procurements_for_sale(
-            self.carepoint_id, binding.id,
-        )
+        pass
+        # line_unit = self.unit_for(
+        #     SaleOrderLineUnit, model='carepoint.sale.order.line',
+        # )
+        # # @TODO: Eliminate circular import - sale.order.line depends on this,
+        # #        which in turn imports sale lines.
+        # line_unit._import_sale_order_lines(
+        #     self.carepoint_id, binding.id,
+        # )
+        # proc_unit = self.unit_for(
+        #     ProcurementOrderUnit, model='carepoint.procurement.order',
+        # )
+        # proc_unit._import_procurements_for_sale(
+        #     self.carepoint_id, binding.id,
+        # )
 
 
 @carepoint
