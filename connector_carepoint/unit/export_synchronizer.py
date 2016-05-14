@@ -270,7 +270,7 @@ class CarepointExporter(CarepointBaseExporter):
             # If wrap is True, relation is already a binding record.
             binding = relation
 
-        if not rel_binder.to_backend(binding):
+        if not rel_binder.to_backend(binding, wrap=False):
             exporter = self.unit_for(exporter_class, model=binding_model)
             exporter.run(binding.id)
 

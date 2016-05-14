@@ -76,7 +76,7 @@ class CarepointModelBinder(CarepointBinder):
         else:
             return bindings if browse else bindings.id
 
-    def to_backend(self, record_id, wrap=False):
+    def to_backend(self, record_id, wrap=True):
         """ Give the external ID for an Odoo ID
         :param record_id: Odoo ID for which we want the external id
                           or a recordset with one record
