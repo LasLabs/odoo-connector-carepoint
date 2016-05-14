@@ -126,6 +126,15 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
         return {'invoice_id': invoice_id.id}
 
     @mapping
+    @only_create
+    def sale_line_ids(self, record):
+        binder = self.binder_for('carepoint.procurement.order')
+        proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
+        return {
+            'sale_line_ids': [(6, 0, [proc_id.sale_line_id.id])],
+        }
+
+    @mapping
     def invoice_line_data(self, record):
         binder = self.binder_for('carepoint.procurement.order')
         proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
@@ -137,9 +146,6 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
         state_id = self.env.ref(
             'connector_carepoint.state_%d' % cp_state
         )
-        res.update({
-            'sale_line_ids': [(6, 0, [line_id.id])],
-        })
         return res
 
     @mapping
