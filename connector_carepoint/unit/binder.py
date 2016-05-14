@@ -37,6 +37,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.sale.order',
         'carepoint.sale.order.line',
         'carepoint.procurement.order',
+        'carepoint.stock.picking',
         'carepoint.res.users',
         'carepoint.fdb.ndc',
         'carepoint.fdb.gcn',
@@ -53,7 +54,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.fdb.ndc.cs.ext',
     ]
 
-    def to_odoo(self, external_id, unwrap=False, browse=False):
+    def to_odoo(self, external_id, unwrap=True, browse=False):
         """ Give the Odoo ID for an external ID
         :param external_id: external ID for which we want the Odoo ID
         :param unwrap: if True, returns the normal record (the one
@@ -75,7 +76,7 @@ class CarepointModelBinder(CarepointBinder):
         else:
             return bindings if browse else bindings.id
 
-    def to_backend(self, record_id, wrap=False):
+    def to_backend(self, record_id, wrap=True):
         """ Give the external ID for an Odoo ID
         :param record_id: Odoo ID for which we want the external id
                           or a recordset with one record

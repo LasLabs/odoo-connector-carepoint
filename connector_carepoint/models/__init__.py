@@ -11,6 +11,7 @@ from . import sale_order
 from . import sale_order_line
 from . import procurement_order
 from . import account_invoice_line
+from . import stock_picking
 
 # Medical Models
 from . import medical_pharmacy

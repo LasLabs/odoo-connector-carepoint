@@ -110,13 +110,13 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
 
     @mapping
     def refill_qty_original(self, record):
-        return {'refill_qty_original': record['refills_orig'] + 1}
+        return {'refill_qty_original': (record['refills_orig'] or 0) + 1}
 
     @mapping
     @only_create
     def duration(self, record):
-        days_supply = record.get('days_supply', 0)
-        refills = record.get('refills_orig', 0) + 1
+        days_supply = record['days_supply'] or 0
+        refills = (record['refills_orig'] or 0) + 1
         duration = days_supply * refills
         return {'duration': duration}
 
@@ -142,31 +142,31 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     def ndc_id(self, record):
         binder = self.binder_for('carepoint.fdb.ndc')
         ndc_id = binder.to_odoo(record['ndc'].strip())
-        ndc_id = self.env['carepoint.fdb.ndc'].browse(ndc_id)
-        return {'ndc_id': ndc_id.ndc_id.id}
+        return {'ndc_id': ndc_id}
 
     @mapping
     @only_create
     def gcn_id(self, record):
         binder = self.binder_for('carepoint.fdb.gcn')
         gcn_id = binder.to_odoo(record['gcn_seqno'])
-        gcn_id = self.env['carepoint.fdb.gcn'].browse(gcn_id)
-        return {'gcn_id': gcn_id.gcn_id.id}
+        return {'gcn_id': gcn_id}
 
     @mapping
     @only_create
     def medication_dosage_id(self, record):
         # @TODO: Find sig codes table & integrate instead of search
         dose_obj = self.env['medical.medication.dosage']
-        dose_id = dose_obj.search([
-            ('code', '=', record['sig_code'].strip()),
+        sig_code = record['sig_code'].strip()
+        dose_id = dose_obj.search(['|',
+            ('name', '=', record['sig_text_english'].strip()),
+            ('code', '=', sig_code),
         ],
             limit=1,
         )
         if not len(dose_id):
             dose_id = dose_obj.create({
-                'name': record['sig_text'].strip(),
-                'code': record['sig_code'].strip(),
+                'name': record['sig_text_english'].strip(),
+                'code': sig_code,
             })
         return {'medication_dosage_id': dose_id.id}
 
@@ -181,13 +181,13 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @mapping
     def physician_id(self, record):
         binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'])
+        physician_id = binder.to_odoo(record['md_id'], True)
         return {'physician_id': physician_id}
 
     @mapping
     def prescription_order_id(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order')
-        prescription_order_id = binder.to_odoo(record['rx_id'])
+        prescription_order_id = binder.to_odoo(record['rx_id'], True)
         return {'prescription_order_id': prescription_order_id}
 
     @mapping

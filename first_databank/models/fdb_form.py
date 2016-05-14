@@ -16,4 +16,5 @@ class FdbForm(models.Model):
         required=True,
         ondelete='cascade',
     )
+    gcdf = fields.Char()
     update_yn = fields.Boolean()

@@ -164,25 +164,7 @@ class FdbUnitImportMapper(CarepointImportMapper):
 @carepoint
 class FdbUnitImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.unit']
-
     _base_mapper = FdbUnitImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbUnitImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbUnitAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbUnitAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.unit record """
-    _model_name = ['carepoint.fdb.unit']
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
 
 
 @job(default_channel='root.carepoint.fdb')

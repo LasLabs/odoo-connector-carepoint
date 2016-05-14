@@ -97,6 +97,19 @@ class CarepointAddressAdapter(CarepointCRUDAdapter):
     _model_name = 'carepoint.carepoint.address'
 
 
+
+@carepoint
+class AddressUnit(ConnectorUnit):
+    _model_name = 'carepoint.carepoint.address'
+
+    def _import_by_filter(self, **filters):
+        adapter = self.unit_for(CarepointCRUDAdapter)
+        importer = self.unit_for(CarepointAddressImporter)
+        rec_ids = adapter.search(**filters)
+        for rec_id in rec_ids:
+            importer.run(rec_id)
+
+
 @carepoint
 class CarepointAddressBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Addresss.

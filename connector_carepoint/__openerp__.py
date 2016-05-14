@@ -13,6 +13,9 @@
     'depends': [
         'connector',
         'first_databank',
+        'delivery',
+        'l10n_multilang',
+        'l10n_us',
     ],
     "external_dependencies": {
         "python": [

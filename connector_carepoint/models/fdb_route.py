@@ -81,7 +81,6 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
 class FdbRouteImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
-        (trim('gcrt'), 'grct'),
         (trim_and_titleize('rt'), 'rt'),
         (trim('gcrt2'), 'code'),
         (trim_and_titleize('gcrt_desc'), 'name'),
@@ -105,28 +104,11 @@ class FdbRouteImportMapper(CarepointImportMapper):
     def carepoint_id(self, record):
         return {'carepoint_id': record['gcrt'].strip()}
 
+
 @carepoint
 class FdbRouteImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.route']
-
     _base_mapper = FdbRouteImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbRouteImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbRouteAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbRouteAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.route record """
-    _model_name = ['carepoint.fdb.route']
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
 
 
 @job(default_channel='root.carepoint.fdb')

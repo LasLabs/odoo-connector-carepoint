@@ -22,6 +22,7 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
+from .procurement_order import ProcurementOrderUnit
 
 
 _logger = logging.getLogger(__name__)
@@ -78,6 +79,19 @@ class AccountInvoiceLineAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
+class AccountInvoiceLineUnit(ConnectorUnit):
+    # @TODO: Move this somewhere else, here due to circular import issue
+    _model_name = 'carepoint.account.invoice.line'
+
+    def _import_invoice_lines_for_procurement(self, rxdisp_id):
+        adapter = self.unit_for(CarepointCRUDAdapter)
+        importer = self.unit_for(AccountInvoiceLineImporter)
+        rec_ids = adapter.search(rxdisp_id=rxdisp_id)
+        for rec_id in rec_ids:
+            importer.run(rec_id)
+
+
+@carepoint
 class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Patients.
     For every order in the list, a delayed job is created.
@@ -97,42 +111,44 @@ class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
 class AccountInvoiceLineImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.account.invoice.line'
 
-    direct = [
-        # ('submit_date', 'date_order'),
-    ]
-
-    # @mapping
-    # @only_create
-    # def state(self, record):
-    #     state_id = self.env.ref(
-    #         'connector_carepoint.state_%d' % record['order_state_cn']
-    #     )
-    #     return {'state': state_id.order_state}
-
     @mapping
     @only_create
     def invoice_id(self, record):
         binder = self.binder_for('carepoint.procurement.order')
-        proc_id = binder.to_odoo(record['rxdisp_id'])
-        proc_id = self.env['procurement.order'].browse(proc_id)
-        invoice_id = proc_id.sale_line_id.order_id.invoice_ids
+        proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
+        invoice_id = self.env['account.invoice'].search([
+            ('origin', '=', proc_id.sale_line_id.order_id.name)
+        ],
+            limit=1,
+        )
         if len(invoice_id):
             invoice_id = invoice_id[0]
         else:
-            invoice_id = self.env['account.invoice'].create(
-                proc_id.sale_line_id.order_id._prepare_invoice()
-            )
+            vals = proc_id.sale_line_id.order_id._prepare_invoice()
+            vals.update({
+                'date_invoice': record['primary_pay_date'],
+            })
+            invoice_id = self.env['account.invoice'].create(vals)
         return {'invoice_id': invoice_id.id}
 
     @mapping
-    def invoice_lines(self, record):
+    @only_create
+    def sale_line_ids(self, record):
         binder = self.binder_for('carepoint.procurement.order')
-        proc_id = binder.to_odoo(record['rxdisp_id'])
-        proc_id = self.env['procurement.order'].browse(proc_id)
+        proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
+        return {
+            'sale_line_ids': [(6, 0, [proc_id.sale_line_id.id])],
+        }
+
+    @mapping
+    def invoice_line_data(self, record):
+        binder = self.binder_for('carepoint.procurement.order')
+        proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
         line_id = proc_id.sale_line_id
         qty = line_id.product_uom_qty
-        line_id.price_unit = record['t_patient_pay_paid'] / qty
-        return line_id._prepare_invoice_line(qty)
+        line_id.price_unit = float(record['t_price_sub']) / qty
+        res = line_id._prepare_invoice_line(qty)
+        return res
 
     @mapping
     def carepoint_id(self, record):
@@ -157,11 +173,36 @@ class AccountInvoiceLineImporter(CarepointImporter):
         self._import_dependency(record['rxdisp_id'],
                                 'carepoint.procurement.order')
 
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
+    def _after_import(self, binding):
+        """ Validate and pay if necessary """
+        binder = self.binder_for('carepoint.procurement.order')
+        proc_id = binder.to_odoo(self.carepoint_record['rxdisp_id'],
+                                 browse=True)
+        binder = self.binder_for('carepoint.sale.order')
+        sale_id = binder.to_backend(proc_id.sale_line_id.order_id.id)
+        proc_unit = self.unit_for(
+            ProcurementOrderUnit, model='carepoint.procurement.order',
+        )
+        line_cnt = proc_unit._get_order_line_count(sale_id)
+        invoice_id = self._get_binding().invoice_id
+        if len(invoice_id.invoice_line_ids) == line_cnt:
+            cp_state = proc_id.sale_line_id.order_id.carepoint_order_state_cn
+            state_id = self.env.ref(
+                'connector_carepoint.state_%d' % cp_state
+            )
+            vals = {}
+            if invoice_id.state != state_id.invoice_state:
+                vals['state'] = state_id.invoice_state
+            if state_id.invoice_state == 'paid':
+                if invoice_id.state != 'paid':
+                    invoice_id.action_move_create()
+                    invoice_id.invoice_validate()
+                    if invoice_id.residual > 0:
+                        invoice_id.pay_and_reconcile(
+                            self.backend_record.default_payment_journal,
+                            date=invoice_id.date_invoice,
+                        )
+            invoice_id.write(vals)
 
 
 @carepoint

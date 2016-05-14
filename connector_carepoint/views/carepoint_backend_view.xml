@@ -37,31 +37,42 @@
                                     </group>
                                 </group>
                             </page>
-                            <page string="Defaults" name="defaults">
-                                <group name="main_configuration" string="Main Configuration">
-                                    <group>
-                                        <field name="company_id" />
-                                        <field name="is_default" />
-                                    </group>
-                                    <group>
-                                        <field name="default_category_id" />
-                                        <field name="sale_prefix" />
-                                    </group>
-                                </group>
-                                <group string="Localization" name="preferences">
-                                    <field name="default_lang_id"/>
-                                    <field name="default_tz" />
-                                </group>
-                                <group string="Accounting" name="accounting">
-                                    <field name="default_account_payable_id" />
-                                    <field name="default_account_receivable_id" />
-                                    <field name="default_customer_payment_term_id" />
-                                    <field name="default_supplier_payment_term_id" />
-                                </group>
-                            </page>
                         </notebook>
                     </group>
                     <notebook>
+
+                        <page string="Defaults" name="defaults">
+                            <group name="main_configuration" string="Main Configuration">
+                                <group>
+                                    <field name="company_id" />
+                                    <field name="is_default" />
+                                </group>
+                                <group>
+                                    <field name="default_category_id" />
+                                    <field name="sale_prefix" />
+                                </group>
+                            </group>
+                            <group string="Localization" name="preferences">
+                                <field name="default_lang_id"/>
+                                <field name="default_tz" />
+                            </group>
+                            <group string="Accounting" name="accounting">
+                                <group string="Partner">
+                                    <field name="default_account_payable_id" />
+                                    <field name="default_account_receivable_id" />
+                                    <field name="default_payment_journal" />
+                                    <field name="default_customer_payment_term_id" />
+                                    <field name="default_supplier_payment_term_id" />
+                                </group>
+                                <group string="Sale">
+                                    <field name="default_product_income_account_id" />
+                                    <field name="default_product_expense_account_id" />
+                                    <field name="default_sale_tax" />
+                                    <field name="default_purchase_tax" />
+                                </group>
+                            </group>
+                        </page>
+
                         <page name="import" string="Imports">
                             <p class="oe_grey oe_inline">
                                 By clicking on the buttons,
@@ -116,12 +127,12 @@
                             </group>
                             <group>
                                 <div>
-                                    <label string="Import dispenses since" class="oe_inline"/>
-                                    <field name="import_procurements_from_date"
+                                    <label string="Import pickings since" class="oe_inline"/>
+                                    <field name="import_pickings_from_date"
                                            class="oe_inline"
                                            nolabel="1"/>
                                 </div>
-                                <button name="import_procurement_order"
+                                <button name="import_stock_picking"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>
@@ -170,18 +181,6 @@
                                            nolabel="1"/>
                                 </div>
                                 <button name="import_medical_medicament"
-                                        type="object"
-                                        class="oe_highlight"
-                                        string="Import in background"/>
-                            </group>
-                            <group>
-                                <div>
-                                    <label string="Import sales since" class="oe_inline"/>
-                                    <field name="import_sales_from_date"
-                                           class="oe_inline"
-                                           nolabel="1"/>
-                                </div>
-                                <button name="import_sale_order"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>

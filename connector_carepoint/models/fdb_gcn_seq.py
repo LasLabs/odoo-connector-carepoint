@@ -80,8 +80,6 @@ class FdbGcnSeqImportMapper(CarepointImportMapper):
         ('gcn_seqno', 'gcn_seqno'),
         (trim('hic3'), 'hic3'),
         ('hicl_seqno', 'hicl_seqno'),
-        (trim('gcdf'), 'gcdf'),
-        ('gcrt', 'gcrt'),
         (trim('str'), 'str'),
         ('gtc', 'gtc'),
         ('tc', 'tc'),
@@ -92,6 +90,19 @@ class FdbGcnSeqImportMapper(CarepointImportMapper):
         (trim('str60'), 'str60'),
         ('update_yn', 'update_yn'),
     ]
+
+    @mapping
+    def form_id(self, record):
+        form_id = self.env['fdb.form'].search(
+            [('gcdf', '=', record['gcdf'].strip())], limit=1
+        )
+        return {'form_id': form_id.id}
+
+    @mapping
+    def route_id(self, record):
+        binder = self.binder_for('carepoint.fdb.route')
+        route_id = binder.to_odoo(record['gcrt'].strip())
+        return {'route_id': route_id}
 
     @mapping
     def carepoint_id(self, record):

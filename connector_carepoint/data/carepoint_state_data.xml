@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-    <data noupdate="1">
-
+<odoo>
+        
         <record model="carepoint.state" id="state_10">
             <field name="name">Entered</field>
             <field name="code">10</field>
@@ -57,6 +56,5 @@
             <field name="invoice_state">paid</field>
             <field name="prescription_state">done</field>
         </record>
-
-    </data>
-</openerp>
+        
+</odoo>

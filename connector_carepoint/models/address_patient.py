@@ -111,9 +111,11 @@ class CarepointAddressPatientImportMapper(CarepointImportMapper):
         binder = self.binder_for('carepoint.medical.patient')
         patient_id = binder.to_odoo(record['pat_id'])
         partner_id = self.env['medical.patient'].browse(patient_id).partner_id
-        return {
-            'parent_id': partner_id.id,
-        }
+        # if not partner_id.street:
+        #     
+        # return {
+        #     'parent_id': partner_id.id,
+        # }
 
     @mapping
     @only_create
@@ -155,6 +157,8 @@ class CarepointAddressPatientImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['addr_id'],
                                 'carepoint.carepoint.address')
+        self._import_dependency(record['pat_id'],
+                                'carepoint.medical.patient')
     #
     # def _after_import(self, partner_binding):
     #     """ Import the addresses """

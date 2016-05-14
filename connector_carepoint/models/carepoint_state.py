@@ -11,4 +11,5 @@ class CarepointState(models.Model):
     name = fields.Char(required=True)
     code = fields.Integer(required=True)
     order_state = fields.Char(required=True)
+    invoice_state = fields.Char(required=True)
     prescription_state = fields.Char(required=True)

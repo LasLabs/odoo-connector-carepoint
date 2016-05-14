@@ -36,10 +36,12 @@ class CarepointBackend(models.Model):
     username = fields.Char(
         string='Username',
         help="Database user",
+        required=True,
     )
     password = fields.Char(
         string='Password',
         help="Database password",
+        required=True,
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
@@ -86,11 +88,42 @@ class CarepointBackend(models.Model):
     default_account_payable_id = fields.Many2one(
         string='Default Account Payable',
         comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Payable')],
         required=True,
     )
     default_account_receivable_id = fields.Many2one(
         string='Default Account Receivable',
         comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Receivable')],
+        required=True,
+    )
+    default_product_income_account_id = fields.Many2one(
+        string='Default Product Income Account',
+        comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Income')],
+        required=True,
+    )
+    default_product_expense_account_id = fields.Many2one(
+        string='Default Product Expense Account',
+        comodel_name='account.account',
+        domain=lambda s: [('user_type_id.name', '=', 'Expenses')],
+        required=True,
+    )
+    default_sale_tax = fields.Many2one(
+        comodel_name='account.tax',
+        domain="""[('type_tax_use', 'in', ('sale', 'none')),
+                    ('company_id', '=', company_id)]""",
+        required=True,
+    )
+    default_purchase_tax = fields.Many2one(
+        comodel_name='account.tax',
+        domain="""[('type_tax_use', 'in', ('purchase', 'none')),
+                    ('company_id', '=', company_id)]""",
+        required=True,
+    )
+    default_payment_journal = fields.Many2one(
+        string='Default Payment Journal',
+        comodel_name='account.journal',
         required=True,
     )
     default_customer_payment_term_id = fields.Many2one(
@@ -109,7 +142,7 @@ class CarepointBackend(models.Model):
     import_prescriptions_from_date = fields.Datetime()
     import_sales_from_date = fields.Datetime()
     import_addresses_from_date = fields.Datetime()
-    import_procurements_from_date = fields.Datetime()
+    import_pickings_from_date = fields.Datetime()
     import_invoices_from_date = fields.Datetime()
     company_id = fields.Many2one(
         string='Company',
@@ -269,13 +302,13 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_sale_order(self):
-        self._import_from_date('carepoint.sale.order',
+        self._import_from_date('carepoint.sale.order.line',
                                'import_sales_from_date')
 
     @api.multi
-    def import_procurement_order(self):
-        self._import_from_date('carepoint.procurement.order',
-                               'import_procurements_from_date')
+    def import_stock_picking(self):
+        self._import_from_date('carepoint.stock.picking',
+                               'import_pickings_from_date')
 
     @api.multi
     def import_account_invoice(self):

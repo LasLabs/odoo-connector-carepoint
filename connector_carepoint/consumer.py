@@ -64,7 +64,7 @@ def delay_unlink(session, model_name, record_id):
     record = session.env[model_name].browse(record_id)
     env = get_environment(session, model_name, record.backend_id.id)
     binder = env.get_connector_unit(Binder)
-    carepoint_id = binder.to_backend(record_id)
+    carepoint_id = binder.to_backend(record_id, wrap=False)
     if carepoint_id:
         export_delete_record.delay(session, model_name,
                                    record.backend_id.id, carepoint_id)

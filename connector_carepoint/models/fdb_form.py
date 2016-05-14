@@ -81,7 +81,7 @@ class FdbFormBatchImporter(DelayedBatchImporter):
 class FdbFormImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.form'
     direct = [
-        ('gcdf', 'carepoint_id'),
+        (trim('gcdf'), 'gcdf'),
         (trim('dose'), 'code'),
         (trim_and_titleize('gcdf_desc'), 'name'),
         ('update_yn', 'update_yn'),
@@ -107,25 +107,7 @@ class FdbFormImportMapper(CarepointImportMapper):
 @carepoint
 class FdbFormImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.form']
-
     _base_mapper = FdbFormImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbFormImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbFormAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbFormAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.form record """
-    _model_name = ['carepoint.fdb.form']
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
 
 
 @job(default_channel='root.carepoint.fdb')
