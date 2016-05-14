@@ -81,12 +81,18 @@ class SaleOrderLineAdapter(CarepointCRUDAdapter):
 class SaleOrderLineUnit(ConnectorUnit):
     _model_name = 'carepoint.sale.order.line'
 
-    def _import_sale_order_lines(self, sale_order_id, sale_order_binding_id):
+    def __get_order_lines(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
         importer = self.unit_for(SaleOrderLineImporter)
-        sale_line_ids = adapter.search(order_id=sale_order_id)
-        for rec_id in sale_line_ids:
+        return adapter.search(order_id=sale_order_id) 
+
+    def _import_sale_order_lines(self, sale_order_id):
+        for rec_id in self.__get_order_lines(sale_order_id):
             importer.run(rec_id)
+
+    def _get_order_line_count(self, sale_order_id):
+        return len(self.__get_order_lines(sale_order_id))
+
 
 @carepoint
 class SaleOrderLineBatchImporter(DelayedBatchImporter):
@@ -111,6 +117,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     direct = []
 
     @mapping
+    @only_create
     def prescription_data(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order.line')
         line_id = self.env['medical.prescription.order.line'].browse(
@@ -133,6 +140,11 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     def price_unit(self, record):
         # @TODO: Figure out where the prices are
         return {'price_unit': 0}
+
+    @mapping
+    @only_create
+    def tax_id(self, record):
+        return {'tax_id': [(4, self.backend_record.default_sale_tax.id)]}
 
     @mapping
     def carepoint_id(self, record):

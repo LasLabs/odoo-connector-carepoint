@@ -36,10 +36,12 @@ class CarepointBackend(models.Model):
     username = fields.Char(
         string='Username',
         help="Database user",
+        required=True,
     )
     password = fields.Char(
         string='Password',
         help="Database password",
+        required=True,
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
@@ -105,6 +107,18 @@ class CarepointBackend(models.Model):
         string='Default Product Expense Account',
         comodel_name='account.account',
         domain=lambda s: [('user_type_id.name', '=', 'Expenses')],
+        required=True,
+    )
+    default_sale_tax = fields.Many2one(
+        comodel_name='account.tax',
+        domain="""[('type_tax_use', 'in', ('sale', 'none')),
+                    ('company_id', '=', company_id)]""",
+        required=True,
+    )
+    default_purchase_tax = fields.Many2one(
+        comodel_name='account.tax',
+        domain="""[('type_tax_use', 'in', ('purchase', 'none')),
+                    ('company_id', '=', company_id)]""",
         required=True,
     )
     default_payment_journal = fields.Many2one(
