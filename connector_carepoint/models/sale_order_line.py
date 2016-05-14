@@ -22,6 +22,7 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
+from .procurement_order import ProcurementOrderUnit
 
 
 _logger = logging.getLogger(__name__)
@@ -83,10 +84,10 @@ class SaleOrderLineUnit(ConnectorUnit):
 
     def __get_order_lines(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
-        importer = self.unit_for(SaleOrderLineImporter)
         return adapter.search(order_id=sale_order_id) 
 
     def _import_sale_order_lines(self, sale_order_id):
+        importer = self.unit_for(SaleOrderLineImporter)
         for rec_id in self.__get_order_lines(sale_order_id):
             importer.run(rec_id)
 
@@ -175,6 +176,20 @@ class SaleOrderLineImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['rxdisp_id'],
                                 'carepoint.procurement.order')
+        self._import_dependency(record['rxdisp_id'],
+                                'carepoint.account.invoice.line')
+        proc_unit = self.unit_for(
+            ProcurementOrderUnit, model='carepoint.procurement.order',
+        )
+        binder = self.binder_for('carepoint.sale.order')
+        order_id = binder.to_backend(binding.order_id)
+        line_cnt = proc_unit._get_order_line_count(
+            order_id
+        )
+        if len(binding.order_id.order_line) == line_cnt:
+            self._import_dependency(
+                record['order_id'], 'carepoint.stock.picking'
+            )
 
 
 @carepoint

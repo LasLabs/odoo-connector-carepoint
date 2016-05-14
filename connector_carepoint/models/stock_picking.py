@@ -82,7 +82,7 @@ class StockPickingAdapter(CarepointCRUDAdapter):
 class StockPickingUnit(ConnectorUnit):
     _model_name = 'carepoint.stock.picking'
 
-    def _import_pickings_for_sale(self, sale_order_id, binding_id):
+    def _import_pickings_for_sale(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
         importer = self.unit_for(StockPickingImporter)
         rec_ids = adapter.search(order_id=sale_order_id)
@@ -165,6 +165,8 @@ class StockPickingImporter(CarepointImporter):
         # )
 
     def _after_import(self, binding):
+        """ Transfer pickings and trigger invoice generation """
+
         binding.odoo_id.force_assign()
         wiz_id = self.env['stock.immediate.transfer'].create({
             'pick_id': binding.odoo_id.id

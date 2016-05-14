@@ -178,7 +178,7 @@ class SaleOrderImporter(CarepointImporter):
         #     ProcurementOrderUnit, model='carepoint.procurement.order',
         # )
         # proc_unit._import_procurements_for_sale(
-        #     self.carepoint_id, binding.id,
+        #     self.carepoint_id,
         # )
 
 

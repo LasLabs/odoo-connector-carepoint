@@ -22,8 +22,6 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
-from .stock_picking import StockPickingUnit
-from .account_invoice_line import AccountInvoiceLineUnit
 
 
 _logger = logging.getLogger(__name__)
@@ -83,12 +81,17 @@ class ProcurementOrderAdapter(CarepointCRUDAdapter):
 class ProcurementOrderUnit(ConnectorUnit):
     _model_name = 'carepoint.procurement.order'
 
-    def _import_procurements_for_sale(self, sale_order_id, binding_id):
+    def __get_order_lines(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
+        return adapter.search(order_id=sale_order_id)
+
+    def _import_procurements_for_sale(self, sale_order_id):
         importer = self.unit_for(ProcurementOrderImporter)
-        rec_ids = adapter.search(order_id=sale_order_id)
-        for rec_id in rec_ids:
+        for rec_id in self.__get_order_lines(sale_order_id):
             importer.run(rec_id)
+
+    def _get_order_line_count(self, sale_order_id):
+        return len(self.__get_order_lines(sale_order_id))
 
 
 @carepoint
@@ -192,23 +195,28 @@ class ProcurementOrderImporter(CarepointImporter):
                                 'carepoint.sale.order')
 
     def _after_import(self, binding):
-        """ Import the stock pickings & invoice lines """
-        record = self.carepoint_record
-        picking_unit = self.unit_for(
-            StockPickingUnit, model='carepoint.stock.picking',
+        """ Import the stock pickings & invoice lines if all lines imported"""
+        binder = self.binder_for('carepoint.sale.order')
+        #sale_id = binder.to_odoo(self.carepoint_record['order_id'])
+        proc_unit = self.unit_for(
+            ProcurementOrderUnit, model='carepoint.procurement.order',
         )
-        order_bind_id = self.env['carepoint.sale.order'].search([
-            ('odoo_id', '=', binding.sale_line_id.order_id.id),
-        ])
-        picking_unit._import_pickings_for_sale(
-            order_bind_id.carepoint_id, binding.id,
-        )
-        invoice_unit = self.unit_for(
-            AccountInvoiceLineUnit, model='carepoint.account.invoice.line',
-        )
-        invoice_unit._import_invoice_lines_for_procurement(
-            record['rxdisp_id'], binding.id,
-        )
+        line_cnt = proc_unit._get_order_line_count(self.carepoint_record['order_id'])
+        # if len(binding.sale_line_id.order_id.order_line) == line_cnt:
+        #     record = self.carepoint_record
+        #     picking_unit = self.unit_for(
+        #         StockPickingUnit, model='carepoint.stock.picking',
+        #     )
+        #     order_bind_id = binder.to_backend(
+        #         binding.sale_line_id.order_id.id, wrap=False,
+        #     )
+        #     picking_unit._import_pickings_for_sale(order_bind_id)
+            # invoice_unit = self.unit_for(
+            #     AccountInvoiceLineUnit, model='carepoint.account.invoice.line',
+            # )
+            # invoice_unit._import_invoice_lines_for_procurement(
+            #     record['rxdisp_id'], binding.id,
+            # )
 
 
 @carepoint

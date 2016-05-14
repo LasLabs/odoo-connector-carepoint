@@ -22,7 +22,7 @@ from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
 from ..related_action import unwrap_binding
-from .sale_order_line import SaleOrderLineUnit
+from .procurement_order import ProcurementOrderUnit
 
 
 _logger = logging.getLogger(__name__)
@@ -80,9 +80,10 @@ class AccountInvoiceLineAdapter(CarepointCRUDAdapter):
 
 @carepoint
 class AccountInvoiceLineUnit(ConnectorUnit):
+    # @TODO: Move this somewhere else, here due to circular import issue
     _model_name = 'carepoint.account.invoice.line'
 
-    def _import_invoice_lines_for_procurement(self, rxdisp_id, binding_id):
+    def _import_invoice_lines_for_procurement(self, rxdisp_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
         importer = self.unit_for(AccountInvoiceLineImporter)
         rec_ids = adapter.search(rxdisp_id=rxdisp_id)
@@ -115,7 +116,11 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
     def invoice_id(self, record):
         binder = self.binder_for('carepoint.procurement.order')
         proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
-        invoice_id = proc_id.sale_line_id.order_id.invoice_ids
+        invoice_id = self.env['account.invoice'].search([
+            ('origin', '=', proc_id.sale_line_id.order_id.name)
+        ],
+            limit=1,
+        )
         if len(invoice_id):
             invoice_id = invoice_id[0]
         else:
@@ -174,12 +179,11 @@ class AccountInvoiceLineImporter(CarepointImporter):
         proc_id = binder.to_odoo(self.carepoint_record['rxdisp_id'],
                                  browse=True)
         binder = self.binder_for('carepoint.sale.order')
-        sale_id = binder.to_backend(proc_id.sale_line_id.order_id.id,
-                                    wrap=True)
-        line_unit = self.unit_for(
-            SaleOrderLineUnit, model='carepoint.sale.order.line',
+        sale_id = binder.to_backend(proc_id.sale_line_id.order_id.id)
+        proc_unit = self.unit_for(
+            ProcurementOrderUnit, model='carepoint.procurement.order',
         )
-        line_cnt = line_unit._get_order_line_count(sale_id)
+        line_cnt = proc_unit._get_order_line_count(sale_id)
         invoice_id = self._get_binding().invoice_id
         if len(invoice_id.invoice_line_ids) == line_cnt:
             cp_state = proc_id.sale_line_id.order_id.carepoint_order_state_cn
