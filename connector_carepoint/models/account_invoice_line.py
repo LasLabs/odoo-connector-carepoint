@@ -137,9 +137,9 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
         state_id = self.env.ref(
             'connector_carepoint.state_%d' % cp_state
         )
-        # res.update({
-        #     'state': state_id.invoice_state,
-        # })
+        res.update({
+            'sale_line_ids': [(6, 0, [line_id.id])],
+        })
         return res
 
     @mapping
