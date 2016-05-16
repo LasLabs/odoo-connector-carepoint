@@ -146,7 +146,7 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
         proc_id = binder.to_odoo(record['rxdisp_id'], browse=True)
         line_id = proc_id.sale_line_id
         qty = line_id.product_uom_qty
-        line_id.price_unit = float(record['t_price_sub']) / qty
+        line_id.price_unit = float(record['t_patient_pay_sub']) / qty
         res = line_id._prepare_invoice_line(qty)
         return res
 
