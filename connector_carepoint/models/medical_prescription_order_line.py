@@ -109,7 +109,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @mapping
     def name(self, record):
         name = '{prefix}{name}'.format(
-            prefix=self.backend_record.backend_id.rx_prefix,
+            prefix=self.backend_record.rx_prefix,
             name=record['script_no'],
         )
         return {'name': name}
