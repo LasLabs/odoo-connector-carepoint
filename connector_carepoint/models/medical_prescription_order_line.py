@@ -107,6 +107,14 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     ]
 
     @mapping
+    def name(self, record):
+        name = '{prefix}{name}'.format(
+            prefix=self.backend_record.backend_id.rx_prefix,
+            name=record['script_no'],
+        )
+        return {'name': name}
+
+    @mapping
     def refill_qty_original(self, record):
         return {'refill_qty_original': (record['refills_orig'] or 0) + 1}
 

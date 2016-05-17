@@ -45,20 +45,20 @@ class CarepointBackend(models.Model):
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
-        default='CP-S/',
+        default='SSO/',
         help="A prefix put before the name of imported sales orders.\n"
              "For instance, if the prefix is 'cp-', the sales "
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
              "in Odoo.",
     )
-    # rx_prefix = fields.Char(
-    #     string='Rx Prefix',
-    #     default='CP-RX/',
-    #     help="A prefix put before the name of imported RX orders.\n"
-    #          "For instance, if the prefix is 'cp-', the Rx "
-    #          "order 100000692 in Carepoint, will be named 'cp-100000692' "
-    #          "in Odoo.",
-    # )
+    rx_prefix = fields.Char(
+        string='Rx Prefix',
+        default='SRX/',
+        help="A prefix put before the name of imported RX orders.\n"
+             "For instance, if the prefix is 'cp-', the Rx "
+             "order 100000692 in Carepoint, will be named 'cp-100000692' "
+             "in Odoo.",
+    )
     store_ids = fields.One2many(
         comodel_name='carepoint.medical.pharmacy',
         inverse_name='backend_id',
