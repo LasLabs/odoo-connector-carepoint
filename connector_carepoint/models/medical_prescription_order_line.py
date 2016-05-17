@@ -138,7 +138,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
 
     @mapping
     def is_substitutable(self, record):
-        return {'is_substitutable': bool(record['daw_yn'])}
+        return {'is_substitutable': not bool(record['daw_yn'])}
 
     @mapping
     def patient_id(self, record):
