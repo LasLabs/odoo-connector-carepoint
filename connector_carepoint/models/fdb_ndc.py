@@ -271,6 +271,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 'property_account_expense_id':
                     self.backend_record.default_product_expense_account_id.id,
                 'categ_id': self.backend_record.default_category_id.id,
+                'website_published': True,
             })
         return {'medicament_id': medicament_id.id}
 

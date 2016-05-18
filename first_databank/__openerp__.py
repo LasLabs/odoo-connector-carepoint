@@ -15,7 +15,7 @@
         'medical_insurance_us',
         'medical_medicament_us',
         # 'medical_patient_us',
-        'medical_physician_us',
+        # 'medical_physician_us',
         'medical_pharmacy_us',
         'medical_prescription_us',
         'medical_prescription_sale_stock_us',

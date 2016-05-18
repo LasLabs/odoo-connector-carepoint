@@ -50,6 +50,7 @@
                                 <group>
                                     <field name="default_category_id" />
                                     <field name="sale_prefix" />
+                                    <field name="rx_prefix" />
                                 </group>
                             </group>
                             <group string="Localization" name="preferences">

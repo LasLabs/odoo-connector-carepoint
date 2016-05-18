@@ -98,8 +98,6 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.medical.prescription.order.line'
 
     direct = [
-        # ('script_no', 'name'),
-        ('script_no', 'name'),
         ('start_date', 'date_start_treatment'),
         ('expire_date', 'date_stop_treatment'),
         ('written_qty', 'qty'),
@@ -107,6 +105,14 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         ('units_entered', 'quantity'),
         ('refills_left', 'refill_qty_remain'),
     ]
+
+    @mapping
+    def name(self, record):
+        name = '{prefix}{name}'.format(
+            prefix=self.backend_record.rx_prefix,
+            name=record['script_no'],
+        )
+        return {'name': name}
 
     @mapping
     def refill_qty_original(self, record):
@@ -124,12 +130,15 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @only_create
     def medicament_and_meta(self, record):
         binder = self.binder_for('carepoint.fdb.ndc')
-        ndc_id = binder.to_odoo(record['ndc'])
-        ndc_id = self.env['fdb.ndc'].browse(ndc_id)
+        ndc_id = binder.to_odoo(record['ndc'], browse=True)
         return {'medicament_id': ndc_id.medicament_id.id,
                 'dose_uom_id': ndc_id.medicament_id.uom_id.id,
                 'dispense_uom_id': ndc_id.medicament_id.uom_id.id,
                 }
+
+    @mapping
+    def is_substitutable(self, record):
+        return {'is_substitutable': not bool(record['daw_yn'])}
 
     @mapping
     def patient_id(self, record):

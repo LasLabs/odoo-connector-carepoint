@@ -101,10 +101,17 @@ class SaleOrderImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.sale.order'
 
     direct = [
-        ('order_id', 'origin'),
         ('comments', 'note'),
         ('order_state_cn', 'carepoint_order_state_cn'),
     ]
+
+    @mapping
+    def name(self, record):
+        name = '{prefix}{name}'.format(
+            prefix=self.backend_record.sale_prefix,
+            name=record['invoice_nbr'],
+        )
+        return {'name': name}
 
     @mapping
     def date_order(self, record):
