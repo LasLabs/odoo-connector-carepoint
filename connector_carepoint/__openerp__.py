@@ -28,6 +28,7 @@
         'data/medical_drug_form_data.xml',
         'data/carepoint_state_data.xml',
         'data/carepoint_carepoint_account_data.xml',
+        'data/ir_cron_data.xml',
     ],
     'installable': True,
     'application': False,

@@ -45,7 +45,7 @@ class CarepointBackend(models.Model):
     )
     sale_prefix = fields.Char(
         string='Sale Prefix',
-        default='CSO',
+        default='CSO/',
         help="A prefix put before the name of imported sales orders.\n"
              "For instance, if the prefix is 'cp-', the sales "
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
@@ -53,7 +53,7 @@ class CarepointBackend(models.Model):
     )
     rx_prefix = fields.Char(
         string='Rx Prefix',
-        default='CRX',
+        default='CRX/',
         help="A prefix put before the name of imported RX orders.\n"
              "For instance, if the prefix is 'cp-', the Rx "
              "order 100000692 in Carepoint, will be named 'cp-100000692' "
@@ -155,6 +155,9 @@ class CarepointBackend(models.Model):
         ' All newly created records for this company will be synced to the'
         ' default system. Only records that originated from non-default'
         ' systems will be synced with them.',
+    )
+    active = fields.Boolean(
+        default=True,
     )
     #
     # product_binding_ids = fields.One2many(
@@ -275,6 +278,14 @@ class CarepointBackend(models.Model):
     #     stores = store_obj.search([('backend_id', 'in', self.ids)])
     #     stores.import_prescription_orders()
     #     return True
+
+    @api.model
+    def cron_import_medical_prescription(self):
+        self.search([]).import_medical_prescription()
+
+    @api.model
+    def cron_import_sale_order(self):
+        self.search([]).import_sale_order()
 
     @api.multi
     def import_medical_medicament(self):
