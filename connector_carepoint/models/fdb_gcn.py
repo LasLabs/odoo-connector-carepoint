@@ -77,7 +77,7 @@ class FdbGcnBatchImporter(DelayedBatchImporter):
 class FdbGcnImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.gcn'
     direct = [
-        ('gcn', 'name'),
+        ('gcn_seqno', 'name'),
         ('update_yn', 'update_yn'),
     ]
 
