@@ -4,7 +4,7 @@
 
 import logging
 import re
-from openerp import models, fields
+from openerp import models, fields, _
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
@@ -21,6 +21,8 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..connector import add_checkpoint
 from .fdb_unit import ureg
 from pint.errors import DimensionalityError, UndefinedUnitError
+from psycopg2 import IntegrityError
+from openerp.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -253,7 +255,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 ],
                     limit=1,
                 )
-            medicament_id = medicament_obj.create({
+            medicament_vals = {
                 'name': medicament_name,
                 'drug_route_id': route_id.id,
                 'drug_form_id': form_id.id,
@@ -272,7 +274,14 @@ class FdbNdcImportMapper(CarepointImportMapper):
                     self.backend_record.default_product_expense_account_id.id,
                 'categ_id': self.backend_record.default_category_id.id,
                 'website_published': True,
-            })
+            }
+            try:
+                medicament_id = medicament_obj.create(medicament_vals)
+            except IntegrityError, e:
+                raise ValidationError(_(
+                    'Unable to create medicament w/ vals: %s '
+                    '--- Original Error: %s'
+                ) % (medicament_vals, e))
         return {'medicament_id': medicament_id.id}
 
     @mapping
