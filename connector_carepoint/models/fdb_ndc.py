@@ -188,9 +188,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         if not strength_str:
             strength_str = fdb_gcn_seq_id.str.lower().strip()
-        if not route_id:
+        if not route_id.id:
             route_id = fdb_gcn_seq_id.route_id.route_id
-        if not form_id:
+        if not form_id.id:
             form_id = fdb_gcn_seq_id.form_id.form_id
 
         strength_str = strength_str.replace('%', 'percent')
@@ -216,10 +216,10 @@ class FdbNdcImportMapper(CarepointImportMapper):
             strength_obj = ureg(' '.join(unit_arr))
         _logger.debug('%s, %s, %s, %s', route_id, form_id, fdb_gcn_seq_id, cs_ext_id)
         strength_str = strength_str.replace(
-            '%d' % strength_obj.m, ''
+            float(strength_obj), ''
         ).strip().upper()
         _logger.debug('Got str # %s. Searching for strength_str %s',
-                      strength_obj.m, strength_str)
+                      float(strength_obj), strength_str)
         strength_uom_id = self.env['product.uom'].search([
             ('name', '=', strength_str),
         ],
