@@ -236,6 +236,12 @@ class FdbNdcImportMapper(CarepointImportMapper):
         ],
             limit=1,
         )
+
+        if is_prescription:
+            categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
+        else:
+            categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
+
         if not len(medicament_id):
             code = record['dea']
             if not code:
@@ -255,13 +261,14 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 ],
                     limit=1,
                 )
+
             medicament_vals = {
                 'name': medicament_name,
                 'drug_route_id': route_id.id,
                 'drug_form_id': form_id.id,
                 'gpi': gpi,
                 'control_code': code,
-                'is_prescription': is_prescription,
+                'categ_id': categ_id.id,
                 'strength': strength_obj.m,
                 'strength_uom_id': strength_uom_id.id,
                 'uom_id': sale_uom_id.id,
@@ -282,6 +289,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                     'Unable to create medicament w/ vals: %s '
                     '--- Original Error: %s'
                 ) % (medicament_vals, e))
+
         return {'medicament_id': medicament_id.id}
 
     @mapping
