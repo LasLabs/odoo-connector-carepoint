@@ -219,10 +219,12 @@ class FdbNdcImportMapper(CarepointImportMapper):
             strength_str = strength_str.replace(
                 '%d' % strength_obj.m, ''
             ).strip().upper()
+            strength_num = float(strength_obj.m)
         except AttributeError:
             strength_str = strength_str.replace(
                 '%d' % strength_obj, ''
             ).strip().upper()
+            strength_num = float(strength_obj)
         strength_uom_id = self.env['product.uom'].search([
             ('name', '=', strength_str),
         ],
@@ -234,7 +236,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
             ('drug_route_id', '=', route_id.id),
             ('drug_form_id', '=', form_id.id),
             ('gpi', '=', gpi),
-            ('strength', '=', strength_obj.m),
+            ('strength', '=', strength_num),
             ('strength_uom_id', '=', strength_uom_id.id),
         ],
             limit=1,
@@ -272,7 +274,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 'gpi': gpi,
                 'control_code': code,
                 'categ_id': categ_id.id,
-                'strength': strength_obj.m,
+                'strength': strength_num,
                 'strength_uom_id': strength_uom_id.id,
                 'uom_id': sale_uom_id.id,
                 'uom_po_id': sale_uom_id.id,
