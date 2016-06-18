@@ -91,8 +91,9 @@ class FdbFormImportMapper(CarepointImportMapper):
     @only_create
     def form_id(self, record):
         """ Will bind the form on a existing form with same name """
-        form_id = self.env['medical.drug.form'].search([
-            ('name', 'ilike', record['gcdf_desc'].strip()),
+        form_id = self.env['medical.drug.form'].search(['|',
+            ('code', '=', record['dose'].strip()),
+            ('name', '=', record['gcdf_desc'].strip().title()),
         ],
             limit=1,
         )

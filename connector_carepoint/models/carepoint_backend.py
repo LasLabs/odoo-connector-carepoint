@@ -9,6 +9,7 @@ from openerp.exceptions import ValidationError
 from openerp.addons.connector.session import ConnectorSession
 from openerp.addons.base.res.res_partner import _tz_get
 from ..unit.import_synchronizer import (import_batch,
+                                        import_record,
                                         DirectBatchImporter,
                                         )
 from ..backend import carepoint
@@ -261,6 +262,19 @@ class CarepointBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
+
+    @api.model
+    def resync_all(self, binding_model):
+        """ Resync all bindings for model """
+        session = self.__get_session()
+        for record_id in self.env[binding_model].search([]):
+            for binding_id in record_id.carepoint_bind_ids:
+                import_record.delay(session,
+                                    binding_model,
+                                    binding_id.backend_id.id,
+                                    binding_id.carepoint_id,
+                                    force=True,
+                                    )
 
     #
     # @api.multi

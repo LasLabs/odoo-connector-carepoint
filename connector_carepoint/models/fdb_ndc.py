@@ -4,7 +4,7 @@
 
 import logging
 import re
-from openerp import models, fields
+from openerp import models, fields, _
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
@@ -21,6 +21,8 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..connector import add_checkpoint
 from .fdb_unit import ureg
 from pint.errors import DimensionalityError, UndefinedUnitError
+from psycopg2 import IntegrityError
+from openerp.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -213,11 +215,16 @@ class FdbNdcImportMapper(CarepointImportMapper):
                         unit_arr.append(uom_str)
             strength_obj = ureg(' '.join(unit_arr))
         _logger.debug('%s, %s, %s, %s', route_id, form_id, fdb_gcn_seq_id, cs_ext_id)
-        strength_str = strength_str.replace(
-            '%d' % strength_obj.m, ''
-        ).strip().upper()
-        _logger.debug('Got str # %s. Searching for strength_str %s',
-                      strength_obj.m, strength_str)
+        try:
+            strength_str = strength_str.replace(
+                '%d' % strength_obj.m, ''
+            ).strip().upper()
+            strength_num = float(strength_obj.m)
+        except AttributeError:
+            strength_str = strength_str.replace(
+                '%d' % strength_obj, ''
+            ).strip().upper()
+            strength_num = float(strength_obj)
         strength_uom_id = self.env['product.uom'].search([
             ('name', '=', strength_str),
         ],
@@ -228,12 +235,17 @@ class FdbNdcImportMapper(CarepointImportMapper):
             ('name', '=', medicament_name),
             ('drug_route_id', '=', route_id.id),
             ('drug_form_id', '=', form_id.id),
-            ('gpi', '=', gpi),
-            ('strength', '=', strength_obj.m),
+            ('strength', '=', strength_num),
             ('strength_uom_id', '=', strength_uom_id.id),
         ],
             limit=1,
         )
+
+        if is_prescription:
+            categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
+        else:
+            categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
+
         if not len(medicament_id):
             code = record['dea']
             if not code:
@@ -253,14 +265,15 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 ],
                     limit=1,
                 )
-            medicament_id = medicament_obj.create({
+
+            medicament_vals = {
                 'name': medicament_name,
                 'drug_route_id': route_id.id,
                 'drug_form_id': form_id.id,
-                'gpi': gpi,
+                'gpi': str(gpi),
                 'control_code': code,
-                'is_prescription': is_prescription,
-                'strength': strength_obj.m,
+                'categ_id': categ_id.id,
+                'strength': strength_num,
                 'strength_uom_id': strength_uom_id.id,
                 'uom_id': sale_uom_id.id,
                 'uom_po_id': sale_uom_id.id,
@@ -272,7 +285,15 @@ class FdbNdcImportMapper(CarepointImportMapper):
                     self.backend_record.default_product_expense_account_id.id,
                 'categ_id': self.backend_record.default_category_id.id,
                 'website_published': True,
-            })
+            }
+            try:
+                medicament_id = medicament_obj.create(medicament_vals)
+            except IntegrityError, e:
+                raise ValidationError(_(
+                    'Unable to create medicament w/ vals: %s '
+                    '--- Original Error: %s'
+                ) % (medicament_vals, e))
+
         return {'medicament_id': medicament_id.id}
 
     @mapping
