@@ -192,6 +192,8 @@ class FdbNdcImportMapper(CarepointImportMapper):
             route_id = fdb_gcn_seq_id.route_id.route_id
         if not form_id:
             form_id = fdb_gcn_seq_id.form_id.form_id
+        if not gpi:
+            gpi = 0
 
         strength_str = strength_str.replace('%', 'percent')
 
@@ -246,46 +248,46 @@ class FdbNdcImportMapper(CarepointImportMapper):
         else:
             categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
 
-        if not len(medicament_id):
-            code = record['dea']
-            if not code:
-                code = '0'
-            binder = self.binder_for('carepoint.fdb.ndc')
-            fdb_ndc_id = binder.to_odoo(record['ndc'])
-            fdb_ndc_id = self.env['fdb.ndc'].browse(fdb_ndc_id)
-            hcfa_unit = record['hcfa_unit'] or ''
+        code = record['dea']
+        if not code:
+            code = '0'
+        binder = self.binder_for('carepoint.fdb.ndc')
+        fdb_ndc_id = binder.to_odoo(record['ndc'])
+        fdb_ndc_id = self.env['fdb.ndc'].browse(fdb_ndc_id)
+        hcfa_unit = record['hcfa_unit'] or ''
+        sale_uom_id = self.env['product.uom'].search([
+            ('name', '=', hcfa_unit.strip()),
+        ],
+            limit=1,
+        )
+        if not sale_uom_id:
             sale_uom_id = self.env['product.uom'].search([
-                ('name', '=', hcfa_unit.strip()),
+                ('name', '=', 'UNIT'),
             ],
                 limit=1,
             )
-            if not sale_uom_id:
-                sale_uom_id = self.env['product.uom'].search([
-                    ('name', '=', 'UNIT'),
-                ],
-                    limit=1,
-                )
 
-            medicament_vals = {
-                'name': medicament_name,
-                'drug_route_id': route_id.id,
-                'drug_form_id': form_id.id,
-                'gpi': str(gpi),
-                'control_code': code,
-                'categ_id': categ_id.id,
-                'strength': strength_num,
-                'strength_uom_id': strength_uom_id.id,
-                'uom_id': sale_uom_id.id,
-                'uom_po_id': sale_uom_id.id,
-                'gcn_id': fdb_gcn_id.gcn_id.id,
-                'type': 'product',
-                'property_account_income_id':
-                    self.backend_record.default_product_income_account_id.id,
-                'property_account_expense_id':
-                    self.backend_record.default_product_expense_account_id.id,
-                'categ_id': self.backend_record.default_category_id.id,
-                'website_published': True,
-            }
+        medicament_vals = {
+            'name': medicament_name,
+            'drug_route_id': route_id.id,
+            'drug_form_id': form_id.id,
+            'gpi': str(gpi),
+            'control_code': code,
+            'categ_id': categ_id.id,
+            'strength': strength_num,
+            'strength_uom_id': strength_uom_id.id,
+            'uom_id': sale_uom_id.id,
+            'uom_po_id': sale_uom_id.id,
+            'gcn_id': fdb_gcn_id.gcn_id.id,
+            'type': 'product',
+            'property_account_income_id':
+                self.backend_record.default_product_income_account_id.id,
+            'property_account_expense_id':
+                self.backend_record.default_product_expense_account_id.id,
+            'website_published': True,
+        }
+
+        if not len(medicament_id):
             try:
                 medicament_id = medicament_obj.create(medicament_vals)
             except IntegrityError, e:
@@ -293,6 +295,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
                     'Unable to create medicament w/ vals: %s '
                     '--- Original Error: %s'
                 ) % (medicament_vals, e))
+
+        else:
+            medicament_id.write(medicament_vals)
 
         return {'medicament_id': medicament_id.id}
 

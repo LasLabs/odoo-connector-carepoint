@@ -24,4 +24,9 @@ class FdbGcn(models.Model):
         ondelete='cascade',
         required=True,
     )
+    monograph_ids = fields.One2many(
+        string='Monographs',
+        comodel_name='fdb.pem.mogc',
+        inverse_name='gcn_id',
+    )
     update_yn = fields.Boolean()

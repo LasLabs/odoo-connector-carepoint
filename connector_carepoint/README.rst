@@ -60,6 +60,11 @@ Known Issues / Roadmap
 * More intelligent PK handling, and allowance of searches without
 * Multiple DB connections not currently supported (namespace isolation required)
 * Have to reboot server after reinstall to kill dup namespaces
+* Medicament creation in NDC is bad & should use medicament importer instead
+* Medicament category setting is not enforced - also need Rx/OTC delineation
+* Add Rx/OTC Tax delineation
+* ``import_dependency`` usage in ``_after_import`` should be replaced for delay
+* Needs to be split into multiple modules to isolate dependencies
 
 Credits
 =======
