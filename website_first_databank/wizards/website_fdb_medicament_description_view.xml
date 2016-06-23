@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright 2016 LasLabs Inc.
+    @license AGPL-3 or later (http://www.gnu.org/licenses/agpl.html).
+-->
+
+<odoo>
+
+    <record model="ir.ui.view" id="website_fdb_medicament_description_view_form">
+        <field name="name">website.fdb.medicament.description.view.form</field>
+        <field name="model">website.fdb.medicament.description</field>
+        <field name="arch" type="xml">
+            
+            <form string="FDB Description">
+                <header />
+                <sheet>
+                    <notebook>
+                        <page string="Options">
+                            <group>
+                                <group>
+                                    <field name="medicament_id" />
+                                    <field name="gcn_id" />
+                                </group>
+                                <group>
+                                    <field name="monograph_id" />
+                                    <field name="template_id" />
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Preview">
+                            <field name="monograph_html" />
+                        </page>
+                    </notebook>
+
+                </sheet>
+                <footer>
+                    <button special="cancel"
+                            string="Cancel" />
+                    <button name="sync_description"
+                            type="object"
+                            string="Save"
+                            class="oe_highlight" />
+                </footer>
+            </form>
+
+        </field>
+    </record>
+
+    <act_window src_model="medical.medicament"
+                res_model="website.fdb.medicament.description"
+                id="website_fdb_medicament_description_action"
+                name="Update Website"
+                view_mode="form"
+                target="new"
+                key2="client_action_multi" />
+
+
+</odoo>

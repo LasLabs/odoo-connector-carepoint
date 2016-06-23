@@ -15,6 +15,7 @@ addon | version | summary
 --- | --- | ---
 [connector_carepoint](connector_carepoint/) | 9.0.1.0.0 | Base CarePoint connector
 [first_databank](first_databank/) | 9.0.1.0.0 | Models to help with First Databank import
+[website_first_databank](website_first_databank) | 9.0.1.0.0 | Provides FDB monograph data in website product descriptions
 
 
 Unported addons
