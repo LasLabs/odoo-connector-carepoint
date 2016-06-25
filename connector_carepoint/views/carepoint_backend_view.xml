@@ -13,10 +13,10 @@
         <field name="arch" type="xml">
             <form string="CarePoint Backend">
                 <header>
-                  <button name="synchronize_metadata"
+                  <button name="import_fdb"
                     type="object"
                     class="oe_highlight"
-                    string="Synchronize Metadata"/>
+                    string="Import FDB Core"/>
                 </header>
                 <sheet>
                     <label for="name" class="oe_edit_only"/>

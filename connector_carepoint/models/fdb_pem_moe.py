@@ -22,47 +22,42 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
-
-
-class CarepointFdbGcn(models.Model):
-    _name = 'carepoint.fdb.gcn'
+class CarepointFdbPemMoe(models.Model):
+    _name = 'carepoint.fdb.pem.moe'
     _inherit = 'carepoint.binding'
-    _inherits = {'fdb.gcn': 'odoo_id'}
-    _description = 'Carepoint FdbGcn'
-    _cp_lib = 'fdb_gcn'  # Name of model in Carepoint lib (snake_case)
+    _inherits = {'fdb.pem.moe': 'odoo_id'}
+    _description = 'Carepoint FdbPemMoe'
+    _cp_lib = 'fdb_pem_moe'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        string='FdbGcn',
-        comodel_name='fdb.gcn',
+        string='FdbPemMoe',
+        comodel_name='fdb.pem.moe',
         required=True,
         ondelete='restrict'
     )
 
-class FdbGcn(models.Model):
-    _inherit = 'fdb.gcn'
+class FdbPemMoe(models.Model):
+    _inherit = 'fdb.pem.moe'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.gcn',
+        comodel_name='carepoint.fdb.pem.moe',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class FdbGcnAdapter(CarepointCRUDAdapter):
-    _model_name = 'carepoint.fdb.gcn'
+class FdbPemMoeAdapter(CarepointCRUDAdapter):
+    _model_name = 'carepoint.fdb.pem.moe'
 
 
 @carepoint
-class FdbGcnBatchImporter(DelayedBatchImporter):
-    """ Import the Carepoint FdbGcns.
+class FdbPemMoeBatchImporter(DelayedBatchImporter):
+    """ Import the Carepoint FdbPemMoes.
     For every product category in the list, a delayed job is created.
     Import from a date
     """
-    _model_name = ['carepoint.fdb.gcn']
+    _model_name = ['carepoint.fdb.pem.moe']
 
     def run(self, filters=None):
         """ Run the synchronization """
@@ -74,45 +69,51 @@ class FdbGcnBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbGcnImportMapper(CarepointImportMapper):
-    _model_name = 'carepoint.fdb.gcn'
+class FdbPemMoeImportMapper(CarepointImportMapper):
+    _model_name = 'carepoint.fdb.pem.moe'
+
     direct = [
-        ('gcn_seqno', 'name'),
+        ('pemono_sn', 'pemono_sn'),
+        (trim('pemtxtei'), 'pemtxtei'),
+        (trim('pemtxte'), 'pemtxte'),
+        (trim('pemgndr'), 'pemgndr'),
+        (trim('pemage'), 'pemage'),
         ('update_yn', 'update_yn'),
     ]
 
     @mapping
+    def mogc_id(self, record):
+        mogc_id = self.env['fdb.pem.mogc'].search([
+            ('pemono', '=', record['pemono']),
+        ],
+            limit=1,
+        )
+        return {'mogc_id': mogc_id.id}
+
+    @mapping
     def carepoint_id(self, record):
-        return {'carepoint_id': record['gcn_seqno']}
+        return {'carepoint_id': '%d,%d' % (record['pemono'],
+                                           record['pemono_sn'],
+                                          )}
 
 
 @carepoint
-class FdbGcnImporter(CarepointImporter):
-    _model_name = ['carepoint.fdb.gcn']
+class FdbPemMoeImporter(CarepointImporter):
+    _model_name = ['carepoint.fdb.pem.moe']
 
-    _base_mapper = FdbGcnImportMapper
+    _base_mapper = FdbPemMoeImportMapper
 
     def _create(self, data):
-        odoo_binding = super(FdbGcnImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbGcnAddCheckpoint)
+        odoo_binding = super(FdbPemMoeImporter, self)._create(data)
+        checkpoint = self.unit_for(FdbPemMoeAddCheckpoint)
         checkpoint.run(odoo_binding.id)
         return odoo_binding
 
-    def _import_dependencies(self):
-        """ Import depends for record """
-        record = self.carepoint_record
-        self._import_dependency(record['gcn_seqno'],
-                                'carepoint.fdb.gcn.seq')
-
-    def _after_import(self, binding):
-        self._import_dependency(self.carepoint_record['gcn_seqno'],
-                                'carepoint.fdb.pem.mogc')
-
 
 @carepoint
-class FdbGcnAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.gcn record """
-    _model_name = ['carepoint.fdb.gcn']
+class FdbPemMoeAddCheckpoint(ConnectorUnit):
+    """ Add a connector.checkpoint on the carepoint.fdb.pem.moe record """
+    _model_name = ['carepoint.fdb.pem.moe']
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,
@@ -121,10 +122,10 @@ class FdbGcnAddCheckpoint(ConnectorUnit):
 
 
 @job(default_channel='root.carepoint.fdb')
-def fdb_gcn_import_batch(session, model_name, backend_id, filters=None):
+def fdb_pem_moe_import_batch(session, model_name, backend_id, filters=None):
     """ Prepare the import of NDCs from Carepoint """
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbGcnBatchImporter)
+    importer = env.get_connector_unit(FdbPemMoeBatchImporter)
     importer.run(filters=filters)

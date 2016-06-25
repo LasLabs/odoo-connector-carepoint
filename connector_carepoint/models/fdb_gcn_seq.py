@@ -22,11 +22,6 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
-
-
 class CarepointFdbGcnSeq(models.Model):
     _name = 'carepoint.fdb.gcn.seq'
     _inherit = 'carepoint.binding'

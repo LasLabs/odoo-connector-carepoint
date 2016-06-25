@@ -101,18 +101,27 @@ class CarepointCRUDAdapter(CRUDAdapter):
 
     def read(self, _id, attributes=None, create=False):
         """ Gets record by id and returns the object
-        :param _id: Id of record to get from Db
-        :type _id: int
+        :param _id: Id of record to get from Db. Can be comma sep str
+            for multiple indexes
+        :type _id: mixed
         :param attributes: Attributes to rcv from db. None for *
         :type attributes: list or None
         :param create: Create a record if not found
         :type create: bool
         :rtype: dict
+
+        @TODO: Fix the conjoined index lookups, this is pretty flaky
         """
         # @TODO: Fix lookup by ident
         model_obj = self.__get_cp_model()
-        pk = self.carepoint.get_pks(model_obj)[0]
-        rec = self.carepoint.search(model_obj, {pk: _id}, attributes)[0]
+        pks = self.carepoint.get_pks(model_obj)
+        domain = {}
+        try:
+            for idx, id_part in enumerate(_id.split(',')):
+                domain[pks[idx]] = id_part
+        except AttributeError:
+            domain[pks[0]] = _id
+        rec = self.carepoint.search(model_obj, domain, attributes)[0]
         return rec
 
     def read_image(self, path):

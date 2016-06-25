@@ -52,6 +52,8 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.fdb.imglbl.rid',
         'carepoint.fdb.unit',
         'carepoint.fdb.ndc.cs.ext',
+        'carepoint.fdb.pem.mogc',
+        'carepoint.fdb.pem.moe',
     ]
 
     def to_odoo(self, external_id, unwrap=True, browse=False):
