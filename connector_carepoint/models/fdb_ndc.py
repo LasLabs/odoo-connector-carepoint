@@ -243,10 +243,13 @@ class FdbNdcImportMapper(CarepointImportMapper):
             limit=1,
         )
 
-        if is_prescription:
-            categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
-        else:
-            categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
+        categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
+
+        # @TODO: Figure out true is_prescription
+        # if is_prescription:
+        #     categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
+        # else:
+        #     categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
 
         code = record['dea']
         if not code:
