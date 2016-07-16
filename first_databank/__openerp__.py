@@ -21,6 +21,9 @@
         'medical_prescription_sale_stock_us',
         'medical_manufacturer',
     ],
+    'data': [
+        'security/ir.model.access.csv',
+    ],
     'installable': True,
     'application': False,
 }
