@@ -24,7 +24,8 @@ class WebsiteFdbNdcImporter(FdbNdcImporter):
                 return
             wizard_id = wizard_obj.create({
                 'medicament_id': binding.medicament_id.id,
-                'template_id': binding.backend_id.website_product_template_id.id,
+                'template_id':
+                    binding.backend_id.website_product_template_id.id,
                 'monograph_id': fdb_gcn_id.monograph_ids[0].id,
             })
             wizard_id._render_save()

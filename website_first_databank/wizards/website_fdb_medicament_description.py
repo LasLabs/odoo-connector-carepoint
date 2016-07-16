@@ -19,7 +19,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     )
     gcn_id = fields.Many2one(
         comodel_name='medical.medicament.gcn',
-        related='medicament_id.gcn_id',
+        compute='_compute_gcn_id',
         readonly=True,
     )
     monograph_id = fields.Many2one(
@@ -38,7 +38,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     @api.model
     def _default_medicament_ids(self):
         model = 'medical.medicament'
-        if self.env.context.get('active_model') != 'medical.medicament':
+        if self.env.context.get('active_model') != model:
             return
         res = []
         if self.env.context.get('active_id'):
@@ -46,6 +46,12 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         if self.env.context.get('active_ids'):
             res.extend(self.env.context['active_id'])
         return [6, 0, res]
+
+    @api.multi
+    def _compute_gcn_id(self):
+        for rec_id in self:
+            if rec_id.medicament_ids:
+                rec_id.gcn_id = rec_id.medicament_ids[0].gcn_id
 
     @api.model
     def _default_monograph_id(self):
