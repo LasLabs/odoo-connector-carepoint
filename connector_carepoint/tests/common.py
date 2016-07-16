@@ -11,10 +11,6 @@ import mock
 from contextlib import contextmanager
 import openerp.tests.common as common
 from openerp.addons.connector.session import ConnectorSession
-# from openerp.addons.connector_carepoint.unit.import_synchronizer import (
-#     import_batch,
-# )
-# from .data_base import carepoint_base_responses
 
 from carepoint.db import Db as CarepointDb
 
@@ -50,18 +46,25 @@ def mock_job_delay_to_direct(job_path):
 
 
 @contextmanager
-def mock_api(actions=None, ret_val=False):
-    """ """
-    with mock.patch('%s.carepoint.Carepoint' % backend_adapter) as API:
-        API().search()
+def mock_api():
+    """ Mock CarePoint API for testing """
+    with mock.patch('%s.Carepoint' % backend_adapter) as API:
         yield API
 
 
 class CarepointHelper(object):
+    """ Emulate a ConnectorEnvironment """
 
-    def __init__(self, cr, registry, model_name):
-        self.cr = cr
-        self.model = registry(model_name)
+    def __init__(self, env, model_name, backend):
+        self.cr = env.cr
+        self.model = env[model_name]
+        self.backend = backend.get_backend()
+        self.backend_record = backend
+        self.session = ConnectorSession(
+            env.cr,
+            env.uid,
+            env.context,
+        )
 
 
 class ObjDict(dict):
@@ -74,10 +77,7 @@ class ObjDict(dict):
 
 
 class SetUpCarepointBase(common.TransactionCase):
-    """ Base class - Test the imports from a Carepoint Mock.
-    The data returned by Carepoint are those created for the
-    demo version of Carepoint on a standard 2 version.
-    """
+    """ Base class - Test the imports from a Carepoint Mock. """
 
     def setUp(self):
         super(SetUpCarepointBase, self).setUp()
@@ -85,7 +85,9 @@ class SetUpCarepointBase(common.TransactionCase):
         self.session = ConnectorSession(
             self.env.cr, self.env.uid, context=self.env.context,
         )
-        self.journal = self.env.ref('account.check_journal')
+        self.journal = self.env['account.journal'].search(
+            [('type', '=', 'general')]
+        )[0]
         self.cx_term = self.env.ref('account.account_payment_term_net')
         self.vx_term = self.env.ref('account.account_payment_term_immediate')
         self.cx_tax = self.env['account.tax'].create({
@@ -142,4 +144,6 @@ class SetUpCarepointBase(common.TransactionCase):
         self.mock_api = mock_api
 
     def get_carepoint_helper(self, model_name):
-        return CarepointHelper(self.cr, self.registry, model_name)
+        return CarepointHelper(
+            self.env, model_name, self.backend
+        )

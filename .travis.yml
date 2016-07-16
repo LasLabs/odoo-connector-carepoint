@@ -34,7 +34,7 @@ install:
   - export PATH=${HOME}/maintainer-quality-tools/travis:${PATH}
   - travis_install_nightly
   - pip install -r test_requirements.txt
-  - pip install git+https://github.com/laslabs/Python-Carepoint.git
+  - pip install --upgrade git+https://github.com/laslabs/Python-Carepoint.git
 
 script:
   - travis_run_tests

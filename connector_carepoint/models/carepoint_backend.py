@@ -28,6 +28,13 @@ class CarepointBackend(models.Model):
 
     _backend_type = 'carepoint'
 
+    _sql_constraints = [
+        ('sale_prefix_uniq', 'unique(sale_prefix)',
+         "A backend with the same sale prefix already exists"),
+        ('rx_prefix_uniq', 'unique(rx_prefix)',
+         "A backend with the same rx prefix already exists"),
+    ]
+
     version = fields.Selection(
         selection='select_versions',
         required=True
@@ -179,13 +186,6 @@ class CarepointBackend(models.Model):
     #     readonly=True,
     # )
 
-    _sql_constraints = [
-        ('sale_prefix_uniq', 'unique(sale_prefix)',
-         "A backend with the same sale prefix already exists"),
-        ('rx_prefix_uniq', 'unique(rx_prefix)',
-         "A backend with the same rx prefix already exists"),
-    ]
-
     @api.multi
     @api.constrains('is_default', 'company_id')
     def _check_default_for_company(self):
@@ -282,23 +282,6 @@ class CarepointBackend(models.Model):
                                     force=True,
                                     )
 
-    #
-    # @api.multi
-    # def import_partners(self):
-    #     """ Import partners from all store """
-    #     for backend in self:
-    #         backend.check_carepoint_structure()
-    #         backend.store_ids.import_partners()
-    #     return True
-    #
-    # @api.multi
-    # def import_prescription_order(self):
-    #     """ Import prescription orders from associated stores """
-    #     store_obj = self.env['carepoint.store']
-    #     stores = store_obj.search([('backend_id', 'in', self.ids)])
-    #     stores.import_prescription_orders()
-    #     return True
-
     @api.model
     def cron_import_medical_prescription(self):
         self.search([]).import_medical_prescription()
@@ -347,13 +330,13 @@ class CarepointBackend(models.Model):
                                'import_invoices_from_date',
                                'primary_pay_date')
 
-    @api.multi
-    def import_address(self):
-        # self._import_from_date('carepoint.carepoint.address',
-        #                        'import_addresses_from_date')
-        self._import_all('carepoint.carepoint.address.pharmacy')
-        self._import_all('carepoint.carepoint.address.physician')
-        self._import_all('carepoint.carepoint.address.patient')
+    # @api.multi
+    # def import_address(self):
+    #     # self._import_from_date('carepoint.carepoint.address',
+    #     #                        'import_addresses_from_date')
+    #     self._import_all('carepoint.carepoint.address.pharmacy')
+    #     self._import_all('carepoint.carepoint.address.physician')
+    #     self._import_all('carepoint.carepoint.address.patient')
 
     @api.multi
     def import_fdb(self):
@@ -369,70 +352,6 @@ class CarepointBackend(models.Model):
         # self._import_all('carepoint.fdb.ndc')
         # self._import_all('carepoint.fdb.gcn.seq')
         return True
-
-    # @api.multi
-    # def _domain_for_update_product_stock_qty(self):
-    #     return [
-    #         ('backend_id', 'in', self.ids),
-    #         ('type', '!=', 'service'),
-    #         ('no_stock_sync', '=', False),
-    #     ]
-    #
-    # @api.multi
-    # def update_product_stock_qty(self):
-    #     mag_product_obj = self.env['carepoint.product.product']
-    #     domain = self._domain_for_update_product_stock_qty()
-    #     carepoint_products = mag_product_obj.search(domain)
-    #     carepoint_products.recompute_carepoint_qty()
-    #     return True
-    #
-    # @api.model
-    # def _carepoint_backend(self, callback, domain=None):
-    #     if domain is None:
-    #         domain = []
-    #     backends = self.search(domain)
-    #     if backends:
-    #         getattr(backends, callback)()
-    #
-    # @api.model
-    # def _scheduler_import_sale_orders(self, domain=None):
-    #     self._carepoint_backend('import_sale_orders', domain=domain)
-    #
-    # @api.model
-    # def _scheduler_import_customer_groups(self, domain=None):
-    #     self._carepoint_backend('import_customer_groups', domain=domain)
-    #
-    # @api.model
-    # def _scheduler_import_partners(self, domain=None):
-    #     self._carepoint_backend('import_partners', domain=domain)
-    #
-    # @api.model
-    # def _scheduler_import_product_categories(self, domain=None):
-    #     self._carepoint_backend('import_product_categories', domain=domain)
-    #
-    # @api.model
-    # def _scheduler_import_product_product(self, domain=None):
-    #     self._carepoint_backend('import_product_product', domain=domain)
-    #
-    # @api.model
-    # def _scheduler_update_product_stock_qty(self, domain=None):
-    #     self._carepoint_backend('update_product_stock_qty', domain=domain)
-
-    @api.multi
-    def output_recorder(self):
-        """ Utility method to output a file containing all the recorded
-        requests / responses with Carepoint.  Used to generate test data.
-        Should be called with ``erppeek`` for instance.
-        """
-        from .unit.backend_adapter import output_recorder
-        import os
-        import tempfile
-        fmt = '%Y-%m-%d-%H-%M-%S'
-        timestamp = datetime.now().strftime(fmt)
-        filename = 'output_%s_%s' % (self.env.cr.dbname, timestamp)
-        path = os.path.join(tempfile.gettempdir(), filename)
-        output_recorder(path)
-        return path
 
 
 @carepoint
