@@ -52,7 +52,7 @@ vag insert = vaginal
 unit = [unit]
 capsule = unit
 vial = unit
-vl unit
+vl = unit
 applicator = unit
 gauge = unit
 lozenge = unit

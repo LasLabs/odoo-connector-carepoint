@@ -4,7 +4,7 @@
 
 import mock
 
-from ..common import SetUpCarepointBase
+from .common import SetUpCarepointBase
 
 from openerp.exceptions import ValidationError
 

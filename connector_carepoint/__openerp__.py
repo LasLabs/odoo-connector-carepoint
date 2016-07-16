@@ -29,6 +29,7 @@
         'data/carepoint_state_data.xml',
         'data/carepoint_carepoint_account_data.xml',
         'data/ir_cron_data.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
     'application': False,
