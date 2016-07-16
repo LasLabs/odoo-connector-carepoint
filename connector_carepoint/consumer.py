@@ -4,13 +4,13 @@
 
 from openerp.addons.connector.connector import Binder
 from .unit.export_synchronizer import (export_record,
-                                      )
+                                       )
 from .unit.delete_synchronizer import export_delete_record
 from .connector import get_environment
-from openerp.addons.connector.event import (on_record_write,
-                                            on_record_create,
-                                            on_record_unlink
-                                            )
+# from openerp.addons.connector.event import (on_record_write,
+#                                             on_record_create,
+#                                             on_record_unlink
+#                                             )
 
 
 import logging

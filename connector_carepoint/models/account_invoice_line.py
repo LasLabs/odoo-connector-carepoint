@@ -4,7 +4,6 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
@@ -13,15 +12,13 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
+from ..connector import add_checkpoint
 from .procurement_order import ProcurementOrderUnit
 
 
@@ -222,7 +219,7 @@ class AccountInvoiceLineExportMapper(ExportMapper):
 
     @changed_by('gender')
     @mapping
-    def gender_cd(self):
+    def gender_cd(self, record):
         return {'gender_cd': record.get('gender').upper()}
 
 
@@ -239,7 +236,9 @@ class AccountInvoiceLineDeleteSynchronizer(CarepointDeleter):
 
 @carepoint
 class AccountInvoiceLineAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.account.invoice.line record """
+    """ Add a connector.checkpoint on the carepoint.account.invoice.line
+    record
+    """
     _model_name = ['carepoint.account.invoice.line', ]
 
     def run(self, binding_id):

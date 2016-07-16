@@ -7,12 +7,10 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -41,6 +39,7 @@ class CarepointFdbPemMogc(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbPemMogc(models.Model):
     _inherit = 'fdb.pem.mogc'
@@ -130,6 +129,7 @@ class FdbPemMogcImporter(CarepointImporter):
 class FdbPemMogcAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.pem.mogc record """
     _model_name = ['carepoint.fdb.pem.mogc']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

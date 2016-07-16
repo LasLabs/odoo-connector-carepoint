@@ -7,12 +7,11 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
-from ..unit.mapper import PartnerImportMapper, trim, trim_and_titleize
+from ..unit.mapper import PartnerImportMapper
+from ..unit.mapper import trim_and_titleize
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -40,6 +39,7 @@ class CarepointFdbImgMfg(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbImgMfg(models.Model):
     _inherit = 'fdb.img.mfg'
@@ -102,6 +102,7 @@ class FdbImgMfgImporter(CarepointImporter):
 class FdbImgMfgAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.img.mfg record """
     _model_name = ['carepoint.fdb.img.mfg']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

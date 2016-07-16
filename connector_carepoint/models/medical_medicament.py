@@ -3,24 +3,19 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+from collections import defaultdict
 from openerp import models, fields, api
-from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
                                                   only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
+from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -329,7 +324,6 @@ class MedicamentImporter(CarepointImporter):
         If it returns None, the import will continue normally.
         :returns: None | str | unicode
         """
-        pass
 
     def _validate_data(self, data):
         """ Check if the values to import are correct
@@ -337,7 +331,6 @@ class MedicamentImporter(CarepointImporter):
         ``_update`` if some fields are missing or invalid
         Raise `InvalidDataError`
         """
-        pass
 
     def _create(self, data):
         odoo_binding = super(MedicamentImporter, self)._create(data)
@@ -349,7 +342,6 @@ class MedicamentImporter(CarepointImporter):
         """ Hook called at the end of the import """
         self._import_dependency(self.carepoint_record['ndc'].strip(),
                                 'carepoint.fdb.ndc')
-        pass
         # translation_importer = self.unit_for(TranslationImporter)
         # translation_importer.run(self.carepoint_id, binding.id,
         #                          mapper_class=MedicamentImportMapper)
@@ -359,7 +351,8 @@ class MedicamentImporter(CarepointImporter):
 
 @carepoint
 class MedicalMedicamentAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.medicament record """
+    """ Add a connector.checkpoint on the carepoint.medical.medicament record
+    """
     _model_name = ['carepoint.medical.medicament', ]
 
     def run(self, binding_id):

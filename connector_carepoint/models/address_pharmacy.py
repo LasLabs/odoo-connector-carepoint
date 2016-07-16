@@ -4,24 +4,18 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
                                                   only_create,
-                                                  ExportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
-from ..connector import get_environment
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
 
 
 _logger = logging.getLogger(__name__)
@@ -29,7 +23,7 @@ _logger = logging.getLogger(__name__)
 
 class CarepointCarepointAddressPharmacy(models.Model):
     """ Binding Model for the Carepoint Address Pharmacy """
-    _name = 'carepoint.carepoint.address.pharmacy'  # This is going to be confusing...
+    _name = 'carepoint.carepoint.address.pharmacy'
     _inherit = 'carepoint.binding'
     _inherits = {'carepoint.address.pharmacy': 'odoo_id'}
     _description = 'Carepoint Address Pharmacy Many2Many Rel'
@@ -110,7 +104,8 @@ class CarepointAddressPharmacyImportMapper(CarepointImportMapper):
     def parent_id(self, record):
         binder = self.binder_for('carepoint.medical.pharmacy')
         pharmacy_id = binder.to_odoo(record['store_id'])
-        partner_id = self.env['medical.pharmacy'].browse(pharmacy_id).partner_id
+        partner_id = self.env['medical.pharmacy'].browse(
+            pharmacy_id).partner_id
         return {
             'parent_id': partner_id.id,
         }
@@ -157,16 +152,12 @@ class CarepointAddressPharmacyImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['addr_id'],
                                 'carepoint.carepoint.address')
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address.pharmacy')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
 @carepoint
 class CarepointAddressPharmacyAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.address.pharmacy record """
+    """ Add a connector.checkpoint on the carepoint.address.pharmacy record
+    """
     _model_name = ['carepoint.carepoint.address.pharmacy', ]
 
     def run(self, binding_id):
@@ -177,7 +168,9 @@ class CarepointAddressPharmacyAddCheckpoint(ConnectorUnit):
 
 
 @job(default_channel='root.carepoint.core')
-def carepoint_address_pharmacy_import_batch(session, model_name, backend_id, filters=None):
+def carepoint_address_pharmacy_import_batch(session, model_name, backend_id,
+                                            filters=None
+                                            ):
     """ Prepare the import of addresss modified on Carepoint """
     if filters is None:
         filters = {}

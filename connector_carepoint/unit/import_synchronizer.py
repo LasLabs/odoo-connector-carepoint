@@ -17,7 +17,6 @@ from openerp import fields, _
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.synchronizer import Importer
-from openerp.addons.connector.exception import IDMissingInBackend
 from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
 

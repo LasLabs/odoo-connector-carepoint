@@ -32,13 +32,19 @@ def call_to_key(method, arguments):
     return (method, tuple(new_args))
 
 
-def record(method, arguments, result):
+def record(method, model, arguments, result):
     """ Utility function which can be used to record test data
     during synchronisations. Call it from CarepointCRUDAdapter._call
     Then ``output_recorder`` can be used to write the data recorded
     to a file.
     """
-    recorder[call_to_key(method, arguments)] = result
+    try:
+        model_recorder = recorder[model]
+    except:
+        recorder[model] = {}
+        model_recorder = recorder[model]
+    model_recorder[call_to_key(method, arguments)] = result
+    output_recorder('/tmp/carepoint_')
 
 
 def output_recorder(filename):
@@ -67,6 +73,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
                 server=backend.server,
                 user=backend.username,
                 passwd=backend.password,
+                drv=backend.db_driver,
             )
         self.carepoint = carepoints[backend.server]
 
@@ -97,7 +104,9 @@ class CarepointCRUDAdapter(CRUDAdapter):
         _logger.debug('Searching %s for %s', model_obj, filters)
         pk = self.carepoint.get_pks(model_obj)[0]
         res = self.carepoint.search(model_obj, filters, [pk])
-        return [getattr(row, pk) for row in res]
+        res = [getattr(row, pk) for row in res]
+        record('search', self.connector_env.model._cp_lib, filters, res)
+        return res
 
     def read(self, _id, attributes=None, create=False):
         """ Gets record by id and returns the object
@@ -122,6 +131,8 @@ class CarepointCRUDAdapter(CRUDAdapter):
         except AttributeError:
             domain[pks[0]] = _id
         rec = self.carepoint.search(model_obj, domain, attributes)[0]
+        record('read', self.connector_env.model._cp_lib,
+               [_id, attributes, create], rec)
         return rec
 
     def read_image(self, path):
@@ -133,7 +144,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         Returns:
             :type:`str` Binary string representation of file
         """
-        return self.carepoint.get_file(path).read().encode('base64')
+        image = self.carepoint.get_file(path).read().encode('base64')
+        record('read_image', self.connector_env.model._cp_lib,
+               [path], image)
+        return image
 
     def write_image(self, path, file_obj):
         """ Write a file-like object to CarePoint SMB resource
@@ -145,7 +159,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         Returns:
             :type:`bool`
         """
-        return self.carepoint.send_file(path, file_obj)
+        res = self.carepoint.send_file(path, file_obj)
+        record('write_image', self.connector_env.model._cp_lib,
+               [path, file_obj], res)
+        return res
 
     def search_read(self, attributes=None, **filters):
         """ Search table by filters and return records
@@ -155,7 +172,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.search(model_obj, filters, attributes)
+        res = self.carepoint.search(model_obj, filters, attributes)
+        record('search_read', self.connector_env.model._cp_lib,
+               [attributes, filters], res)
+        return res
 
     def create(self, data):
         """ Wrapper to create a record on the external system
@@ -165,7 +185,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         """
         model_obj = self.__get_cp_model()
         _logger.debug('Creating with %s', data)
-        return self.carepoint.create(model_obj, data)
+        rec_id = self.carepoint.create(model_obj, data)
+        record('create', self.connector_env.model._cp_lib,
+               data, rec_id)
+        return rec_id
 
     def write(self, _id, data):
         """ Update record on the external system
@@ -177,7 +200,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         """
         model_obj = self.__get_cp_model()
         _logger.debug('Writing %s with %s', _id, data)
-        return self.carepoint.update(model_obj, _id, data)
+        res = self.carepoint.update(model_obj, _id, data)
+        record('update', self.connector_env.model._cp_lib,
+               [_id, data], res)
+        return res
 
     def delete(self, _id):
         """ Delete record on the external system
@@ -186,4 +212,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :rtype: bool
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.delete(model_obj, _id)
+        res = self.carepoint.delete(model_obj, _id)
+        record('delete', self.connector_env.model._cp_lib,
+               [_id], res)
+        return res

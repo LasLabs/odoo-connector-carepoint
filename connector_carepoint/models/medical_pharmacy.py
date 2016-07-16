@@ -12,7 +12,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
 from ..backend import carepoint
-from ..unit.mapper import PartnerImportMapper, trim, trim_and_titleize
+from ..unit.mapper import PartnerImportMapper
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -141,7 +141,7 @@ class MedicalPharmacyImporter(CarepointImporter):
 
     def _import_dependencies(self):
         """ Import depends for record """
-        record = self.carepoint_record
+        # record = self.carepoint_record
         # @TODO: Fix below error
         # 'csstore_addr' does not have the identity property.
         #  Cannot perform SET operation.

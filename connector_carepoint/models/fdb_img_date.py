@@ -7,12 +7,10 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -40,6 +38,7 @@ class CarepointFdbImgDate(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbImgDate(models.Model):
     _inherit = 'fdb.img.date'
@@ -104,6 +103,7 @@ class FdbImgDateImporter(CarepointImporter):
 class FdbImgDateAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.img.date record """
     _model_name = ['carepoint.fdb.img.date']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

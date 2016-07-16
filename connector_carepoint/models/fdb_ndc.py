@@ -9,10 +9,10 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
+from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import trim
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -20,7 +20,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..connector import add_checkpoint
 from .fdb_unit import ureg
-from pint.errors import DimensionalityError, UndefinedUnitError
+from pint.errors import DimensionalityError
 from psycopg2 import IntegrityError
 from openerp.exceptions import ValidationError
 
@@ -41,6 +41,7 @@ class CarepointFdbNdc(models.Model):
         ondelete='restrict'
     )
 
+
 class FdbNdc(models.Model):
     _inherit = 'fdb.ndc'
 
@@ -49,6 +50,7 @@ class FdbNdc(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+
 
 @carepoint
 class FdbNdcAdapter(CarepointCRUDAdapter):
@@ -216,7 +218,8 @@ class FdbNdcImportMapper(CarepointImportMapper):
                     if uom_str:
                         unit_arr.append(uom_str)
             strength_obj = ureg(' '.join(unit_arr))
-        _logger.debug('%s, %s, %s, %s', route_id, form_id, fdb_gcn_seq_id, cs_ext_id)
+        _logger.debug('%s, %s, %s, %s', route_id,
+                      form_id, fdb_gcn_seq_id, cs_ext_id)
         try:
             strength_str = strength_str.replace(
                 '%d' % strength_obj.m, ''
@@ -243,13 +246,14 @@ class FdbNdcImportMapper(CarepointImportMapper):
             limit=1,
         )
 
-        categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
-
-        # @TODO: Figure out true is_prescription
-        # if is_prescription:
-        #     categ_id = self.env.ref('medical_prescription_sale.product_category_rx')
-        # else:
-        #     categ_id = self.env.ref('medical_prescription_sale.product_category_otc')
+        if is_prescription:
+            categ_id = self.env.ref(
+                'medical_prescription_sale.product_category_rx'
+            )
+        else:
+            categ_id = self.env.ref(
+                'medical_prescription_sale.product_category_otc'
+            )
 
         code = record['dea']
         if not code:
@@ -338,6 +342,7 @@ class FdbNdcImporter(CarepointImporter):
 class FdbNdcAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.ndc record """
     _model_name = ['carepoint.fdb.ndc']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

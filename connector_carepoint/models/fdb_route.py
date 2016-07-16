@@ -5,23 +5,19 @@
 import logging
 from openerp import models, fields
 from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            trim_and_titleize,
-                           to_ord,
-                          )
+                           )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -44,6 +40,7 @@ class CarepointFdbRoute(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbRoute(models.Model):
     _inherit = 'fdb.route'

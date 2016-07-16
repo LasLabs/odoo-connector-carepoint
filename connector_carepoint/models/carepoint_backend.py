@@ -14,6 +14,8 @@ from ..unit.import_synchronizer import (import_batch,
                                         )
 from ..backend import carepoint
 
+from carepoint.db import Db as CarepointDb
+
 _logger = logging.getLogger(__name__)
 
 IMPORT_DELTA_BUFFER = 30  # seconds
@@ -29,6 +31,12 @@ class CarepointBackend(models.Model):
     version = fields.Selection(
         selection='select_versions',
         required=True
+    )
+    db_driver = fields.Selection([
+        (CarepointDb.ODBC_DRIVER, 'Production'),
+        (CarepointDb.SQLITE, 'Testing'),
+    ],
+        default=CarepointDb.ODBC_DRIVER,
     )
     server = fields.Char(
         required=True,
@@ -77,6 +85,7 @@ class CarepointBackend(models.Model):
     default_tz = fields.Selection(
         _tz_get,
         'Default Time Zone',
+        default=lambda s: s.env.user.tz,
         required=True,
     )
     default_category_id = fields.Many2one(
@@ -85,6 +94,8 @@ class CarepointBackend(models.Model):
         help='If a default category is selected, products imported '
              'without a category will be linked to it.',
         required=True,
+        default=lambda s: s.env.ref(
+            'medical_prescription_sale.product_category_rx'),
     )
     default_account_payable_id = fields.Many2one(
         string='Default Account Payable',
@@ -205,13 +216,8 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def check_carepoint_structure(self):
-        """ Used in each data import.
-        Verify if a store exists for each backend before starting the import.
-        """
-        for backend in self:
-            stores = backend.store_ids
-            if not stores:
-                backend.synchronize_metadata()
+        """ Used in each data import """
+        self.synchronize_metadata()
         return True
 
     @api.multi

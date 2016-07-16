@@ -5,23 +5,19 @@
 import logging
 from openerp import models, fields
 from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            trim_and_titleize,
-                           to_ord,
-                          )
+                           )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -44,6 +40,7 @@ class CarepointFdbForm(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbForm(models.Model):
     _inherit = 'fdb.form'
@@ -91,7 +88,8 @@ class FdbFormImportMapper(CarepointImportMapper):
     @only_create
     def form_id(self, record):
         """ Will bind the form on a existing form with same name """
-        form_id = self.env['medical.drug.form'].search(['|',
+        form_id = self.env['medical.drug.form'].search([
+            '|',
             ('code', '=', record['dose'].strip()),
             ('name', '=', record['gcdf_desc'].strip().title()),
         ],
@@ -112,7 +110,9 @@ class FdbFormImporter(CarepointImporter):
 
 
 @job(default_channel='root.carepoint.fdb')
-def fdb_form_import_batch(session, model_name, backend_id, filters=None):
+def fdb_form_import_batch(session, model_name, backend_id,
+                          filters=None
+                          ):
     """ Prepare the import of Forms from Carepoint """
     if filters is None:
         filters = {}

@@ -4,26 +4,16 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
-                                                  ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
-from .procurement_order import ProcurementOrderUnit
-from .sale_order_line import SaleOrderLineUnit
+from ..connector import add_checkpoint
 
 
 _logger = logging.getLogger(__name__)
@@ -138,7 +128,7 @@ class SaleOrderImportMapper(CarepointImportMapper):
         binder = self.binder_for('carepoint.medical.pharmacy')
         store_id = binder.to_odoo(record['store_id'])
         return {'pharmacy_id': store_id}
-    
+
     @mapping
     # @only_create
     def state(self, record):
@@ -172,7 +162,6 @@ class SaleOrderImporter(CarepointImporter):
 
     def _after_import(self, binding):
         """ Import the sale lines & procurements """
-        pass
         # line_unit = self.unit_for(
         #     SaleOrderLineUnit, model='carepoint.sale.order.line',
         # )
@@ -187,38 +176,6 @@ class SaleOrderImporter(CarepointImporter):
         # proc_unit._import_procurements_for_sale(
         #     self.carepoint_id,
         # )
-
-
-@carepoint
-class SaleOrderExportMapper(ExportMapper):
-    _model_name = 'carepoint.sale.order'
-
-    direct = [
-        ('ref', 'ssn'),
-        ('email', 'email'),
-        ('dob', 'birth_date'),
-        ('dod', 'death_date'),
-    ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
-
-    @changed_by('gender')
-    @mapping
-    def gender_cd(self):
-        return {'gender_cd': record.get('gender').upper()}
-
-
-@carepoint
-class SaleOrderExporter(CarepointExporter):
-    _model_name = ['carepoint.sale.order']
-    _base_mapper = SaleOrderExportMapper
-
-
-@carepoint
-class SaleOrderDeleteSynchronizer(CarepointDeleter):
-    _model_name = ['carepoint.sale.order']
 
 
 @carepoint

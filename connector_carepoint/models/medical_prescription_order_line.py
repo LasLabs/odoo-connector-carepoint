@@ -3,26 +3,20 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.exceptions import ValidationError
-from openerp.addons.connector.queue.job import job, related_action
+from openerp import fields
+from openerp import models
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
                                                   only_create,
-                                                  ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
 
 _logger = logging.getLogger(__name__)
 
@@ -167,11 +161,12 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         dose_obj = self.env['medical.medication.dosage']
         sig_code = record['sig_code'].strip()
         dose_id = dose_obj.search(['|',
-            ('name', '=', record['sig_text_english'].strip()),
-            ('code', '=', sig_code),
-        ],
-            limit=1,
-        )
+                                   ('name', '=', record[
+                                    'sig_text_english'].strip()),
+                                   ('code', '=', sig_code),
+                                   ],
+                                  limit=1,
+                                  )
         if not len(dose_id):
             dose_id = dose_obj.create({
                 'name': record['sig_text_english'].strip(),
@@ -219,52 +214,18 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter):
                                 'carepoint.fdb.ndc')
 
     def _create(self, data):
-        binding = super(MedicalPrescriptionOrderLineImporter, self)._create(data)
+        binding = super(MedicalPrescriptionOrderLineImporter,
+                        self)._create(data)
         checkpoint = self.unit_for(MedicalPrescriptionOrderLineAddCheckpoint)
         checkpoint.run(binding.id)
         return binding
 
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
-
-
-@carepoint
-class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
-    _model_name = 'carepoint.medical.prescription.order.line'
-
-    direct = [
-        ('date_start_treatment', 'start_date'),
-        ('date_stop_treatment', 'expire_date'),
-        ('qty', 'written_qty'),
-        ('frequency', 'freq_of_admin'),
-        ('quantity', 'units_per_dose'),
-        # Note that the col naming seems to be reversed *shrug*
-        # ('refill_qty_original', 'refills_left'),
-        # ('refill_qty_remain', 'refills_orig'),
-    ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
-
-    @mapping
-    @changed_by('gender')
-    def gender_cd(self):
-        return {'gender_cd': record.get('gender').upper()}
-
-
-@carepoint
-class MedicalPrescriptionOrderLineExporter(CarepointExporter):
-    _model_name = ['carepoint.medical.prescription.order.line']
-    _base_mapper = MedicalPrescriptionOrderLineExportMapper
-
 
 @carepoint
 class MedicalPrescriptionOrderLineAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.prescription.order.line record """
+    """ Add a connector.checkpoint on the
+    carepoint.medical.prescription.order.line record
+    """
     _model_name = ['carepoint.medical.prescription.order.line', ]
 
     def run(self, binding_id):
@@ -280,5 +241,6 @@ def prescription_import_batch(session, model_name, backend_id, filters=None):
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(MedicalPrescriptionOrderLineBatchImporter)
+    importer = env.get_connector_unit(
+        MedicalPrescriptionOrderLineBatchImporter)
     importer.run(filters=filters)

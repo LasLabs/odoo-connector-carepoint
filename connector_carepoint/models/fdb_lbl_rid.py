@@ -7,8 +7,6 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
@@ -40,6 +38,7 @@ class CarepointFdbLblRid(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbLblRid(models.Model):
     _inherit = 'fdb.lbl.rid'
@@ -103,6 +102,7 @@ class FdbLblRidImporter(CarepointImporter):
 class FdbLblRidAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.lbl.rid record """
     _model_name = ['carepoint.fdb.lbl.rid']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

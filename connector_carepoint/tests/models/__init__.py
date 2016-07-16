@@ -2,4 +2,4 @@
 # © 2015 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-carepoint_base_responses = {}
+from . import test_carepoint_backend

@@ -114,7 +114,6 @@ class CarepointBaseExporter(Exporter):
 
     def _after_export(self):
         """ Can do several actions after exporting a record on carepoint """
-        pass
 
 
 class CarepointExporter(CarepointBaseExporter):

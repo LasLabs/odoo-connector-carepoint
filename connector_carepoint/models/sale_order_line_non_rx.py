@@ -4,24 +4,16 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
-                                                  ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
+from ..connector import add_checkpoint
 
 
 _logger = logging.getLogger(__name__)
@@ -33,7 +25,8 @@ class CarepointSaleOrderLineNonRx(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'sale.order.line': 'odoo_id'}
     _description = 'Carepoint NonRx Order Line'
-    _cp_lib = 'order_line_non_rx'  # Name of model in Carepoint lib (snake_case)
+    # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'order_line_non_rx'
 
     odoo_id = fields.Many2one(
         comodel_name='sale.order.line',
@@ -87,6 +80,7 @@ class SaleOrderLineNonRxUnit(ConnectorUnit):
         sale_line_ids = adapter.search(order_id=sale_order_id)
         for rec_id in sale_line_ids:
             importer.run(rec_id)
+
 
 @carepoint
 class SaleOrderLineNonRxBatchImporter(DelayedBatchImporter):
@@ -159,40 +153,10 @@ class SaleOrderLineNonRxImporter(CarepointImporter):
 
 
 @carepoint
-class SaleOrderLineNonRxExportMapper(ExportMapper):
-    _model_name = 'carepoint.sale.order.line.non.rx'
-
-    direct = [
-        ('ref', 'ssn'),
-        ('email', 'email'),
-        ('dob', 'birth_date'),
-        ('dod', 'death_date'),
-    ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
-
-    @changed_by('gender')
-    @mapping
-    def gender_cd(self):
-        return {'gender_cd': record.get('gender').upper()}
-
-
-@carepoint
-class SaleOrderLineNonRxExporter(CarepointExporter):
-    _model_name = ['carepoint.sale.order.line.non.rx']
-    _base_mapper = SaleOrderLineNonRxExportMapper
-
-
-@carepoint
-class SaleOrderLineNonRxDeleteSynchronizer(CarepointDeleter):
-    _model_name = ['carepoint.sale.order.line.non.rx']
-
-
-@carepoint
 class SaleOrderLineNonRxAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.sale.order.line.non.rx record """
+    """ Add a connector.checkpoint on the
+    carepoint.sale.order.line.non.rx record
+    """
     _model_name = ['carepoint.sale.order.line.non.rx', ]
 
     def run(self, binding_id):

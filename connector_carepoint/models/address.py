@@ -4,16 +4,14 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
                                                   ExportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
-from ..connector import get_environment
+from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import trim_and_titleize
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -21,7 +19,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
 
 
 _logger = logging.getLogger(__name__)
@@ -83,7 +80,7 @@ class CarepointAddress(models.Model):
         string='Country',
         comodel_name='res.country',
     )
-    
+
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.carepoint.address',
         inverse_name='odoo_id',
@@ -95,7 +92,6 @@ class CarepointAddress(models.Model):
 class CarepointAddressAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Address """
     _model_name = 'carepoint.carepoint.address'
-
 
 
 @carepoint
@@ -219,7 +215,9 @@ class CarepointAddressAddCheckpoint(ConnectorUnit):
 
 
 @job(default_channel='root.carepoint.core')
-def carepoint_address_import_batch(session, model_name, backend_id, filters=None):
+def carepoint_address_import_batch(session, model_name, backend_id,
+                                   filters=None
+                                   ):
     """ Prepare the import of addresss modified on Carepoint """
     if filters is None:
         filters = {}

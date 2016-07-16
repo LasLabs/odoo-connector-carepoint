@@ -6,16 +6,17 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
                                                   ImportMapper,
                                                   ExportMapper,
-                                                 )
+                                                  )
 
 
 def to_ord(field):
     """ A modifier intended to be used on the ``direct`` mappings.
-    Convert a string to reversible ord representation (pads the zeros) 
+    Convert a string to reversible ord representation (pads the zeros)
     Example::
         direct = [(to_ord('source'), 'target')]
     :param field: name of the source field in the record
     """
+
     def modifier(self, record, to_attr):
         value = record.get(field)
         if not value:
@@ -32,6 +33,7 @@ def trim(field):
         direct = [(trim('source'), 'target')]
     :param field: name of the source field in the record
     """
+
     def modifier(self, record, to_attr):
         value = record.get(field)
         if not value:
@@ -47,6 +49,7 @@ def trim_and_titleize(field):
         direct = [(trim_and_titleize('source'), 'target')]
     :param field: name of the source field in the record
     """
+
     def modifier(self, record, to_attr):
         value = record.get(field)
         if not value:
@@ -62,6 +65,7 @@ def to_float(field):
         direct = [(to_float('source'), 'target')]
     :param field: name of the source field in the record
     """
+
     def modifier(self, record, to_attr):
         value = record.get(field)
         if not value:
@@ -77,6 +81,7 @@ def to_int(field):
         direct = [(to_int('source'), 'target')]
     :param field: name of the source field in the record
     """
+
     def modifier(self, record, to_attr):
         value = record.get(field)
         if not value:
@@ -86,7 +91,7 @@ def to_int(field):
 
 
 class CarepointImportMapper(ImportMapper):
-    
+
     @mapping
     def backend_id(self, record):
         return {'backend_id': self.backend_record.id}
