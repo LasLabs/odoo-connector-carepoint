@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
@@ -52,7 +52,7 @@ class CarepointImporter(Importer):
         """ Hook called before the import, when we have the Carepoint
         data"""
 
-    def _is_uptodate(self, binding):
+    def _is_current(self, binding):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
         assert self.carepoint_record
@@ -181,7 +181,7 @@ class CarepointImporter(Importer):
         """
         self.carepoint_id = carepoint_id
         self.carepoint_record = self._get_carepoint_data()
-        _logger.info('self.carepoint_record - %s', self.carepoint_record)
+        _logger.debug('self.carepoint_record - %s', self.carepoint_record)
         lock_name = 'import({}, {}, {}, {})'.format(
             self.backend_record._name,
             self.backend_record.id,
@@ -197,8 +197,8 @@ class CarepointImporter(Importer):
 
         binding = self._get_binding()
 
-        if not force and self._is_uptodate(binding):
-            return _('Already up-to-date.')
+        if not force and self._is_current(binding):
+            return _('Already Up To Date.')
         self._before_import()
 
         # import the missing linked resources
@@ -227,8 +227,13 @@ class BatchImporter(Importer):
 
     def run(self, filters=None):
         """ Run the synchronization """
-        record_ids = self.backend_adapter.search(filters)
+        if filters is None:
+            filters = {}
+        record_ids = self.backend_adapter.search(**filters)
+        _logger.info('Search for carepoint companies %s returned %s\n',
+                     filters, record_ids)
         for record_id in record_ids:
+            _logger.info('In record loop with %s', record_id)
             self._import_record(record_id)
 
     def _import_record(self, record_id):
@@ -268,55 +273,7 @@ class SimpleRecordImporter(CarepointImporter):
     """ Import one Carepoint Store """
     _model_name = [
         'carepoint.store',
-        # 'carepoint.res.partner.category',
     ]
-
-
-@carepoint
-class TranslationImporter(Importer):
-    """ Import translations for a record.
-    Usually called from importers, in ``_after_import``.
-    For instance from the products and products' categories importers.
-    """
-
-    _model_name = []
-
-    def _get_carepoint_data(self, storeview_id=None):
-        """ Return the raw Carepoint data for ``self.carepoint_id`` """
-        return self.backend_adapter.read(self.carepoint_id, storeview_id)
-
-    def run(self, carepoint_id, binding_id, mapper_class=None):
-        self.carepoint_id = carepoint_id
-        storeviews = self.env['carepoint.storeview'].search(
-            [('backend_id', '=', self.backend_record.id)]
-        )
-        default_lang = self.backend_record.default_lang_id
-        lang_storeviews = [sv for sv in storeviews
-                           if sv.lang_id and sv.lang_id != default_lang]
-        if not lang_storeviews:
-            return
-
-        # find the translatable fields of the model
-        fields = self.model.fields_get()
-        translatable_fields = [field for field, attrs in fields.iteritems()
-                               if attrs.get('translate')]
-
-        if mapper_class is None:
-            mapper = self.mapper
-        else:
-            mapper = self.unit_for(mapper_class)
-
-        binding = self.model.browse(binding_id)
-        for storeview in lang_storeviews:
-            lang_record = self._get_carepoint_data(storeview.carepoint_id)
-            map_record = mapper.map_record(lang_record)
-            record = map_record.values()
-
-            data = dict((field, value) for field, value in record.iteritems()
-                        if field in translatable_fields)
-
-            binding.with_context(connector_no_export=True,
-                                 lang=storeview.lang_id.code).write(data)
 
 
 @carepoint

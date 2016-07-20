@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from openerp import models, fields
@@ -11,13 +11,15 @@ def get_environment(session, model_name, backend_id):
     """ Create an environment to work with.  """
     backend_record = session.env['carepoint.backend'].browse(backend_id)
     env = ConnectorEnvironment(backend_record, session, model_name)
-    lang = backend_record.default_lang_id
-    lang_code = lang.code if lang else 'en_US'
-    if lang_code == session.context.get('lang'):
-        return env
-    else:
-        with env.session.change_context(lang=lang_code):
-            return env
+    return env
+    # @TODO: Multiple lang support. Seems not needed.
+    # lang = backend_record.default_lang_id
+    # lang_code = lang.code if lang else 'en_US'
+    # if lang_code == session.context.get('lang'):
+    #     return env
+    # else:
+    #     with env.session.change_context(lang=lang_code):
+    #         return env
 
 
 class CarepointBinding(models.AbstractModel):

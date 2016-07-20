@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -42,6 +42,7 @@ class CarepointBaseExporter(Exporter):
         super(CarepointBaseExporter, self).__init__(connector_env)
         self.binding_id = None
         self.carepoint_id = None
+        self.binding_record = None
 
     def _delay_import(self):
         """ Schedule an import of the record.
@@ -84,15 +85,17 @@ class CarepointBaseExporter(Exporter):
         """ Run the synchronization
         :param binding_id: identifier of the binding record to export
         """
+
         self.binding_id = binding_id
         self.binding_record = self._get_odoo_data()
-
         self.carepoint_id = self.binder.to_backend(self.binding_id)
+
         try:
             should_import = self._should_import()
         except IDMissingInBackend:
             self.carepoint_id = None
             should_import = False
+
         if should_import:
             self._delay_import()
 
@@ -114,18 +117,11 @@ class CarepointBaseExporter(Exporter):
 
     def _after_export(self):
         """ Can do several actions after exporting a record on carepoint """
+        return
 
 
 class CarepointExporter(CarepointBaseExporter):
     """ A common flow for the exports to Carepoint """
-
-    def __init__(self, connector_env):
-        """
-        :param connector_env: current environment (backend, session, ...)
-        :type connector_env: :class:`connector.connector.ConnectorEnvironment`
-        """
-        super(CarepointExporter, self).__init__(connector_env)
-        self.binding_record = None
 
     def _lock(self):
         """ Lock the binding record.
@@ -186,7 +182,9 @@ class CarepointExporter(CarepointBaseExporter):
 
     def _export_dependency(self, relation, binding_model, exporter_class=None,
                            binding_field='carepoint_bind_ids',
-                           binding_extra_vals=None):
+                           binding_extra_vals=None,
+                           force=False,
+                           ):
         """ Export a dependency. The exporter class is a subclass of
         ``CarepointExporter``. If a more precise class need to be defined,
         it can be passed to the ``exporter_class`` keyword argument.
@@ -216,9 +214,11 @@ class CarepointExporter(CarepointBaseExporter):
                               It is used only when the relation is not
                               a binding but is a normal record.
         :type binding_field: str | unicode
-        :binding_extra_vals:  In case we want to create a new binding
+        :param binding_extra_vals:  In case we want to create a new binding
                               pass extra values for this binding
         :type binding_extra_vals: dict
+        :param force: Trigger export workflow even if record exists
+        :type force: bool
         """
         if not relation:
             return
@@ -269,7 +269,7 @@ class CarepointExporter(CarepointBaseExporter):
             # If wrap is True, relation is already a binding record.
             binding = relation
 
-        if not rel_binder.to_backend(binding, wrap=False):
+        if force or not rel_binder.to_backend(binding, wrap=False):
             exporter = self.unit_for(exporter_class, model=binding_model)
             exporter.run(binding.id)
 
@@ -282,19 +282,6 @@ class CarepointExporter(CarepointBaseExporter):
         :py:class:`~odoo.addons.connector.unit.mapper.MapRecord`
         """
         return self.mapper.map_record(self.binding_record)
-
-    def _validate_data(self, data):
-        """ Check if the values to import are correct
-        Kept for retro-compatibility. To remove in 8.0
-        Pro-actively check before the ``Model.create`` or ``Model.update``
-        if some fields are missing or invalid
-        Raise `InvalidDataError`
-        """
-        _logger.warning('Deprecated: _validate_data is deprecated '
-                        'in favor of validate_create_data() '
-                        'and validate_update_data()')
-        self._validate_create_data(data)
-        self._validate_update_data(data)
 
     def _validate_create_data(self, data):
         """ Check if the values to import are correct

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2016 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 """
@@ -22,7 +22,7 @@ backend_adapter = 'openerp.addons.connector_carepoint.unit.backend_adapter'
 def mock_job_delay_to_direct(job_path):
     """ Replace the .delay() of a job by a direct call
     job_path is the python path, such as::
-      openerp.addons.carepoint.stock_picking.export_picking_done
+      openerp.addons.carepoint.models.stock_picking.export_picking_done
     """
     job_module, job_name = job_path.rsplit('.', 1)
     module = importlib.import_module(job_module)
@@ -46,9 +46,16 @@ def mock_job_delay_to_direct(job_path):
 
 
 @contextmanager
-def mock_api():
+def mock_api(instantiated=False):
     """ Mock CarePoint API for testing """
     with mock.patch('%s.Carepoint' % backend_adapter) as API:
+        yield API() if instantiated else API
+
+
+@contextmanager
+def mock_adapter(unit):
+    """ Mock the backend adapter for testing """
+    with mock.patch.object(unit, '_backend_adapter') as API:
         yield API
 
 
@@ -65,15 +72,14 @@ class CarepointHelper(object):
             env.uid,
             env.context,
         )
+        self.connector_unit = {}
 
-
-class ObjDict(dict):
-
-    def __getattr__(self, key):
+    def get_connector_unit(self, unit_class):
         try:
-            return super(ObjDict, self).__getattr__(key)
-        except AttributeError:
-            return self[key]
+            return self.connector_unit[unit_class]
+        except KeyError:
+            self.connector_unit[unit_class] = mock.MagicMock()
+            return self.connector_unit[unit_class]
 
 
 class SetUpCarepointBase(common.TransactionCase):
@@ -140,8 +146,8 @@ class SetUpCarepointBase(common.TransactionCase):
             'default_product_income_account_id': self.account_income.id,
             'default_product_expense_account_id': self.account_expense.id,
         })
-        self.backend_id = self.backend.id
         self.mock_api = mock_api
+        self.mock_adapter = mock_adapter
 
     def get_carepoint_helper(self, model_name):
         return CarepointHelper(

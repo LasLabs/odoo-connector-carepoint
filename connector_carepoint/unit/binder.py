@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
@@ -72,7 +72,9 @@ class CarepointModelBinder(CarepointBinder):
         ])
         if not bindings:
             return self.model.browse() if browse else None
-        assert len(bindings) == 1, "Several records found: %s" % (bindings,)
+        assert len(bindings) == 1, openerp._(
+            "Several records found: %s"
+        ) % (bindings)
         if unwrap:
             return bindings.odoo_id if browse else bindings.odoo_id.id
         else:
@@ -106,7 +108,7 @@ class CarepointModelBinder(CarepointBinder):
         if not record:
             record = self.model.browse(record_id)
         assert record
-        return record.carepoint_id
+        return record.id
 
     def bind(self, external_id, binding_id):
         """ Create the link between an external ID and an Odoo ID and
@@ -117,7 +119,7 @@ class CarepointModelBinder(CarepointBinder):
         """
         # the external ID can be 0 on Carepoint! Prevent False values
         # like False, None, or "", but not 0.
-        assert (external_id or external_id == 0) and binding_id, (
+        assert (external_id or external_id is 0) and binding_id, (
             "external_id or binding_id missing, "
             "got: %s, %s" % (external_id, binding_id)
         )

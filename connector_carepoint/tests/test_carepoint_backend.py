@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2016 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import mock
@@ -13,6 +13,7 @@ from openerp.exceptions import ValidationError
 from openerp.addons.connector_carepoint.models.carepoint_backend import (
     IMPORT_DELTA_BUFFER
 )
+
 
 model = 'openerp.addons.connector_carepoint.models.carepoint_backend'
 

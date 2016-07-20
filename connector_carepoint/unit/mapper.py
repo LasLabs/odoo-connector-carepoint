@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from openerp.addons.connector.unit.mapper import (mapping,
@@ -7,23 +7,6 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ImportMapper,
                                                   ExportMapper,
                                                   )
-
-
-def to_ord(field):
-    """ A modifier intended to be used on the ``direct`` mappings.
-    Convert a string to reversible ord representation (pads the zeros)
-    Example::
-        direct = [(to_ord('source'), 'target')]
-    :param field: name of the source field in the record
-    """
-
-    def modifier(self, record, to_attr):
-        value = record.get(field)
-        if not value:
-            return None
-        ords = ['%03d' % ord(c) for c in value]
-        return ''.join(ords)
-    return modifier
 
 
 def trim(field):
@@ -112,16 +95,31 @@ class PartnerImportMapper(CarepointImportMapper):
         return {'currency_id': self.backend_record.company_id.currency_id.id}
 
     @mapping
-    def accounting_defaults(self, record):
+    def property_account_payable_id(self, record):
+        return {
+            'property_account_payable_id':
+                self.backend_record.default_account_payable_id.id,
+        }
+
+    @mapping
+    def property_payment_term_id(self, record):
         return {
             'property_payment_term_id':
                 self.backend_record.default_customer_payment_term_id.id,
+        }
+
+    @mapping
+    def property_supplier_payment_term_id(self, record):
+        return {
             'property_supplier_payment_term_id':
-                self.backend_record.default_supplier_payment_term_id,
+                self.backend_record.default_supplier_payment_term_id.id,
+        }
+
+    @mapping
+    def property_account_receivable_id(self, record):
+        return {
             'property_account_receivable_id':
                 self.backend_record.default_account_receivable_id.id,
-            'property_account_payable_id':
-                self.backend_record.default_account_payable_id.id,
         }
 
 
@@ -143,8 +141,8 @@ class PersonImportMapper(PartnerImportMapper):
 
 class PersonExportMapper(ExportMapper):
 
-    @changed_by('name')
     @mapping
+    @changed_by('name')
     def names(self, record):
         # @TODO: Support other name parts (surname)
         if ' ' in record.name:
