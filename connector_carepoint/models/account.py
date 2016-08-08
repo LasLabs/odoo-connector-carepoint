@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..connector import get_environment
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 

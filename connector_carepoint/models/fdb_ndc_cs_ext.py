@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -8,7 +8,6 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
@@ -40,6 +39,7 @@ class CarepointFdbNdcCsExt(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbNdcCsExt(models.Model):
     _inherit = 'fdb.ndc.cs.ext'
@@ -128,11 +128,11 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
     def form_id(self, record):
         form_str = record['dn_form'].strip()
         form_id = self.env['fdb.form'].search(['|',
-            ('code', '=', form_str),
-            ('name', '=', form_str.title()),
-        ],
-            limit=1,
-        )
+                                               ('code', '=', form_str),
+                                               ('name', '=', form_str.title()),
+                                               ],
+                                              limit=1,
+                                              )
         return {'form_id': form_id.id}
 
     @mapping
@@ -158,7 +158,7 @@ class FdbNdcCsExtImporter(CarepointImporter):
 
     def _import_dependencies(self):
         """ Import depends for record """
-        record = self.carepoint_record
+        # record = self.carepoint_record
         # @TODO: Don't assume route & form; data vs PK issue
         # self._import_dependency(record['dn_form'].strip(),
         #                         'carepoint.fdb.form')
@@ -176,6 +176,7 @@ class FdbNdcCsExtImporter(CarepointImporter):
 class FdbNdcCsExtAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.ndc.cs.ext record """
     _model_name = ['carepoint.fdb.ndc.cs.ext']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

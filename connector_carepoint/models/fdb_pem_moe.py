@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -7,8 +7,6 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
@@ -35,6 +33,7 @@ class CarepointFdbPemMoe(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbPemMoe(models.Model):
     _inherit = 'fdb.pem.moe'
@@ -94,7 +93,7 @@ class FdbPemMoeImportMapper(CarepointImportMapper):
     def carepoint_id(self, record):
         return {'carepoint_id': '%d,%d' % (record['pemono'],
                                            record['pemono_sn'],
-                                          )}
+                                           )}
 
 
 @carepoint
@@ -114,6 +113,7 @@ class FdbPemMoeImporter(CarepointImporter):
 class FdbPemMoeAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.pem.moe record """
     _model_name = ['carepoint.fdb.pem.moe']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

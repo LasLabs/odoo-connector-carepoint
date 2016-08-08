@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -8,7 +8,6 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import PersonImportMapper
@@ -111,7 +110,7 @@ class MedicalUserImportMapper(PersonImportMapper):
     def odoo_id(self, record):
         """ Will bind the user on a existing user
         with the same name & email """
-        name = self._get_name(record)
+        self._get_name(record)
         user_id = self.env['res.users'].search([
             ('login', 'ilike', record.get('login_name')),
         ],

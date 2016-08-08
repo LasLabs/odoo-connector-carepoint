@@ -1,28 +1,23 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.exceptions import ValidationError
-from openerp.addons.connector.queue.job import job, related_action
+from openerp import fields
+from openerp import models
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
                                                   ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
 
 _logger = logging.getLogger(__name__)
 
@@ -168,11 +163,6 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
     def pat_id(self, record):
         return {'pat_id': record.carepoint_id}
 
-    @mapping
-    @changed_by('gender')
-    def gender_cd(self):
-        return {'gender_cd': record.get('gender').upper()}
-
 
 @carepoint
 class MedicalPrescriptionOrderExporter(CarepointExporter):
@@ -182,7 +172,9 @@ class MedicalPrescriptionOrderExporter(CarepointExporter):
 
 @carepoint
 class MedicalPrescriptionOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.prescription.order record """
+    """ Add a connector.checkpoint on the
+    carepoint.medical.prescription.order record
+    """
     _model_name = ['carepoint.medical.prescription.order', ]
 
     def run(self, binding_id):

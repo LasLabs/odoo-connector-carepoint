@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -7,12 +7,10 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..connector import get_environment
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -40,6 +38,7 @@ class CarepointFdbGcn(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class FdbGcn(models.Model):
     _inherit = 'fdb.gcn'
@@ -113,6 +112,7 @@ class FdbGcnImporter(CarepointImporter):
 class FdbGcnAddCheckpoint(ConnectorUnit):
     """ Add a connector.checkpoint on the carepoint.fdb.gcn record """
     _model_name = ['carepoint.fdb.gcn']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,

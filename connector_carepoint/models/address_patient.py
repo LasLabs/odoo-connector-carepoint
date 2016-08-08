@@ -1,27 +1,21 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job, related_action
+from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
                                                   only_create,
-                                                  ExportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim, trim_and_titleize
-from ..connector import get_environment
+from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
 from ..connector import add_checkpoint, get_environment
-from ..related_action import unwrap_binding
 
 
 _logger = logging.getLogger(__name__)
@@ -29,7 +23,7 @@ _logger = logging.getLogger(__name__)
 
 class CarepointCarepointAddressPatient(models.Model):
     """ Binding Model for the Carepoint Address Patient """
-    _name = 'carepoint.carepoint.address.patient'  # This is going to be confusing...
+    _name = 'carepoint.carepoint.address.patient'
     _inherit = 'carepoint.binding'
     _inherits = {'carepoint.address.patient': 'odoo_id'}
     _description = 'Carepoint Address Patient Many2Many Rel'
@@ -110,9 +104,9 @@ class CarepointAddressPatientImportMapper(CarepointImportMapper):
     def parent_id(self, record):
         binder = self.binder_for('carepoint.medical.patient')
         patient_id = binder.to_odoo(record['pat_id'])
-        partner_id = self.env['medical.patient'].browse(patient_id).partner_id
+        self.env['medical.patient'].browse(patient_id).partner_id
         # if not partner_id.street:
-        #     
+        #
         # return {
         #     'parent_id': partner_id.id,
         # }
@@ -159,11 +153,6 @@ class CarepointAddressPatientImporter(CarepointImporter):
                                 'carepoint.carepoint.address')
         self._import_dependency(record['pat_id'],
                                 'carepoint.medical.patient')
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address.patient')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
 @carepoint
@@ -191,7 +180,9 @@ class CarepointAddressPatientAddCheckpoint(ConnectorUnit):
 
 
 @job(default_channel='root.carepoint.patient')
-def carepoint_address_patient_import_batch(session, model_name, backend_id, filters=None):
+def carepoint_address_patient_import_batch(session, model_name, backend_id,
+                                           filters=None
+                                           ):
     """ Prepare the import of addresss modified on Carepoint """
     if filters is None:
         filters = {}

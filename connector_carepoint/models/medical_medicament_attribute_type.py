@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -7,15 +7,11 @@ from openerp import models, fields
 from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
-                           trim_and_titleize,
-                           to_ord,
-                          )
+                           )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -44,6 +40,7 @@ class CarepointMedicalMedicamentAttributeType(models.Model):
         required=True,
         ondelete='restrict'
     )
+
 
 class MedicalMedicamentAttributeType(models.Model):
     _inherit = 'medical.medicament.attribute.type'
@@ -97,7 +94,8 @@ class MedicalMedicamentAttributeTypeImporter(CarepointImporter):
     _base_mapper = MedicalMedicamentAttributeTypeImportMapper
 
     def _create(self, data):
-        odoo_binding = super(MedicalMedicamentAttributeTypeImporter, self)._create(data)
+        odoo_binding = super(
+            MedicalMedicamentAttributeTypeImporter, self)._create(data)
         checkpoint = self.unit_for(MedicalMedicamentAttributeTypeAddCheckpoint)
         checkpoint.run(odoo_binding.id)
         return odoo_binding
@@ -105,8 +103,11 @@ class MedicalMedicamentAttributeTypeImporter(CarepointImporter):
 
 @carepoint
 class MedicalMedicamentAttributeTypeAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.medicament.attribute.type record """
+    """ Add a connector.checkpoint on the
+    carepoint.medical.medicament.attribute.type record
+    """
     _model_name = ['carepoint.medical.medicament.attribute.type']
+
     def run(self, binding_id):
         add_checkpoint(self.session,
                        self.model._name,
@@ -120,5 +121,6 @@ def fdb_form_import_batch(session, model_name, backend_id, filters=None):
     if filters is None:
         filters = {}
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(MedicalMedicamentAttributeTypeBatchImporter)
+    importer = env.get_connector_unit(
+        MedicalMedicamentAttributeTypeBatchImporter)
     importer.run(filters=filters)

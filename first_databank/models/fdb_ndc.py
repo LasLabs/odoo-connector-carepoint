@@ -119,4 +119,3 @@ class FdbNdc(models.Model):
         help='Is Active?',
     )
     ln60 = fields.Char()
-  

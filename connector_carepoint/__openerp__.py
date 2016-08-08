@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 {
@@ -29,6 +29,7 @@
         'data/carepoint_state_data.xml',
         'data/carepoint_carepoint_account_data.xml',
         'data/ir_cron_data.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
     'application': False,

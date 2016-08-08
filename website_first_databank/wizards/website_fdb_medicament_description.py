@@ -11,15 +11,15 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     _name = 'website.fdb.medicament.description'
     _description = 'Website Fdb Medicament Description'
 
-    medicament_id = fields.Many2one(
+    medicament_ids = fields.Many2many(
         string='Medicament',
         comodel_name='medical.medicament',
-        default=lambda s: s._default_medicament_id(),
+        default=lambda s: s._default_medicament_ids(),
         readonly=True,
     )
     gcn_id = fields.Many2one(
         comodel_name='medical.medicament.gcn',
-        related='medicament_id.gcn_id',
+        compute='_compute_gcn_id',
         readonly=True,
     )
     monograph_id = fields.Many2one(
@@ -31,17 +31,27 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     template_id = fields.Many2one(
         string='Template',
         comodel_name='ir.ui.view',
-        required=True,
         default=lambda s: s._default_template_id(),
     )
     monograph_html = fields.Html()
 
     @api.model
-    def _default_medicament_id(self):
+    def _default_medicament_ids(self):
         model = 'medical.medicament'
-        if self.env.context.get('active_model') != 'medical.medicament':
+        if self.env.context.get('active_model') != model:
             return
-        return self.env.context['active_id']
+        res = []
+        if self.env.context.get('active_id'):
+            res.append(self.env.context['active_id'])
+        if self.env.context.get('active_ids'):
+            res.extend(self.env.context['active_id'])
+        return [6, 0, res]
+
+    @api.multi
+    def _compute_gcn_id(self):
+        for rec_id in self:
+            if rec_id.medicament_ids:
+                rec_id.gcn_id = rec_id.medicament_ids[0].gcn_id
 
     @api.model
     def _default_monograph_id(self):
@@ -62,7 +72,8 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         template_id = self.env.ref(
             'website_first_databank.website_medicament_description'
         )
-        return template_id.id
+        if template_id:
+            return template_id.id
 
     @api.multi
     @api.onchange('template_id')
@@ -73,8 +84,9 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     def sync_description(self):
         """ Sync the product website description from FDB """
         for rec_id in self:
-            rec_id.medicament_id.product_id.website_description = \
-                rec_id.monograph_html
+            html = rec_id.monograph_html
+            for medicament_id in rec_id.medicament_ids:
+                medicament_id.product_id.website_description = html
 
     @api.multi
     def _render_save(self):

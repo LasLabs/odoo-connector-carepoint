@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp.addons.connector.connector import Binder
+# from openerp.addons.connector.connector import Binder
 from .unit.export_synchronizer import (export_record,
-                                      )
-from .unit.delete_synchronizer import export_delete_record
-from .connector import get_environment
-from openerp.addons.connector.event import (on_record_write,
-                                            on_record_create,
-                                            on_record_unlink
-                                            )
+                                       )
+# from .unit.delete_synchronizer import export_delete_record
+# from .connector import get_environment
+# from openerp.addons.connector.event import (on_record_write,
+#                                             on_record_create,
+#                                             on_record_unlink
+#                                             )
 
 
 import logging
@@ -58,13 +58,13 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
 #                                'carepoint.carepoint.address',
 #                                'carepoint.carepoint.address.patient',
 #                                ])
-def delay_unlink(session, model_name, record_id):
-    """ Delay a job which delete a record on Carepoint.
-    Called on binding records."""
-    record = session.env[model_name].browse(record_id)
-    env = get_environment(session, model_name, record.backend_id.id)
-    binder = env.get_connector_unit(Binder)
-    carepoint_id = binder.to_backend(record_id, wrap=False)
-    if carepoint_id:
-        export_delete_record.delay(session, model_name,
-                                   record.backend_id.id, carepoint_id)
+# def delay_unlink(session, model_name, record_id):
+#     """ Delay a job which delete a record on Carepoint.
+#     Called on binding records."""
+#     record = session.env[model_name].browse(record_id)
+#     env = get_environment(session, model_name, record.backend_id.id)
+#     binder = env.get_connector_unit(Binder)
+#     carepoint_id = binder.to_backend(record_id, wrap=False)
+#     if carepoint_id:
+#         export_delete_record.delay(session, model_name,
+#                                    record.backend_id.id, carepoint_id)

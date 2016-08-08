@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# © 2015 LasLabs Inc.
+# Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -8,14 +8,11 @@ from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
-                                                  ImportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
-                           PersonExportMapper,
                            trim,
-                           trim_and_titleize,
-                          )
+                           )
 from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -146,7 +143,8 @@ class MedicalPhysicianImporter(CarepointImporter):
 
 @carepoint
 class MedicalPhysicianAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.physician record """
+    """ Add a connector.checkpoint on the carepoint.medical.physician record
+    """
     _model_name = ['carepoint.medical.physician', ]
 
     def run(self, binding_id):
