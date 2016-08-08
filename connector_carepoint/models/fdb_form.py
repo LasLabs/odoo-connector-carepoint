@@ -4,7 +4,6 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
@@ -13,18 +12,12 @@ from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            trim_and_titleize,
                            )
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointFdbForm(models.Model):
@@ -65,14 +58,6 @@ class FdbFormBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.fdb.form']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class FdbFormImportMapper(CarepointImportMapper):
@@ -107,15 +92,3 @@ class FdbFormImportMapper(CarepointImportMapper):
 class FdbFormImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.form']
     _base_mapper = FdbFormImportMapper
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_form_import_batch(session, model_name, backend_id,
-                          filters=None
-                          ):
-    """ Prepare the import of Forms from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbFormBatchImporter)
-    importer.run(filters=filters)

@@ -13,6 +13,8 @@ from . import test_connector
 from . import test_base_exporter
 from . import test_carepoint_exporter
 
+from . import test_carepoint_deleter
+
 from . import test_mapper
 from . import test_carepoint_import_mapper
 from . import test_partner_import_mapper

@@ -4,7 +4,6 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper
@@ -18,7 +17,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint, get_environment
 
 
 _logger = logging.getLogger(__name__)
@@ -113,14 +111,6 @@ class CarepointAddressBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.carepoint.address']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class CarepointAddressImportMapper(CarepointImportMapper):
@@ -160,14 +150,7 @@ class CarepointAddressImportMapper(CarepointImportMapper):
 @carepoint
 class CarepointAddressImporter(CarepointImporter):
     _model_name = ['carepoint.carepoint.address']
-
     _base_mapper = CarepointAddressImportMapper
-
-    def _create(self, data):
-        binding = super(CarepointAddressImporter, self)._create(data)
-        checkpoint = self.unit_for(CarepointAddressAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     #
     # def _after_import(self, partner_binding):
@@ -200,27 +183,3 @@ class CarepointAddressExporter(CarepointExporter):
 @carepoint
 class CarepointAddressDeleteSynchronizer(CarepointDeleter):
     _model_name = ['carepoint.carepoint.address']
-
-
-@carepoint
-class CarepointAddressAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.address record """
-    _model_name = ['carepoint.carepoint.address', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.core')
-def carepoint_address_import_batch(session, model_name, backend_id,
-                                   filters=None
-                                   ):
-    """ Prepare the import of addresss modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(CarepointAddressBatchImporter)
-    importer.run(filters=filters)

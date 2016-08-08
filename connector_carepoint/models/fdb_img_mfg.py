@@ -4,26 +4,17 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..connector import get_environment
 from ..unit.mapper import PartnerImportMapper
 from ..unit.mapper import trim_and_titleize
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointFdbImgMfg(models.Model):
@@ -64,14 +55,6 @@ class FdbImgMfgBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.fdb.img.mfg']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class FdbImgMfgImportMapper(PartnerImportMapper):
@@ -88,33 +71,4 @@ class FdbImgMfgImportMapper(PartnerImportMapper):
 @carepoint
 class FdbImgMfgImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img.mfg']
-
     _base_mapper = FdbImgMfgImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbImgMfgImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbImgMfgAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbImgMfgAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.img.mfg record """
-    _model_name = ['carepoint.fdb.img.mfg']
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_img_mfg_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of NDCs from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbImgMfgBatchImporter)
-    importer.run(filters=filters)

@@ -5,8 +5,6 @@
 import logging
 from openerp import fields
 from openerp import models
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
@@ -16,7 +14,6 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint, get_environment
 
 _logger = logging.getLogger(__name__)
 
@@ -78,14 +75,6 @@ class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.medical.prescription.order.line']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
@@ -98,6 +87,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         ('freq_of_admin', 'frequency'),
         ('units_entered', 'quantity'),
         ('refills_left', 'refill_qty_remain'),
+        ('refills_orig', 'refill_qty_original')
     ]
 
     @mapping
@@ -107,10 +97,6 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
             name=record['script_no'],
         )
         return {'name': name}
-
-    @mapping
-    def refill_qty_original(self, record):
-        return {'refill_qty_original': (record['refills_orig'] or 0) + 1}
 
     @mapping
     @only_create
@@ -160,23 +146,25 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         # @TODO: Find sig codes table & integrate instead of search
         dose_obj = self.env['medical.medication.dosage']
         sig_code = record['sig_code'].strip()
-        dose_id = dose_obj.search(['|',
-                                   ('name', '=', record[
-                                    'sig_text_english'].strip()),
-                                   ('code', '=', sig_code),
-                                   ],
-                                  limit=1,
-                                  )
+        sig_text = record['sig_text_english'].strip()
+        dose_id = dose_obj.search([
+            '|',
+            ('name', '=', sig_text),
+            ('code', '=', sig_code),
+        ],
+            limit=1,
+        )
         if not len(dose_id):
             dose_id = dose_obj.create({
-                'name': record['sig_text_english'].strip(),
+                'name': sig_text,
                 'code': sig_code,
             })
-        return {'medication_dosage_id': dose_id.id}
+        return {'medication_dosage_id': dose_id[0].id}
 
     @mapping
     @only_create
     def duration_uom_id(self, record):
+        # @TODO: make this use self.env.ref to core days - verify it exists
         uom_id = self.env['product.uom'].search(
             [('name', '=', 'DAYS')], limit=1,
         )
@@ -185,13 +173,13 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @mapping
     def physician_id(self, record):
         binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'], True)
+        physician_id = binder.to_odoo(record['md_id'])
         return {'physician_id': physician_id}
 
     @mapping
     def prescription_order_id(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order')
-        prescription_order_id = binder.to_odoo(record['rx_id'], True)
+        prescription_order_id = binder.to_odoo(record['rx_id'])
         return {'prescription_order_id': prescription_order_id}
 
     @mapping
@@ -212,35 +200,3 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter):
                                 'carepoint.medical.prescription.order')
         self._import_dependency(record['ndc'],
                                 'carepoint.fdb.ndc')
-
-    def _create(self, data):
-        binding = super(MedicalPrescriptionOrderLineImporter,
-                        self)._create(data)
-        checkpoint = self.unit_for(MedicalPrescriptionOrderLineAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
-
-
-@carepoint
-class MedicalPrescriptionOrderLineAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the
-    carepoint.medical.prescription.order.line record
-    """
-    _model_name = ['carepoint.medical.prescription.order.line', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.prescription')
-def prescription_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of prescriptions modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(
-        MedicalPrescriptionOrderLineBatchImporter)
-    importer.run(filters=filters)
