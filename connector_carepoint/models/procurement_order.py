@@ -4,7 +4,6 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -15,7 +14,6 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint, get_environment
 
 
 _logger = logging.getLogger(__name__)
@@ -75,17 +73,17 @@ class ProcurementOrderAdapter(CarepointCRUDAdapter):
 class ProcurementOrderUnit(ConnectorUnit):
     _model_name = 'carepoint.procurement.order'
 
-    def __get_order_lines(self, sale_order_id):
+    def _get_order_lines(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
         return adapter.search(order_id=sale_order_id)
 
     def _import_procurements_for_sale(self, sale_order_id):
         importer = self.unit_for(ProcurementOrderImporter)
-        for rec_id in self.__get_order_lines(sale_order_id):
+        for rec_id in self._get_order_lines(sale_order_id):
             importer.run(rec_id)
 
     def _get_order_line_count(self, sale_order_id):
-        return len(self.__get_order_lines(sale_order_id))
+        return len(self._get_order_lines(sale_order_id))
 
 
 @carepoint
@@ -94,14 +92,6 @@ class ProcurementOrderBatchImporter(DelayedBatchImporter):
     For every patient in the list, a delayed job is created.
     """
     _model_name = ['carepoint.procurement.order']
-
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
 
 
 @carepoint
@@ -114,10 +104,9 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
     ]
 
     @mapping
-    def prescription_data(self, record):
+    def name(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order.line')
-        rx_id = binder.to_odoo(record['rx_id'])
-        rx_id = self.env['medical.prescription.order.line'].browse(rx_id)
+        rx_id = binder.to_odoo(record['rx_id'], browse=True)
         name = 'RX %s - %s' % (record['rx_id'],
                                rx_id.medicament_id.display_name)
         return {'name': name}
@@ -138,7 +127,11 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
         line_id = line_id[0]
 
         # Set the sale line to what was dispensed
-        line_id.product_id = ndc_id.medicament_id.product_id.id
+        # This is a hack circumventing lack of qty in CP until now
+        line_id.write({
+            'product_id': ndc_id.medicament_id.product_id.id,
+            'product_uom_qty': record['dispense_qty'],
+        })
 
         procurement_group_id = self.env['procurement.group'].search([
             ('name', '=', sale_id.name),
@@ -152,11 +145,10 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
             sale_id.procurement_group_id = procurement_group_id.id
 
         res = line_id._prepare_order_line_procurement(procurement_group_id.id)
-        line_id.product_uom_qty = record['dispense_qty']
         res.update({'origin': sale_id.name,
                     'product_uom': line_id.product_uom.id,
                     'ndc_id': ndc_id.id,
-                    'product_id': ndc_id.medicament_id.product_id.id,
+                    'product_id': line_id.product_id,
                     })
 
         return res
@@ -172,12 +164,6 @@ class ProcurementOrderImporter(CarepointImporter):
 
     _base_mapper = ProcurementOrderImportMapper
 
-    def _create(self, data):
-        binding = super(ProcurementOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(ProcurementOrderAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
-
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
@@ -188,14 +174,16 @@ class ProcurementOrderImporter(CarepointImporter):
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
 
-    def _after_import(self, binding):
-        """ Import the stock pickings & invoice lines if all lines imported"""
-        self.binder_for('carepoint.sale.order')
+    # def _after_import(self, binding):
+        # """ Import the stock pickings & invoice lines if all lines
+        #     imported
+        # """
+        # self.binder_for('carepoint.sale.order')
         # sale_id = binder.to_odoo(self.carepoint_record['order_id'])
-        proc_unit = self.unit_for(
-            ProcurementOrderUnit, model='carepoint.procurement.order',
-        )
-        proc_unit._get_order_line_count(self.carepoint_record['order_id'])
+        # proc_unit = self.unit_for(
+        #     ProcurementOrderUnit, model='carepoint.procurement.order',
+        # )
+        # proc_unit._get_order_line_count(self.carepoint_record['order_id'])
         # if len(binding.sale_line_id.order_id.order_line) == line_cnt:
         #     record = self.carepoint_record
         #     picking_unit = self.unit_for(
@@ -211,27 +199,3 @@ class ProcurementOrderImporter(CarepointImporter):
         # invoice_unit._import_invoice_lines_for_procurement(
         #     record['rxdisp_id'], binding.id,
         # )
-
-
-@carepoint
-class ProcurementOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the
-    carepoint.procurement.order record
-    """
-    _model_name = ['carepoint.procurement.order', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.patient')
-def patient_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of patients modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(ProcurementOrderBatchImporter)
-    importer.run(filters=filters)

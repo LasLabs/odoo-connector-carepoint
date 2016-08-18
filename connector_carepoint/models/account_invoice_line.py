@@ -6,7 +6,6 @@ import logging
 from openerp import models, fields
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
                                                   only_create,
                                                   ExportMapper,
                                                   )
@@ -18,7 +17,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
 from ..unit.delete_synchronizer import (CarepointDeleter)
-from ..connector import add_checkpoint
 from .procurement_order import ProcurementOrderUnit
 
 
@@ -95,14 +93,6 @@ class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.account.invoice.line']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class AccountInvoiceLineImportMapper(CarepointImportMapper):
@@ -158,12 +148,6 @@ class AccountInvoiceLineImporter(CarepointImporter):
 
     _base_mapper = AccountInvoiceLineImportMapper
 
-    def _create(self, data):
-        binding = super(AccountInvoiceLineImporter, self)._create(data)
-        checkpoint = self.unit_for(AccountInvoiceLineAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
-
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
@@ -206,22 +190,6 @@ class AccountInvoiceLineImporter(CarepointImporter):
 class AccountInvoiceLineExportMapper(ExportMapper):
     _model_name = 'carepoint.account.invoice.line'
 
-    direct = [
-        ('ref', 'ssn'),
-        ('email', 'email'),
-        ('dob', 'birth_date'),
-        ('dod', 'death_date'),
-    ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
-
-    @changed_by('gender')
-    @mapping
-    def gender_cd(self, record):
-        return {'gender_cd': record.get('gender').upper()}
-
 
 @carepoint
 class AccountInvoiceLineExporter(CarepointExporter):
@@ -232,17 +200,3 @@ class AccountInvoiceLineExporter(CarepointExporter):
 @carepoint
 class AccountInvoiceLineDeleteSynchronizer(CarepointDeleter):
     _model_name = ['carepoint.account.invoice.line']
-
-
-@carepoint
-class AccountInvoiceLineAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.account.invoice.line
-    record
-    """
-    _model_name = ['carepoint.account.invoice.line', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)

@@ -4,7 +4,6 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -15,7 +14,6 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint, get_environment
 
 
 _logger = logging.getLogger(__name__)
@@ -90,14 +88,6 @@ class StockPickingBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.stock.picking']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class StockPickingImportMapper(CarepointImportMapper):
@@ -125,12 +115,6 @@ class StockPickingImporter(CarepointImporter):
     _model_name = ['carepoint.stock.picking']
 
     _base_mapper = StockPickingImportMapper
-
-    def _create(self, data):
-        binding = super(StockPickingImporter, self)._create(data)
-        checkpoint = self.unit_for(StockPickingAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     def _import_dependencies(self):
         """ Import depends for record """
@@ -165,25 +149,3 @@ class StockPickingImporter(CarepointImporter):
             'pick_id': binding.odoo_id.id
         })
         wiz_id.process()
-
-
-@carepoint
-class StockPickingAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.stock.picking record """
-    _model_name = ['carepoint.stock.picking', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.patient')
-def patient_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of patients modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(StockPickingBatchImporter)
-    importer.run(filters=filters)

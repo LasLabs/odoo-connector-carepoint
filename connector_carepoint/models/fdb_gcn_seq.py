@@ -4,18 +4,14 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..connector import get_environment
 from ..unit.mapper import CarepointImportMapper, trim
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -58,14 +54,6 @@ class FdbGcnSeqBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.fdb.gcn.seq']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class FdbGcnSeqImportMapper(CarepointImportMapper):
@@ -106,33 +94,4 @@ class FdbGcnSeqImportMapper(CarepointImportMapper):
 @carepoint
 class FdbGcnSeqImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.gcn.seq']
-
     _base_mapper = FdbGcnSeqImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbGcnSeqImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbGcnSeqAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbGcnSeqAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.gcn.seq record """
-    _model_name = ['carepoint.fdb.gcn.seq']
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_gcn_seq_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of GCN Seqs from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbGcnSeqBatchImporter)
-    importer.run(filters=filters)

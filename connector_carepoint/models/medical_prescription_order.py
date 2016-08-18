@@ -5,8 +5,6 @@
 import logging
 from openerp import fields
 from openerp import models
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper,
                                                   )
@@ -17,7 +15,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
-from ..connector import add_checkpoint, get_environment
 
 _logger = logging.getLogger(__name__)
 
@@ -79,14 +76,6 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.medical.prescription.order']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
@@ -120,7 +109,6 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
 @carepoint
 class MedicalPrescriptionOrderImporter(CarepointImporter):
     _model_name = ['carepoint.medical.prescription.order']
-
     _base_mapper = MedicalPrescriptionOrderImportMapper
 
     def _import_dependencies(self):
@@ -130,12 +118,6 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
                                 'carepoint.medical.patient')
         self._import_dependency(record['md_id'],
                                 'carepoint.medical.physician')
-
-    def _create(self, data):
-        binding = super(MedicalPrescriptionOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(MedicalPrescriptionOrderAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     #
     # def _after_import(self, partner_binding):
@@ -168,27 +150,3 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
 class MedicalPrescriptionOrderExporter(CarepointExporter):
     _model_name = ['carepoint.medical.prescription.order']
     _base_mapper = MedicalPrescriptionOrderExportMapper
-
-
-@carepoint
-class MedicalPrescriptionOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the
-    carepoint.medical.prescription.order record
-    """
-    _model_name = ['carepoint.medical.prescription.order', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.prescription')
-def prescription_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of prescriptions modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(MedicalPrescriptionOrderBatchImporter)
-    importer.run(filters=filters)

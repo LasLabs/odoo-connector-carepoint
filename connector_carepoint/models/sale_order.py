@@ -4,16 +4,13 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  )
+from openerp.addons.connector.unit.mapper import mapping
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 
 _logger = logging.getLogger(__name__)
@@ -113,8 +110,7 @@ class SaleOrderImportMapper(CarepointImportMapper):
     def partner_data(self, record):
         binder = self.binder_for('carepoint.carepoint.account')
         if record['acct_id']:
-            acct_id = binder.to_odoo(record['acct_id'])
-            acct_id = self.env['carepoint.account'].browse(acct_id)
+            acct_id = binder.to_odoo(record['acct_id'], browse=True)
             patient_id = acct_id.patient_id
         else:
             patient_id = self.env.ref('connector_carepoint.patient_null')
@@ -145,14 +141,7 @@ class SaleOrderImportMapper(CarepointImportMapper):
 @carepoint
 class SaleOrderImporter(CarepointImporter):
     _model_name = ['carepoint.sale.order']
-
     _base_mapper = SaleOrderImportMapper
-
-    def _create(self, data):
-        binding = super(SaleOrderImporter, self)._create(data)
-        checkpoint = self.unit_for(SaleOrderAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     def _import_dependencies(self):
         """ Import depends for record """
@@ -162,6 +151,7 @@ class SaleOrderImporter(CarepointImporter):
 
     def _after_import(self, binding):
         """ Import the sale lines & procurements """
+        pass
         # line_unit = self.unit_for(
         #     SaleOrderLineUnit, model='carepoint.sale.order.line',
         # )
@@ -176,15 +166,3 @@ class SaleOrderImporter(CarepointImporter):
         # proc_unit._import_procurements_for_sale(
         #     self.carepoint_id,
         # )
-
-
-@carepoint
-class SaleOrderAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.sale.order record """
-    _model_name = ['carepoint.sale.order', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)

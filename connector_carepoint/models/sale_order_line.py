@@ -4,17 +4,16 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
+from openerp.addons.connector.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 from .procurement_order import ProcurementOrderUnit
 
 
@@ -75,17 +74,17 @@ class SaleOrderLineAdapter(CarepointCRUDAdapter):
 class SaleOrderLineUnit(ConnectorUnit):
     _model_name = 'carepoint.sale.order.line'
 
-    def __get_order_lines(self, sale_order_id):
+    def _get_order_lines(self, sale_order_id):
         adapter = self.unit_for(CarepointCRUDAdapter)
         return adapter.search(order_id=sale_order_id)
 
     def _import_sale_order_lines(self, sale_order_id):
         importer = self.unit_for(SaleOrderLineImporter)
-        for rec_id in self.__get_order_lines(sale_order_id):
+        for rec_id in self._get_order_lines(sale_order_id):
             importer.run(rec_id)
 
     def _get_order_line_count(self, sale_order_id):
-        return len(self.__get_order_lines(sale_order_id))
+        return len(self._get_order_lines(sale_order_id))
 
 
 @carepoint
@@ -94,14 +93,6 @@ class SaleOrderLineBatchImporter(DelayedBatchImporter):
     For every order in the list, a delayed job is created.
     """
     _model_name = ['carepoint.sale.order.line']
-
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
 
 
 @carepoint
@@ -114,9 +105,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     @only_create
     def prescription_data(self, record):
         binder = self.binder_for('carepoint.medical.prescription.order.line')
-        line_id = self.env['medical.prescription.order.line'].browse(
-            binder.to_odoo(record['rx_id'])
-        )
+        line_id = binder.to_odoo(record['rx_id'], browse=True)
         return {'prescription_order_line_id': line_id.id,
                 'product_id': line_id.medicament_id.product_id.id,
                 'product_uom': line_id.dispense_uom_id.id,
@@ -132,7 +121,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
 
     @mapping
     def price_unit(self, record):
-        # @TODO: Figure out where the prices are
+        # @TODO: Are prices even possible in sales? Seems only after dispense
         return {'price_unit': 0}
 
     @mapping
@@ -150,12 +139,6 @@ class SaleOrderLineImporter(CarepointImporter):
     _model_name = ['carepoint.sale.order.line']
 
     _base_mapper = SaleOrderLineImportMapper
-
-    def _create(self, data):
-        binding = super(SaleOrderLineImporter, self)._create(data)
-        checkpoint = self.unit_for(SaleOrderLineAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     def _import_dependencies(self):
         """ Import depends for record """
@@ -183,15 +166,3 @@ class SaleOrderLineImporter(CarepointImporter):
             self._import_dependency(
                 record['order_id'], 'carepoint.stock.picking'
             )
-
-
-@carepoint
-class SaleOrderLineAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.sale.order.line record """
-    _model_name = ['carepoint.sale.order.line', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)

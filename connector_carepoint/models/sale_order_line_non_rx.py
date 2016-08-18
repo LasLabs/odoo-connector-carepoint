@@ -13,7 +13,6 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 
 _logger = logging.getLogger(__name__)
@@ -89,14 +88,6 @@ class SaleOrderLineNonRxBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.sale.order.line.non.rx']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class SaleOrderLineNonRxImportMapper(CarepointImportMapper):
@@ -136,31 +127,10 @@ class SaleOrderLineNonRxImportMapper(CarepointImportMapper):
 @carepoint
 class SaleOrderLineNonRxImporter(CarepointImporter):
     _model_name = ['carepoint.sale.order.line.non.rx']
-
     _base_mapper = SaleOrderLineNonRxImportMapper
-
-    def _create(self, data):
-        binding = super(SaleOrderLineNonRxImporter, self)._create(data)
-        checkpoint = self.unit_for(SaleOrderLineNonRxAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
 
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
-
-
-@carepoint
-class SaleOrderLineNonRxAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the
-    carepoint.sale.order.line.non.rx record
-    """
-    _model_name = ['carepoint.sale.order.line.non.rx', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)

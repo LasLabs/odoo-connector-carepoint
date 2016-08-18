@@ -4,19 +4,15 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import PersonImportMapper
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
 
@@ -78,14 +74,6 @@ class MedicalUserBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.res.users']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class MedicalUserImportMapper(PersonImportMapper):
@@ -110,7 +98,6 @@ class MedicalUserImportMapper(PersonImportMapper):
     def odoo_id(self, record):
         """ Will bind the user on a existing user
         with the same name & email """
-        self._get_name(record)
         user_id = self.env['res.users'].search([
             ('login', 'ilike', record.get('login_name')),
         ],
@@ -123,39 +110,4 @@ class MedicalUserImportMapper(PersonImportMapper):
 @carepoint
 class MedicalUserImporter(CarepointImporter):
     _model_name = ['carepoint.res.users']
-
     _base_mapper = MedicalUserImportMapper
-
-    def _create(self, data):
-        binding = super(MedicalUserImporter, self)._create(data)
-        checkpoint = self.unit_for(MedicalUserAddCheckpoint)
-        checkpoint.run(binding.id)
-        return binding
-
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
-
-
-@carepoint
-class MedicalUserAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.res.users record """
-    _model_name = ['carepoint.res.users', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.core')
-def user_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of users modified on Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(MedicalUserBatchImporter)
-    importer.run(filters=filters)

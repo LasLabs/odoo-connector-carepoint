@@ -5,7 +5,6 @@
 import logging
 from os import path
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
@@ -13,7 +12,6 @@ from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            )
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -69,14 +67,6 @@ class FdbUnitBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.fdb.unit']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class FdbUnitImportMapper(CarepointImportMapper):
@@ -91,16 +81,8 @@ class FdbUnitImportMapper(CarepointImportMapper):
     def carepoint_id(self, record):
         return {'carepoint_id': record['str'].strip()}
 
-    @mapping
-    @only_create
-    def uom_id(self, record):
-
-        unit_base = ureg(record['str60'].strip())
-        unit_base_str = str(unit_base.u)
-        unit_root = infer_base_unit(unit_base)
-        unit_root_str = str(unit_root)
-        unit_converted = unit_base.to(unit_root)
-
+    def _uom_category_id(self, unit_root_str):
+        """ Find or create a UOM category """
         categ_obj = self.env['product.uom.categ']
         categ_id = categ_obj.search([
             ('name', '=', unit_root_str),
@@ -111,13 +93,26 @@ class FdbUnitImportMapper(CarepointImportMapper):
             categ_id = categ_obj.create({
                 'name': unit_root_str,
             })
+        return categ_id
+
+    @mapping
+    @only_create
+    def uom_id(self, record):
+
+        unit_base = ureg(record['str60'].strip())
+        unit_base_str = str(unit_base.u)
+        unit_root = infer_base_unit(unit_base)
+        unit_root_str = str(unit_root)
+        unit_converted = unit_base.to(unit_root)
+
+        categ_id = self._uom_category_id(unit_root_str)
 
         uom_obj = self.env['product.uom']
         uom_id = uom_obj.search([
             ('name', '=', unit_base_str),
         ])
         if len(uom_id):
-            return {'uom_id': uom_id.id}
+            return {'uom_id': uom_id[0].id}
 
         vals = {
             'name': record['str'].strip(),
@@ -161,13 +156,3 @@ class FdbUnitImportMapper(CarepointImportMapper):
 class FdbUnitImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.unit']
     _base_mapper = FdbUnitImportMapper
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_unit_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of Units from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbUnitBatchImporter)
-    importer.run(filters=filters)

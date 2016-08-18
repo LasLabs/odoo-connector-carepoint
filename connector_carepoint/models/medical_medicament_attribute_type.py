@@ -4,27 +4,18 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            )
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointMedicalMedicamentAttributeType(models.Model):
@@ -65,14 +56,6 @@ class MedicalMedicamentAttributeTypeBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.medical.medicament.attribute.type']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class MedicalMedicamentAttributeTypeImportMapper(CarepointImportMapper):
@@ -90,37 +73,4 @@ class MedicalMedicamentAttributeTypeImportMapper(CarepointImportMapper):
 @carepoint
 class MedicalMedicamentAttributeTypeImporter(CarepointImporter):
     _model_name = ['carepoint.medical.medicament.attribute.type']
-
     _base_mapper = MedicalMedicamentAttributeTypeImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(
-            MedicalMedicamentAttributeTypeImporter, self)._create(data)
-        checkpoint = self.unit_for(MedicalMedicamentAttributeTypeAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class MedicalMedicamentAttributeTypeAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the
-    carepoint.medical.medicament.attribute.type record
-    """
-    _model_name = ['carepoint.medical.medicament.attribute.type']
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_form_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of Forms from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(
-        MedicalMedicamentAttributeTypeBatchImporter)
-    importer.run(filters=filters)

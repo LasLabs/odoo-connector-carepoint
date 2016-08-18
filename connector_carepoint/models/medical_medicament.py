@@ -3,9 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from collections import defaultdict
-from openerp import models, fields, api
-from openerp.addons.connector.connector import ConnectorUnit
+from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
@@ -15,14 +13,8 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointMedicalMedicament(models.Model):
@@ -76,63 +68,64 @@ class CarepointMedicalMedicament(models.Model):
 
     RECOMPUTE_QTY_STEP = 1000  # products at a time
 
-    @api.multi
-    def recompute_carepoint_qty(self):
-        """ Check if the quantity in the stock location configured
-        on the backend has changed since the last export.
-        If it has changed, write the updated quantity on `carepoint_qty`.
-        The write on `carepoint_qty` will trigger an `on_record_write`
-        event that will create an export job.
-        It groups the products by backend to avoid to read the backend
-        informations for each product.
-        """
-        # group products by backend
-        backends = defaultdict(self.browse)
-        for product in self:
-            backends[product.backend_id] |= product
-
-        for backend, products in backends.iteritems():
-            self._recompute_carepoint_qty_backend(backend, products)
-        return True
-
-    @api.multi
-    def _recompute_carepoint_qty_backend(self, backend, products,
-                                         read_fields=None):
-        """ Recompute the products quantity for one backend.
-        If field names are passed in ``read_fields`` (as a list), they
-        will be read in the product that is used in
-        :meth:`~._carepoint_qty`.
-        """
-        if backend.product_stock_field_id:
-            stock_field = backend.product_stock_field_id.name
-        else:
-            stock_field = 'virtual_available'
-
-        location = backend.warehouse_id.lot_stock_id
-
-        product_fields = ['carepoint_qty', stock_field]
-        if read_fields:
-            product_fields += read_fields
-
-        self_with_location = self.with_context(location=location.id)
-        for chunk_ids in chunks(products.ids, self.RECOMPUTE_QTY_STEP):
-            records = self_with_location.browse(chunk_ids)
-            for product in records.read(fields=product_fields):
-                new_qty = self._carepoint_qty(
-                    product, backend, location, stock_field
-                )
-                if new_qty != product['carepoint_qty']:
-                    self.browse(product['id']).carepoint_qty = new_qty
-
-    @api.multi
-    def _carepoint_qty(self, product, backend, location, stock_field):
-        """ Return the current quantity for one product.
-        Can be inherited to change the way the quantity is computed,
-        according to a backend / location.
-        If you need to read additional fields on the product, see the
-        ``read_fields`` argument of :meth:`~._recompute_carepoint_qty_backend`
-        """
-        return product[stock_field]
+    # @api.multi
+    # def recompute_carepoint_qty(self):
+    #     """ Check if the quantity in the stock location configured
+    #     on the backend has changed since the last export.
+    #     If it has changed, write the updated quantity on `carepoint_qty`.
+    #     The write on `carepoint_qty` will trigger an `on_record_write`
+    #     event that will create an export job.
+    #     It groups the products by backend to avoid to read the backend
+    #     informations for each product.
+    #     """
+    #     # group products by backend
+    #     backends = defaultdict(self.browse)
+    #     for product in self:
+    #         backends[product.backend_id] |= product
+    #
+    #     for backend, products in backends.iteritems():
+    #         self._recompute_carepoint_qty_backend(backend, products)
+    #     return True
+    #
+    # @api.multi
+    # def _recompute_carepoint_qty_backend(self, backend, products,
+    #                                      read_fields=None):
+    #     """ Recompute the products quantity for one backend.
+    #     If field names are passed in ``read_fields`` (as a list), they
+    #     will be read in the product that is used in
+    #     :meth:`~._carepoint_qty`.
+    #     """
+    #     if backend.product_stock_field_id:
+    #         stock_field = backend.product_stock_field_id.name
+    #     else:
+    #         stock_field = 'virtual_available'
+    #
+    #     location = backend.warehouse_id.lot_stock_id
+    #
+    #     product_fields = ['carepoint_qty', stock_field]
+    #     if read_fields:
+    #         product_fields += read_fields
+    #
+    #     self_with_location = self.with_context(location=location.id)
+    #     for chunk_ids in chunks(products.ids, self.RECOMPUTE_QTY_STEP):
+    #         records = self_with_location.browse(chunk_ids)
+    #         for product in records.read(fields=product_fields):
+    #             new_qty = self._carepoint_qty(
+    #                 product, backend, location, stock_field
+    #             )
+    #             if new_qty != product['carepoint_qty']:
+    #                 self.browse(product['id']).carepoint_qty = new_qty
+    #
+    # @api.multi
+    # def _carepoint_qty(self, product, backend, location, stock_field):
+    #     """ Return the current quantity for one product.
+    #     Can be inherited to change the way the quantity is computed,
+    #     according to a backend / location.
+    #     If you need to read additional fields on the product, see the
+    #     ``read_fields`` argument of
+    #     :meth:`~._recompute_carepoint_qty_backend`
+    #     """
+    #     return product[stock_field]
 
 
 class MedicalMedicament(models.Model):
@@ -170,14 +163,6 @@ class MedicamentBatchImporter(DelayedBatchImporter):
     Import from a date
     """
     _model_name = ['carepoint.medical.medicament']
-
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
 
 #
 # @carepoint
@@ -332,12 +317,6 @@ class MedicamentImporter(CarepointImporter):
         Raise `InvalidDataError`
         """
 
-    def _create(self, data):
-        odoo_binding = super(MedicamentImporter, self)._create(data)
-        checkpoint = self.unit_for(MedicalMedicamentAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
     def _after_import(self, binding):
         """ Hook called at the end of the import """
         self._import_dependency(self.carepoint_record['ndc'].strip(),
@@ -348,18 +327,6 @@ class MedicamentImporter(CarepointImporter):
         # image_importer = self.unit_for(CatalogImageImporter)
         # image_importer.run(self.carepoint_id, binding.id)
 
-
-@carepoint
-class MedicalMedicamentAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.medical.medicament record
-    """
-    _model_name = ['carepoint.medical.medicament', ]
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
 
 # @carepoint
 # class MedicamentInventoryExporter(Exporter):

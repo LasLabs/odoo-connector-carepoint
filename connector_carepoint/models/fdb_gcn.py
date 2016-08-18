@@ -4,25 +4,16 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..connector import get_environment
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointFdbGcn(models.Model):
@@ -63,14 +54,6 @@ class FdbGcnBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.fdb.gcn']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class FdbGcnImportMapper(CarepointImportMapper):
@@ -88,14 +71,7 @@ class FdbGcnImportMapper(CarepointImportMapper):
 @carepoint
 class FdbGcnImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.gcn']
-
     _base_mapper = FdbGcnImportMapper
-
-    def _create(self, data):
-        odoo_binding = super(FdbGcnImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbGcnAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
 
     def _import_dependencies(self):
         """ Import depends for record """
@@ -106,25 +82,3 @@ class FdbGcnImporter(CarepointImporter):
     def _after_import(self, binding):
         self._import_dependency(self.carepoint_record['gcn_seqno'],
                                 'carepoint.fdb.pem.mogc')
-
-
-@carepoint
-class FdbGcnAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.gcn record """
-    _model_name = ['carepoint.fdb.gcn']
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_gcn_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of NDCs from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbGcnBatchImporter)
-    importer.run(filters=filters)

@@ -4,26 +4,17 @@
 
 import logging
 from openerp import models, fields
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
-from ..connector import get_environment
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..connector import add_checkpoint
 
 _logger = logging.getLogger(__name__)
-
-
-def chunks(items, length):
-    for index in xrange(0, len(items), length):
-        yield items[index:index + length]
 
 
 class CarepointFdbNdcCsExt(models.Model):
@@ -63,14 +54,6 @@ class FdbNdcCsExtBatchImporter(DelayedBatchImporter):
     Import from a date
     """
     _model_name = ['carepoint.fdb.ndc.cs.ext']
-
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
 
 
 @carepoint
@@ -153,42 +136,4 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
 @carepoint
 class FdbNdcCsExtImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.ndc.cs.ext']
-
     _base_mapper = FdbNdcCsExtImportMapper
-
-    def _import_dependencies(self):
-        """ Import depends for record """
-        # record = self.carepoint_record
-        # @TODO: Don't assume route & form; data vs PK issue
-        # self._import_dependency(record['dn_form'].strip(),
-        #                         'carepoint.fdb.form')
-        # self._import_dependency(record['dn_route'].strip(),
-        #                         'carepoint.fdb.route')
-
-    def _create(self, data):
-        odoo_binding = super(FdbNdcCsExtImporter, self)._create(data)
-        checkpoint = self.unit_for(FdbNdcCsExtAddCheckpoint)
-        checkpoint.run(odoo_binding.id)
-        return odoo_binding
-
-
-@carepoint
-class FdbNdcCsExtAddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the carepoint.fdb.ndc.cs.ext record """
-    _model_name = ['carepoint.fdb.ndc.cs.ext']
-
-    def run(self, binding_id):
-        add_checkpoint(self.session,
-                       self.model._name,
-                       binding_id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint.fdb')
-def fdb_gcn_import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare the import of NDCs from Carepoint """
-    if filters is None:
-        filters = {}
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(FdbNdcCsExtBatchImporter)
-    importer.run(filters=filters)

@@ -67,14 +67,6 @@ class AccountBatchImporter(DelayedBatchImporter):
     """
     _model_name = ['carepoint.carepoint.account']
 
-    def run(self, filters=None):
-        """ Run the synchronization """
-        if filters is None:
-            filters = {}
-        record_ids = self.backend_adapter.search(**filters)
-        for record_id in record_ids:
-            self._import_record(record_id)
-
 
 @carepoint
 class AccountImportMapper(CarepointImportMapper):
