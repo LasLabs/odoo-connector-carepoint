@@ -108,6 +108,18 @@ class TestFdbUnitImportMapper(FdbUnitTestBase):
                 self.record['str60'].strip()
             )
 
+    def test_uom_id_ureg_cc(self):
+        """ It should have identified and split the CC for ureg parse """
+        record = self.record
+        record['str60'] = '1cc'
+        with self.mock_pint() as mk:
+            mk['ureg'].side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.uom_id(record)
+            mk['ureg'].assert_called_once_with(
+                '1 cc'
+            )
+
     def test_uom_id_infer_base_unit(self):
         """ It should attempt to infer base of unit """
         with self.mock_pint() as mk:
