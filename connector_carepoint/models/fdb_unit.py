@@ -3,7 +3,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+import re
+
 from os import path
+
 from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -17,8 +20,11 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 
-from pint import LazyRegistry
-from pint.util import infer_base_unit
+try:
+    from pint import LazyRegistry
+    from pint.util import infer_base_unit
+except ImportError:
+    pass
 
 _logger = logging.getLogger(__name__)
 
@@ -99,7 +105,12 @@ class FdbUnitImportMapper(CarepointImportMapper):
     @only_create
     def uom_id(self, record):
 
-        unit_base = ureg(record['str60'].strip())
+        str60 = record['str60'].strip()
+        match = re.search(r'(?P<unit>\d+)cc', str60, re.IGNORECASE)
+        if match:
+            str60 = '%s cc' % match.group('unit')
+
+        unit_base = ureg(str60)
         unit_base_str = str(unit_base.u)
         unit_root = infer_base_unit(unit_base)
         unit_root_str = str(unit_root)
