@@ -120,6 +120,18 @@ class TestFdbUnitImportMapper(FdbUnitTestBase):
                 '1 cc'
             )
 
+    def test_uom_id_ureg_days(self):
+        """ It should have identified and split the days for ureg parse """
+        record = self.record
+        record['str60'] = 'daysx3'
+        with self.mock_pint() as mk:
+            mk['ureg'].side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.uom_id(record)
+            mk['ureg'].assert_called_once_with(
+                'days ** 3'
+            )
+
     def test_uom_id_infer_base_unit(self):
         """ It should attempt to infer base of unit """
         with self.mock_pint() as mk:
