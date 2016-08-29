@@ -39,6 +39,7 @@ class TestRelatedAction(SetUpCarepointBase):
             'name': 'Test Pharm',
             'carepoint_id': 1234567,
             'backend_id': self.backend.id,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def test_unwrap_binding_no_binding(self):

@@ -140,13 +140,13 @@ class TestCarepointBackend(SetUpCarepointBase):
             self.backend.cron_import_sale_order()
             mk().import_sale_order.assert_called_once_with()
 
-    def test_import_medical_medicament(self):
+    def test_import_carepoint_item(self):
         """ It should import proper model on date field """
         with mock.patch.object(self.backend, '_import_from_date') as mk:
-            self.backend.import_medical_medicament()
+            self.backend.import_carepoint_item()
             mk.assert_called_once_with(
-                'carepoint.medical.medicament',
-                'import_medicaments_from_date',
+                'carepoint.carepoint.item',
+                'import_items_from_date',
             )
 
     def test_import_medical_patient(self):

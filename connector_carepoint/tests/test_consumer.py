@@ -24,6 +24,7 @@ class TestConsumer(SetUpCarepointBase):
             'name': 'Test Pharm',
             'carepoint_id': 1234567,
             'backend_id': self.backend.id,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def test_delay_export_context_no_export(self):

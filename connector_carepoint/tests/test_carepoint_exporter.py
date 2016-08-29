@@ -76,6 +76,7 @@ class TestCarepointExporter(SetUpCarepointBase):
     def _new_record(self):
         return self.env[self.model].create({
             'name': 'Test',
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def test_lock_sql(self):

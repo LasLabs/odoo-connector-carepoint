@@ -31,6 +31,11 @@ class CarepointMedicalPharmacy(models.Model):
         required=True,
         ondelete='cascade'
     )
+    warehouse_id = fields.Many2one(
+        string='Warehouse',
+        comodel_name='stock.warehouse',
+        required=True,
+    )
 
 
 class MedicalPharmacy(models.Model):
@@ -93,6 +98,12 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
         return {'parent_id': self.backend_record.company_id.partner_id.id}
 
     @mapping
+    def warehouse_id(self, record):
+        binder = self.binder_for('carepoint.stock.warehouse')
+        warehouse_id = binder.to_odoo(record['store_id'])
+        return {'warehouse_id': warehouse_id}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['store_id']}
 
@@ -101,3 +112,7 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
 class MedicalPharmacyImporter(CarepointImporter):
     _model_name = ['carepoint.medical.pharmacy']
     _base_mapper = MedicalPharmacyImportMapper
+
+    def _import_dependencies(self):
+        self._import_dependency(self.carepoint_record['store_id'],
+                                'carepoint.stock.warehouse')

@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-    <data noupdate="1">
+<odoo noupdate="1">
 
-        <record model="medical.patient" id="patient_null">
-            <field name="name">Null Patient</field>
-            <field name="active" eval="False" />
-        </record>
-        
-        <record model="carepoint.carepoint.account" id="account_null">
-            <field name="patient_id" ref="connector_carepoint.patient_null" />
-            <field name="carepoint_id">0</field>
-        </record>
+    <record model="medical.patient" id="patient_null">
+        <field name="name">Null Patient</field>
+        <field name="active" eval="False" />
+    </record>
 
-    </data>
-</openerp>
+</odoo>

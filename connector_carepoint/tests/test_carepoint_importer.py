@@ -62,6 +62,7 @@ class TestCarepointImporter(SetUpCarepointBase):
         return self.env[self.model].create({
             'name': 'Test',
             'sync_date': sync_date,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def _new_importer(self, carepoint_id=None, carepoint_record=None):

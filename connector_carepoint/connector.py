@@ -2,7 +2,7 @@
 # Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp import models, fields
+from openerp import models, fields, api
 from openerp.addons.connector.connector import ConnectorEnvironment
 from openerp.addons.connector.checkpoint import checkpoint
 
@@ -53,7 +53,7 @@ class CarepointBinding(models.AbstractModel):
 
     @api.model
     def _default_backend_id(self):
-        return self.env['easypost.backend'].search([
+        return self.env['carepoint.backend'].search([
             ('is_default', '=', True),
             ('active', '=', True),
         ],
