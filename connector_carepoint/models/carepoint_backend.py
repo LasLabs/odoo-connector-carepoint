@@ -155,7 +155,7 @@ class CarepointBackend(models.Model):
         comodel_name='account.payment.term',
         required=True,
     )
-    import_medicaments_from_date = fields.Datetime()
+    import_items_from_date = fields.Datetime()
     import_patients_from_date = fields.Datetime()
     import_physicians_from_date = fields.Datetime()
     import_prescriptions_from_date = fields.Datetime()
@@ -291,9 +291,9 @@ class CarepointBackend(models.Model):
         self.search([]).import_sale_order()
 
     @api.multi
-    def import_medical_medicament(self):
-        self._import_from_date('carepoint.medical.medicament',
-                               'import_medicaments_from_date')
+    def import_carepoint_item(self):
+        self._import_from_date('carepoint.carepoint.item',
+                               'import_items_from_date')
         return True
 
     @api.multi

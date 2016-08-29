@@ -179,12 +179,12 @@
                             </group>
                             <group>
                                 <div>
-                                    <label string="Import medicaments since" class="oe_inline"/>
-                                    <field name="import_medicaments_from_date"
+                                    <label string="Import items since" class="oe_inline"/>
+                                    <field name="import_items_from_date"
                                            class="oe_inline"
                                            nolabel="1"/>
                                 </div>
-                                <button name="import_medical_medicament"
+                                <button name="import_carepoint_item"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>

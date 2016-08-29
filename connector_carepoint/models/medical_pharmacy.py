@@ -14,6 +14,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 
+
 _logger = logging.getLogger(__name__)
 
 
@@ -30,6 +31,10 @@ class CarepointMedicalPharmacy(models.Model):
         string='Company',
         required=True,
         ondelete='cascade'
+    )
+    warehouse_id = fields.Many2one(
+        string='Warehouse',
+        comodel_name='stock.warehouse',
     )
 
 
@@ -93,6 +98,12 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
         return {'parent_id': self.backend_record.company_id.partner_id.id}
 
     @mapping
+    def warehouse_id(self, record):
+        binder = self.binder_for('carepoint.stock.warehouse')
+        warehouse_id = binder.to_odoo(record['store_id'])
+        return {'warehouse_id': warehouse_id}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['store_id']}
 
@@ -101,3 +112,12 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
 class MedicalPharmacyImporter(CarepointImporter):
     _model_name = ['carepoint.medical.pharmacy']
     _base_mapper = MedicalPharmacyImportMapper
+
+    def _after_import(self, binding):
+        self._import_dependency(binding.carepoint_id,
+                                'carepoint.stock.warehouse')
+        binder = self.binder_for('carepoint.stock.warehouse')
+        warehouse_id = binder.to_odoo(binding.carepoint_id)
+        binding.write({
+            'warehouse_id': warehouse_id,
+        })

@@ -38,6 +38,7 @@ class TestCarepointDeleter(SetUpCarepointBase):
         return self.env[self.model].create({
             'name': 'Test',
             'sync_date': sync_date,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def test_run_not_implemented(self):

@@ -30,6 +30,7 @@ class TestBinder(SetUpCarepointBase):
             'name': 'Test Pharm',
             'carepoint_id': self.carepoint_id if bind else None,
             'backend_id': self.backend.id,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
     def test_to_odoo_unwrap(self):
