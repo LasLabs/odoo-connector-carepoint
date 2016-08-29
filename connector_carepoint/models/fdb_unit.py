@@ -23,16 +23,22 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 try:
     from pint import LazyRegistry
     from pint.util import infer_base_unit
+    ureg = LazyRegistry()
+    ureg.load_definitions(
+        path.abspath(
+            path.join(
+                path.dirname(__file__),
+                '..',
+                'data',
+                'medical_units.txt',
+            )
+        )
+    )
 except ImportError:
-    pass
+    ureg = None
+
 
 _logger = logging.getLogger(__name__)
-
-
-ureg = LazyRegistry()
-ureg.load_definitions(path.abspath(path.join(
-    path.dirname(__file__), '..', 'data', 'medical_units.txt',
-)))
 
 
 class CarepointFdbUnit(models.Model):
