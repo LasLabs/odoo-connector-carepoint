@@ -105,10 +105,7 @@ class FdbUnitImportMapper(CarepointImportMapper):
     @only_create
     def uom_id(self, record):
 
-        str60 = record['str60'].strip()
-        match = re.search(r'(?P<unit>\d+)cc', str60, re.IGNORECASE)
-        if match:
-            str60 = '%s cc' % match.group('unit')
+        str60 = self._parse_str60(record['str60'])
 
         unit_base = ureg(str60)
         unit_base_str = str(unit_base.u)
@@ -149,6 +146,23 @@ class FdbUnitImportMapper(CarepointImportMapper):
                 'factor': factor,
             })
         return vals
+
+    def _parse_str60(self, str60):
+        """ It parses the str60 to fix edge cases """
+
+        str60 = str60.strip()
+
+        # Handle CCs
+        match = re.search(r'(?P<unit>\d+)cc', str60, re.IGNORECASE)
+        if match:
+            return '%s cc' % match.group('unit')
+
+        # Handle daysx
+        match = re.search(r'daysx(?P<unit>\d+)', str60, re.IGNORECASE)
+        if match:
+            return 'days ** %s' % match.group('unit')
+
+        return str60
 
     # @mapping
     # @only_create
