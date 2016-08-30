@@ -37,15 +37,28 @@ class CarepointBinding(models.AbstractModel):
         comodel_name='carepoint.backend',
         string='Carepoint Backend',
         required=True,
+        readonly=True,
         ondelete='restrict',
+        default=lambda s: s._default_backend_id(),
     )
     # fields.Char because 0 is a valid Carepoint ID
     carepoint_id = fields.Char(string='ID on Carepoint')
+    created_at = fields.Date('Created At (on Carepoint)')
+    updated_at = fields.Date('Updated At (on Carepoint)')
 
     _sql_constraints = [
         ('carepoint_uniq', 'unique(backend_id, carepoint_id)',
          'A binding already exists with the same Carepoint ID.'),
     ]
+
+    @api.model
+    def _default_backend_id(self):
+        return self.env['easypost.backend'].search([
+            ('is_default', '=', True),
+            ('active', '=', True),
+        ],
+            limit=1,
+        )
 
 
 def add_checkpoint(session, model_name, record_id, backend_id):
