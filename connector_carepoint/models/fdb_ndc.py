@@ -6,7 +6,6 @@ import logging
 import re
 from openerp import models, fields, _
 from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -16,7 +15,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from .fdb_unit import ureg
-from pint.errors import DimensionalityError
 from psycopg2 import IntegrityError
 from openerp.exceptions import ValidationError
 
@@ -65,6 +63,9 @@ class FdbNdcBatchImporter(DelayedBatchImporter):
 @carepoint
 class FdbNdcImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.ndc'
+
+    DEFAULT_UNIT = 'unit'
+
     direct = [
         (trim('ndc'), 'name'),
         (trim('lblrid'), 'lblrid'),
@@ -150,11 +151,58 @@ class FdbNdcImportMapper(CarepointImportMapper):
         (trim('ln60'), 'ln60'),
     ]
 
-    @mapping
-    @only_create
-    def medicament_id(self, record):
+    def _get_uom_parts(self, uom_str):
+        """ @TODO: Handling for multiple UOMs (compounds)
+        :returns: tuple (int:unit_num, str:uom_str)
+        """
 
-        medicament_obj = self.env['medical.medicament']
+        unit_arr = []
+        uom_str = uom_str.replace('%', 'percent')
+        strength_re = re.compile(r'(?P<unit>\d+\.?\d*)\s?(?P<uom>[a-z]*)')
+        strength_parts = uom_str.split('-')
+
+        # Iter in reverse because UOM is typically last if only one
+        for strength_part in reversed(strength_parts):
+            match = strength_re.match(strength_part)
+            if match:
+                if len(unit_arr):
+                    unit_arr.append('/')
+                unit_arr.append(match.group('unit'))
+                uom_str = match.group('uom') or self.DEFAULT_UNIT
+                if uom_str:
+                    unit_arr.append(uom_str)
+
+        strength_obj = ureg(' '.join(unit_arr) or self.DEFAULT_UNIT)
+
+        uom_str = uom_str.replace(str(strength_obj.m), '').strip().upper()
+        unit_num = float(strength_obj.m)
+
+        return unit_num, uom_str
+
+    def _get_uom_id(self, uom_str):
+        return self.env['product.uom'].search([
+            ('name', '=', str(uom_str).strip().upper()),
+        ],
+            limit=1,
+        )
+
+    def _get_categ_id(self, is_prescription, record):
+        """ It returns the product category based on input
+        :param is_prescription: bool
+        :param record: dict of record. Not used, but good for inherit
+        """
+        if is_prescription:
+            return self.env.ref(
+                'medical_prescription_sale.product_category_rx'
+            )
+        else:
+            return self.env.ref(
+                'medical_prescription_sale.product_category_otc'
+            )
+
+    def _get_medicament_vals(self, record):
+        """ It returns a dict of vals for medicament create/write """
+
         medicament_name = record['bn'].strip()
         binder = self.binder_for('carepoint.fdb.gcn')
         fdb_gcn_id = binder.to_odoo(record['gcn_seqno'], browse=True)
@@ -166,14 +214,15 @@ class FdbNdcImportMapper(CarepointImportMapper):
         strength_str = ''
         route_id = 0
         form_id = 0
-        gpi = 0
+        gpi = record['gpi']
         is_prescription = False
+        dea_code = record['dea'] or '0'
 
         if cs_ext_id:
             strength_str = cs_ext_id.dn_str.lower().strip()
             route_id = cs_ext_id.route_id.route_id
             form_id = cs_ext_id.form_id.form_id
-            gpi = cs_ext_id.gpi
+            gpi = gpi or cs_ext_id.gpi
             is_prescription = cs_ext_id.rx_only_yn
 
         if not strength_str:
@@ -183,91 +232,20 @@ class FdbNdcImportMapper(CarepointImportMapper):
         if not form_id:
             form_id = fdb_gcn_seq_id.form_id.form_id
         if not gpi:
+            # Just in case there is None or False
             gpi = 0
 
-        strength_str = strength_str.replace('%', 'percent')
+        strength_num, strength_str = self._get_uom_parts(strength_str)
+        strength_uom_id = self._get_uom_id(strength_str)
+        sale_uom_id = self._get_uom_id(record['hcfa_unit'] or 'UNIT')
+        categ_id = self._get_categ_id(is_prescription, record)
 
-        try:
-            strength_obj = ureg(strength_str)
-        except DimensionalityError:
-            strength_parts = strength_str.split('-')
-            unit_arr = []
-            uom_str = 'unit'
-            strength_re = re.compile(r'(?P<unit>\d+\.?\d?)\s?(?P<uom>[a-z]?)')
-            # Iter in reverse because UOM is typically last if only one
-            for strength_part in reversed(strength_parts):
-                if len(unit_arr):
-                    unit_arr.append('/')
-                match = strength_re.match(strength_part)
-                if match:
-                    unit_arr.append(match.group('unit'))
-                    if match.group('uom'):
-                        uom_str = match.group('uom')
-                    if uom_str:
-                        unit_arr.append(uom_str)
-            strength_obj = ureg(' '.join(unit_arr))
-        _logger.debug('%s, %s, %s, %s', route_id,
-                      form_id, fdb_gcn_seq_id, cs_ext_id)
-        try:
-            strength_str = strength_str.replace(
-                '%d' % strength_obj.m, ''
-            ).strip().upper()
-            strength_num = float(strength_obj.m)
-        except AttributeError:
-            strength_str = strength_str.replace(
-                '%d' % strength_obj, ''
-            ).strip().upper()
-            strength_num = float(strength_obj)
-        strength_uom_id = self.env['product.uom'].search([
-            ('name', '=', strength_str),
-        ],
-            limit=1,
-        )
-
-        medicament_id = medicament_obj.search([
-            ('name', '=', medicament_name),
-            ('drug_route_id', '=', route_id.id),
-            ('drug_form_id', '=', form_id.id),
-            ('strength', '=', strength_num),
-            ('strength_uom_id', '=', strength_uom_id.id),
-        ],
-            limit=1,
-        )
-
-        if is_prescription:
-            categ_id = self.env.ref(
-                'medical_prescription_sale.product_category_rx'
-            )
-        else:
-            categ_id = self.env.ref(
-                'medical_prescription_sale.product_category_otc'
-            )
-
-        code = record['dea']
-        if not code:
-            code = '0'
-        binder = self.binder_for('carepoint.fdb.ndc')
-        fdb_ndc_id = binder.to_odoo(record['ndc'])
-        fdb_ndc_id = self.env['fdb.ndc'].browse(fdb_ndc_id)
-        hcfa_unit = record['hcfa_unit'] or ''
-        sale_uom_id = self.env['product.uom'].search([
-            ('name', '=', hcfa_unit.strip()),
-        ],
-            limit=1,
-        )
-        if not sale_uom_id:
-            sale_uom_id = self.env['product.uom'].search([
-                ('name', '=', 'UNIT'),
-            ],
-                limit=1,
-            )
-
-        medicament_vals = {
+        return {
             'name': medicament_name,
             'drug_route_id': route_id.id,
             'drug_form_id': form_id.id,
             'gpi': str(gpi),
-            'control_code': code,
+            'control_code': dea_code,
             'categ_id': categ_id.id,
             'strength': strength_num,
             'strength_uom_id': strength_uom_id.id,
@@ -282,6 +260,21 @@ class FdbNdcImportMapper(CarepointImportMapper):
             'website_published': True,
         }
 
+    @mapping
+    def medicament_id(self, record):
+
+        medicament_obj = self.env['medical.medicament']
+        medicament_vals = self._get_medicament_vals(record)
+        medicament_id = medicament_obj.search([
+            ('name', '=', medicament_vals['name']),
+            ('drug_route_id', '=', medicament_vals['drug_route_id']),
+            ('drug_form_id', '=', medicament_vals['drug_form_id']),
+            ('strength', '=', medicament_vals['strength']),
+            ('strength_uom_id', '=', medicament_vals['strength_uom_id']),
+        ],
+            limit=1,
+        )
+
         if not len(medicament_id):
             try:
                 medicament_id = medicament_obj.create(medicament_vals)
@@ -292,9 +285,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 ) % (medicament_vals, e))
 
         else:
-            medicament_id.write(medicament_vals)
+            medicament_id[0].write(medicament_vals)
 
-        return {'medicament_id': medicament_id.id}
+        return {'medicament_id': medicament_id[0].id}
 
     @mapping
     def carepoint_id(self, record):
@@ -312,7 +305,7 @@ class FdbNdcImporter(CarepointImporter):
         try:
             self._import_dependency(record['ndc'],
                                     'carepoint.fdb.ndc.cs.ext')
-        except IndexError:
+        except IndexError:  # pragma: no cover
             # Won't exist in cs_ext if user_product_yn == 0
             pass
         self._import_dependency(record['gcn_seqno'],

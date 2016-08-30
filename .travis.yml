@@ -16,6 +16,8 @@ addons:
       - python-simplejson
       - python-serial
       - python-yaml
+      - sqlite3
+      - libsqlite3-dev
 
 env:
   global:
