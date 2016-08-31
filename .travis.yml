@@ -16,8 +16,7 @@ addons:
       - python-simplejson
       - python-serial
       - python-yaml
-      - sqlite3
-      - libsqlite3-dev
+      - python-pysqlite2
 
 env:
   global:
@@ -35,8 +34,6 @@ install:
   - git clone --depth=1 https://github.com/OCA/maintainer-quality-tools.git ${HOME}/maintainer-quality-tools
   - export PATH=${HOME}/maintainer-quality-tools/travis:${PATH}
   - travis_install_nightly
-  - pip install -r test_requirements.txt
-  - pip install --upgrade git+https://github.com/laslabs/Python-Carepoint.git
 
 script:
   - travis_run_tests

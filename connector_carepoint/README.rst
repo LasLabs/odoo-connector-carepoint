@@ -39,12 +39,14 @@ To install this module, you need to:
 * Install Carepoint Connector module
 * Restart Odoo (requirement of any new connector to set proper DB triggers)
 
+
 Configuration
 =============
 
 To configure this module, you need to:
 
 * Go to ``Connectors => [CarePoint] Backends``
+
 
 Usage
 =====
@@ -65,6 +67,16 @@ Known Issues / Roadmap
 * Add Rx/OTC Tax delineation
 * ``import_dependency`` usage in ``_after_import`` should be replaced for delay
 * Needs to be split into multiple modules to isolate dependencies
+
+
+Bug Tracker
+===========
+
+Bugs are tracked on `GitHub Issues
+<https://github.com/laslabs/odoo-connector-carepointissues>`_. In case of trouble, please
+check there if your issue has already been reported. If you spotted it first,
+please help us smash it by providing a detailed and welcomed feedback.
+
 
 Credits
 =======
