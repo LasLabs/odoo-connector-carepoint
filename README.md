@@ -39,4 +39,4 @@ Maintainer
 
 This module is maintained by [LasLabs Inc.](https://laslabs.com)
 
-* https://repo.laslabs.com/projects/CP/repos/odoo-connector_carepoint/
+* https://github.com/laslabs/odoo-connector-carepoint
