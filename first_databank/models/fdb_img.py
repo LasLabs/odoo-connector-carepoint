@@ -7,8 +7,16 @@ from openerp import models, fields
 
 class FdbImg(models.Model):
     _name = 'fdb.img'
+    _inherits = {'ir.attachment': 'attachment_id'}
     _description = 'Fdb Img'
-    file_name = fields.Char()
-    data = fields.Binary(
-        attachment=True,
+    attachment_id = fields.Many2one(
+        string='Attachment',
+        comodel_name='ir.attachment',
+        required=True,
+        ondelete='cascade',
+    )
+    image_date_ids = fields.One2many(
+        string='Image Dates',
+        comodel_name='fdb.img.date',
+        inverse_name='image_id',
     )
