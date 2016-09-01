@@ -32,6 +32,7 @@ from . import account
 from . import carepoint_state
 from . import carepoint_item
 from . import carepoint_vendor
+from . import carepoint_order_status
 
 # FDB
 from . import fdb_ndc

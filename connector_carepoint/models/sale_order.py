@@ -43,7 +43,10 @@ class SaleOrder(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
-    carepoint_order_state_cn = fields.Integer('State Code in CP')
+    carepoint_status_id = fields.Many2one(
+        string='Carepoint State',
+        comodel_name='carepoint.order.status',
+    )
 
 
 @carepoint
@@ -74,7 +77,6 @@ class SaleOrderImportMapper(CarepointImportMapper):
 
     direct = [
         ('comments', 'note'),
-        ('order_state_cn', 'carepoint_order_state_cn'),
     ]
 
     @mapping
@@ -90,6 +92,12 @@ class SaleOrderImportMapper(CarepointImportMapper):
         if record['submit_date']:
             return {'date_order': record['submit_date']}
         return {'date_order': record['add_date']}
+
+    @mapping
+    def carepoint_status_id(self, record):
+        binder = self.binder_for('carepoint.carepoint.order.status')
+        status_id = binder.to_odoo(record['order_status_cn'])
+        return {'carepoint_status_id': status_id}
 
     @mapping
     def partner_data(self, record):
@@ -133,6 +141,8 @@ class SaleOrderImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['acct_id'],
                                 'carepoint.carepoint.account')
+        self._import_dependency(record['order_status_cn'],
+                                'carepoint.carepoint.order.status')
 
     def _after_import(self, binding):
         """ Import the sale lines & procurements """

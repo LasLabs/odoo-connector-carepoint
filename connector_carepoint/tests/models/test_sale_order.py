@@ -40,6 +40,7 @@ class SaleOrderTestBase(SetUpCarepointBase):
             'store_id': 3,
             'order_state_cn': 4,
             'order_id': 5,
+            'order_status_cn': 6,
         }
 
 
@@ -140,6 +141,35 @@ class TestSaleOrderImportMapper(SaleOrderTestBase):
             }
             self.assertDictEqual(expect, res)
 
+    def test_carepoint_status_id_get_binder(self):
+        """ It should get binder for record type """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.carepoint_status_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.carepoint.order.status'
+            )
+
+    def test_carepoint_status_id_to_odoo(self):
+        """ It should get Odoo record for binding """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_odoo.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.carepoint_status_id(self.record)
+            self.unit.binder_for().to_odoo.assert_called_once_with(
+                self.record['order_status_cn'],
+            )
+
+    def test_carepoint_status_id_return(self):
+        """ It should return proper vals dict """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.carepoint_status_id(self.record)
+            expect = {
+                'carepoint_status_id': self.unit.binder_for().to_odoo()
+            }
+            self.assertDictEqual(expect, res)
+
     def test_partner_data_null_ref(self):
         """ It should get null patient if no account defined """
         with mock.patch.object(self.unit, 'binder_for'):
@@ -197,6 +227,10 @@ class TestSaleOrderImporter(SaleOrderTestBase):
                 mock.call(
                     self.record['acct_id'],
                     'carepoint.carepoint.account',
+                ),
+                mock.call(
+                    self.record['order_status_cn'],
+                    'carepoint.carepoint.order.status',
                 ),
             ])
 
