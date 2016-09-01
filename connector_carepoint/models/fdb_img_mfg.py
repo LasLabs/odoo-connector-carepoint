@@ -5,10 +5,10 @@
 import logging
 from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
+                                                  only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PartnerImportMapper
-from ..unit.mapper import trim_and_titleize
+from ..unit.mapper import PartnerImportMapper, trim
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -22,7 +22,7 @@ class CarepointFdbImgMfg(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'fdb.img.mfg': 'odoo_id'}
     _description = 'Carepoint FdbImgMfg'
-    _cp_lib = 'fdb_img_mfg'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'fdb_img_mfg'
 
     odoo_id = fields.Many2one(
         string='FdbImgMfg',
@@ -60,8 +60,19 @@ class FdbImgMfgBatchImporter(DelayedBatchImporter):
 class FdbImgMfgImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.fdb.img.mfg'
     direct = [
-        (trim_and_titleize('IMGMFGNAME'), 'name'),
+        (trim('IMGMFGNAME'), 'name'),
     ]
+
+    @mapping
+    @only_create
+    def manufacturer_id(self, record):
+        """ It finds Manufacturer of same name and binds on it """
+        manufacturer = self.env['medical.manufacturer'].search(
+            [('name', 'ilike', record['IMGMFGNAME'].strip())],
+            limit=1,
+        )
+        if len(manufacturer):
+            return {'manufacturer_id': manufacturer[0].id}
 
     @mapping
     def carepoint_id(self, record):

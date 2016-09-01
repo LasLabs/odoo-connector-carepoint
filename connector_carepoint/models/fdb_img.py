@@ -7,7 +7,7 @@ from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import CarepointImportMapper, trim
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -21,7 +21,7 @@ class CarepointFdbImg(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'fdb.img': 'odoo_id'}
     _description = 'Carepoint FdbImg'
-    _cp_lib = 'fdb_img'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'fdb_img'
 
     odoo_id = fields.Many2one(
         string='FdbImg',
@@ -59,13 +59,20 @@ class FdbImgBatchImporter(DelayedBatchImporter):
 class FdbImgImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.fdb.img'
     direct = [
-        ('IMGFILENM', 'file_name'),
-        ('data', 'data'),
+        (trim('IMGFILENM'), 'name'),
     ]
 
     @mapping
-    def data(self, record):
-        return {'data': record['data'].decode('base64')}
+    def datas(self, record):
+        return {'datas': record['data']}
+
+    @mapping
+    def mimetype(self, record):
+        return {'mimetype': 'image/jpeg'}
+
+    @mapping
+    def type(self, record):
+        return {'type': 'binary'}
 
     @mapping
     def carepoint_id(self, record):
@@ -75,14 +82,12 @@ class FdbImgImportMapper(CarepointImportMapper):
 @carepoint
 class FdbImgImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img']
-
     _base_mapper = FdbImgImportMapper
 
     def _get_carepoint_data(self):
         """ Return the raw Carepoint data for ``self.carepoint_id`` """
-        _logger.debug('Getting CP data for %s', self.carepoint_id)
-        record = self.backend_adapter.read(self.carepoint_id, [
-            'IMGFILENM', 'IMAGE_PATH', 'IMGID'
-        ])
-        record['data'] = self.backend_adapter.read_image(record['IMAGE_PATH'])
+        record = super(FdbImgImporter, self)._get_carepoint_data()
+        record.data = self.backend_adapter.read_image(
+            record['IMAGE_PATH'],
+        )
         return record

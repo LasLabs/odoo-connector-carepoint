@@ -18,6 +18,9 @@ from .fdb_unit import ureg
 from psycopg2 import IntegrityError
 from openerp.exceptions import ValidationError
 
+from .fdb_img_id import FdbImgIdUnit
+
+
 _logger = logging.getLogger(__name__)
 
 
@@ -290,6 +293,12 @@ class FdbNdcImportMapper(CarepointImportMapper):
         return {'medicament_id': medicament_id[0].id}
 
     @mapping
+    def lbl_mfg_id(self, record):
+        binder = self.binder_for('carepoint.fdb.lbl.rid')
+        lbl_rid = binder.to_odoo(record['lblrid'].strip())
+        return {'lbl_mfg_id': lbl_rid}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['ndc'].strip()}
 
@@ -310,3 +319,12 @@ class FdbNdcImporter(CarepointImporter):
             pass
         self._import_dependency(record['gcn_seqno'],
                                 'carepoint.fdb.gcn')
+
+    def _after_import(self, binding):
+        img_unit = self.unit_for(
+            FdbImgIdUnit,
+            model='carepoint.fdb.img.id',
+        )
+        img_unit._import_by_ndc(
+            self.carepoint_record['ndc'].strip(),
+        )
