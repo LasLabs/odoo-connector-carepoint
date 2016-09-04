@@ -19,6 +19,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..unit.export_synchronizer import (CarepointExporter)
 
+from .address_patient import CarepointAddressPatientUnit
 
 _logger = logging.getLogger(__name__)
 
@@ -88,8 +89,8 @@ class MedicalPatientImportMapper(PersonImportMapper):
     def carepoint_id(self, record):
         return {'carepoint_id': record['pat_id']}
 
-    @only_create
     @mapping
+    @only_create
     def odoo_id(self, record):
         """ Will bind the patient on a existing patient
         with the same name & dob """
@@ -107,11 +108,11 @@ class MedicalPatientImporter(CarepointImporter):
     _model_name = ['carepoint.medical.patient']
     _base_mapper = MedicalPatientImportMapper
 
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
+    def _after_import(self, partner_binding):
+        """ Import the addresses """
+        book = self.unit_for(CarepointAddressPatientUnit,
+                             model='carepoint.carepoint.address.patient')
+        book._import_addresses(self.carepoint_id, partner_binding)
 
 
 @carepoint

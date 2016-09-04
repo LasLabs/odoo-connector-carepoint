@@ -14,6 +14,8 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 
+from ..connector import add_checkpoint
+
 
 _logger = logging.getLogger(__name__)
 
@@ -121,3 +123,10 @@ class MedicalPharmacyImporter(CarepointImporter):
         binding.write({
             'warehouse_id': warehouse_id,
         })
+
+    def _create(self, data):
+        binding = super(MedicalPharmacyImporter, self)._create(data)
+        add_checkpoint(
+            self.session, binding._name, binding.id, binding.backend_id.id
+        )
+        return binding

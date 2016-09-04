@@ -3,7 +3,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
+from openerp import models, fields, api
+
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper
@@ -45,12 +46,15 @@ class CarepointAddress(models.Model):
     _name = 'carepoint.address'
     _description = 'Carepoint Address'
 
-    partner_id = fields.Many2one(
-        string='Partner',
-        comodel_name='res.partner',
-        required=True,
-        ondelete='cascade',
-    )
+    PARTNER_ATTRS = [
+        'street',
+        'street2',
+        'zip',
+        'city',
+        'state_id',
+        'country_id',
+    ]
+
     street = fields.Char()
     street2 = fields.Char()
     zip = fields.Char()
@@ -63,12 +67,43 @@ class CarepointAddress(models.Model):
         string='Country',
         comodel_name='res.country',
     )
+    partner_id = fields.Many2one(
+        string='Partner',
+        comodel_name='res.partner',
+        readonly=True,
+    )
 
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.carepoint.address',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+
+    @api.multi
+    @api.depends('partner_id', *PARTNER_ATTRS)
+    def _sync_partner(self):
+        for rec_id in self:
+            if not len(rec_id.partner_id):
+                continue
+            rec_id.partner_id.write(
+                self._get_partner_sync_vals(self)
+            )
+
+    @api.model
+    def _get_partner_sync_vals(self, partner):
+        """ It extracts sync values from the partner or partner like record
+        Params:
+            parner: Recordset of partner or address
+        Returns:
+            ``dict`` of values for create or write
+        """
+        vals = {}
+        for attr in self.PARTNER_ATTRS:
+            val = getattr(partner, attr, None)
+            if getattr(val, 'id', None):
+                val = val.id
+            vals[attr] = val
+        return vals
 
 
 @carepoint
@@ -78,7 +113,7 @@ class CarepointAddressAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class AddressUnit(ConnectorUnit):
+class CarepointAddressUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.address'
 
     def _import_by_filter(self, **filters):
@@ -136,12 +171,6 @@ class CarepointAddressImportMapper(CarepointImportMapper):
 class CarepointAddressImporter(CarepointImporter):
     _model_name = ['carepoint.carepoint.address']
     _base_mapper = CarepointAddressImportMapper
-
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
 
 
 @carepoint

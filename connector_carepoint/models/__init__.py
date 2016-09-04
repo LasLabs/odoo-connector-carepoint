@@ -23,6 +23,7 @@ from . import medical_prescription_order_line
 
 # Address / Relations
 from . import address
+from . import address_abstract
 from . import address_patient
 from . import address_pharmacy
 from . import address_physician
