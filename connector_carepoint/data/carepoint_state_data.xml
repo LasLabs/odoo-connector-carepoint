@@ -1,60 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
         
-        <record model="carepoint.state" id="state_10">
-            <field name="name">Entered</field>
-            <field name="code">10</field>
-            <field name="order_state">draft</field>
-            <field name="invoice_state">draft</field>
-            <field name="prescription_state">draft</field>
-        </record>
+    <record model="carepoint.state" id="state_10">
+        <field name="name">Entered</field>
+        <field name="code">10</field>
+        <field name="order_state">draft</field>
+        <field name="invoice_state">draft</field>
+        <field name="prescription_state">draft</field>
+    </record>
 
-        <record model="carepoint.state" id="state_20">
-            <field name="name">Verified</field>
-            <field name="code">20</field>
-            <field name="order_state">sale</field>
-            <field name="invoice_state">open</field>
-            <field name="prescription_state">sale</field>
-        </record>
+    <record model="carepoint.state" id="state_20">
+        <field name="name">Verified</field>
+        <field name="code">20</field>
+        <field name="order_state">sale</field>
+        <field name="invoice_state">open</field>
+        <field name="prescription_state">sale</field>
+    </record>
 
-        <record model="carepoint.state" id="state_30">
-            <field name="name">Adjudicated</field>
-            <field name="code">30</field>
-            <field name="order_state">sale</field>
-            <field name="invoice_state">paid</field>
-            <field name="prescription_state">sale</field>
-        </record>
+    <record model="carepoint.state" id="state_30">
+        <field name="name">Adjudicated</field>
+        <field name="code">30</field>
+        <field name="order_state">sale</field>
+        <field name="invoice_state">paid</field>
+        <field name="prescription_state">sale</field>
+    </record>
 
-        <record model="carepoint.state" id="state_35">
-            <field name="name">Printed/Processed</field>
-            <field name="code">35</field>
-            <field name="order_state">sale</field>
-            <field name="invoice_state">paid</field>
-            <field name="prescription_state">sale</field>
-        </record>
+    <record model="carepoint.state" id="state_35">
+        <field name="name">Printed/Processed</field>
+        <field name="code">35</field>
+        <field name="order_state">sale</field>
+        <field name="invoice_state">paid</field>
+        <field name="prescription_state">sale</field>
+    </record>
 
-        <record model="carepoint.state" id="state_40">
-            <field name="name">Approved</field>
-            <field name="code">40</field>
-            <field name="order_state">sale</field>
-            <field name="invoice_state">paid</field>
-            <field name="prescription_state">sale</field>
-        </record>
+    <record model="carepoint.state" id="state_40">
+        <field name="name">Approved</field>
+        <field name="code">40</field>
+        <field name="order_state">sale</field>
+        <field name="invoice_state">paid</field>
+        <field name="prescription_state">sale</field>
+    </record>
 
-        <record model="carepoint.state" id="state_50">
-            <field name="name">Shipped</field>
-            <field name="code">50</field>
-            <field name="order_state">done</field>
-            <field name="invoice_state">paid</field>
-            <field name="prescription_state">done</field>
-        </record>
+    <record model="carepoint.state" id="state_50">
+        <field name="name">Shipped</field>
+        <field name="code">50</field>
+        <field name="order_state">done</field>
+        <field name="invoice_state">paid</field>
+        <field name="prescription_state">done</field>
+    </record>
 
-        <record model="carepoint.state" id="state_60">
-            <field name="name">Returned</field>
-            <field name="code">60</field>
-            <field name="order_state">done</field>
-            <field name="invoice_state">paid</field>
-            <field name="prescription_state">done</field>
-        </record>
+    <record model="carepoint.state" id="state_60">
+        <field name="name">Returned</field>
+        <field name="code">60</field>
+        <field name="order_state">done</field>
+        <field name="invoice_state">paid</field>
+        <field name="prescription_state">done</field>
+    </record>
         
 </odoo>

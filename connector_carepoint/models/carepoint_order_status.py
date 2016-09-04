@@ -9,7 +9,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
-from ..unit.mapper import PartnerImportMapper
+from ..unit.mapper import PartnerImportMapper, trim
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -59,6 +59,11 @@ class CarepointOrderStatus(models.Model):
     name = fields.Char(
         required=True,
     )
+    workflow_id = fields.Many2one(
+        string='Related Workflow',
+        comodel_name='workflow',
+        required=True,
+    )
 
 
 @carepoint
@@ -80,7 +85,7 @@ class CarepointOrderStatusImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.carepoint.order.status'
 
     direct = [
-        ('descr', 'name'),
+        (trim('descr'), 'name'),
         ('state_cn', 'state'),
         ('OmStatus', 'carepoint_id'),
     ]
