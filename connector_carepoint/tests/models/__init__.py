@@ -17,3 +17,4 @@ from . import test_carepoint_vendor
 from . import test_address_abstract
 from . import test_address
 from . import test_address_patient
+from . import test_address_pharmacy
