@@ -148,7 +148,7 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
         res.update({'origin': sale_id.name,
                     'product_uom': line_id.product_uom.id,
                     'ndc_id': ndc_id.id,
-                    'product_id': line_id.product_id,
+                    'product_id': line_id.product_id.id,
                     })
 
         return res
