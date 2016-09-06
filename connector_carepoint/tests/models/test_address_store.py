@@ -4,25 +4,25 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import address_pharmacy
+from openerp.addons.connector_carepoint.models import address_store
 
 from ...unit.backend_adapter import CarepointCRUDAdapter
 
 from ..common import SetUpCarepointBase
 
 
-_file = 'openerp.addons.connector_carepoint.models.address_pharmacy'
+_file = 'openerp.addons.connector_carepoint.models.address_store'
 
 
 class EndTestException(Exception):
     pass
 
 
-class AddressPharmacyTestBase(SetUpCarepointBase):
+class AddressStoreTestBase(SetUpCarepointBase):
 
     def setUp(self):
-        super(AddressPharmacyTestBase, self).setUp()
-        self.model = 'carepoint.address.pharmacy'
+        super(AddressStoreTestBase, self).setUp()
+        self.model = 'carepoint.address.store'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )
@@ -32,25 +32,25 @@ class AddressPharmacyTestBase(SetUpCarepointBase):
         }
 
 
-class TestAddressPharmacyImportMapper(AddressPharmacyTestBase):
+class TestAddressStoreImportMapper(AddressStoreTestBase):
 
     def setUp(self):
-        super(TestAddressPharmacyImportMapper, self).setUp()
-        self.Unit = address_pharmacy.CarepointAddressPharmacyImportMapper
+        super(TestAddressStoreImportMapper, self).setUp()
+        self.Unit = address_store.CarepointAddressStoreImportMapper
         self.unit = self.Unit(self.mock_env)
 
     def test_partner_id_get_binder(self):
-        """ It should get binder for pharmacy """
+        """ It should get binder for store """
         with mock.patch.object(self.unit, 'binder_for'):
             self.unit.binder_for.side_effect = EndTestException
             with self.assertRaises(EndTestException):
                 self.unit.partner_id(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.medical.pharmacy'
+                'carepoint.carepoint.store'
             )
 
     def test_partner_id_to_odoo(self):
-        """ It should get Odoo record for pharmacy """
+        """ It should get Odoo record for store """
         with mock.patch.object(self.unit, 'binder_for'):
             self.unit.binder_for().to_odoo.side_effect = EndTestException
             with self.assertRaises(EndTestException):
@@ -71,16 +71,16 @@ class TestAddressPharmacyImportMapper(AddressPharmacyTestBase):
         self.assertDictEqual(expect, res)
 
 
-class TestAddressPharmacyImporter(AddressPharmacyTestBase):
+class TestAddressStoreImporter(AddressStoreTestBase):
 
     def setUp(self):
-        super(TestAddressPharmacyImporter, self).setUp()
-        self.Unit = address_pharmacy.CarepointAddressPharmacyImporter
+        super(TestAddressStoreImporter, self).setUp()
+        self.Unit = address_store.CarepointAddressStoreImporter
         self.unit = self.Unit(self.mock_env)
         self.unit.carepoint_record = self.record
 
     @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
-                spec=address_pharmacy.CarepointAddressAbstractImporter,
+                spec=address_store.CarepointAddressAbstractImporter,
                 )
     def test_import_dependencies_super(self, _super):
         """ It should call the super """
@@ -89,7 +89,7 @@ class TestAddressPharmacyImporter(AddressPharmacyTestBase):
             self.unit._import_dependencies()
 
     @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
-                spec=address_pharmacy.CarepointAddressAbstractImporter,
+                spec=address_store.CarepointAddressAbstractImporter,
                 )
     def test_import_dependencies_super(self, _super):
         """ It should import all dependencies """
@@ -98,16 +98,16 @@ class TestAddressPharmacyImporter(AddressPharmacyTestBase):
             mk.assert_has_calls([
                 mock.call(
                     self.record['store_id'],
-                    'carepoint.medical.pharmacy',
+                    'carepoint.carepoint.store',
                 ),
             ])
 
 
-class TestCarepointAddressPharmacyUnit(AddressPharmacyTestBase):
+class TestCarepointAddressStoreUnit(AddressStoreTestBase):
 
     def setUp(self):
-        super(TestCarepointAddressPharmacyUnit, self).setUp()
-        self.Unit = address_pharmacy.CarepointAddressPharmacyUnit
+        super(TestCarepointAddressStoreUnit, self).setUp()
+        self.Unit = address_store.CarepointAddressStoreUnit
         self.unit = self.Unit(self.mock_env)
 
     def test_import_addresses_unit(self):
@@ -119,17 +119,17 @@ class TestCarepointAddressPharmacyUnit(AddressPharmacyTestBase):
             mk.assert_has_calls([
                 mock.call(CarepointCRUDAdapter),
                 mock.call(
-                    address_pharmacy.CarepointAddressPharmacyImporter,
+                    address_store.CarepointAddressStoreImporter,
                 ),
             ])
 
     def test_import_addresses_search(self):
         """ It should search adapter for filters """
-        pharmacy = mock.MagicMock()
+        store = mock.MagicMock()
         with mock.patch.object(self.unit, 'unit_for') as mk:
-            self.unit._import_addresses(pharmacy, None)
+            self.unit._import_addresses(store, None)
             mk().search.assert_called_once_with(
-                store_id=pharmacy,
+                store_id=store,
             )
 
     def test_import_addresses_import(self):

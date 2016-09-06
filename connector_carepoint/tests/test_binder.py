@@ -16,7 +16,7 @@ class TestBinder(SetUpCarepointBase):
 
     def setUp(self):
         super(TestBinder, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.carepoint_id = 1234567
         self.Binder = binder.CarepointModelBinder
 

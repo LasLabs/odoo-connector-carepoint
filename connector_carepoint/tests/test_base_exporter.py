@@ -24,7 +24,7 @@ class TestBaseExporter(SetUpCarepointBase):
 
     def setUp(self):
         super(TestBaseExporter, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.carepoint_id = 'carepoint_id'
         self.binding_id = 1234
         self.Exporter = export_synchronizer.CarepointBaseExporter

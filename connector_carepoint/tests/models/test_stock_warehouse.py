@@ -56,7 +56,7 @@ class TestStockWarehouseImportMapper(StockWarehouseTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.partner_id(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.medical.pharmacy'
+                'carepoint.carepoint.store'
             )
 
     def test_partner_id_to_odoo(self):

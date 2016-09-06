@@ -4,7 +4,7 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import medical_pharmacy
+from openerp.addons.connector_carepoint.models import carepoint_store
 
 from ..common import SetUpCarepointBase
 
@@ -13,11 +13,11 @@ class EndTestException(Exception):
     pass
 
 
-class MedicalPharmacyTestBase(SetUpCarepointBase):
+class CarepointStoreTestBase(SetUpCarepointBase):
 
     def setUp(self):
-        super(MedicalPharmacyTestBase, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        super(CarepointStoreTestBase, self).setUp()
+        self.model = 'carepoint.carepoint.store'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )
@@ -27,16 +27,25 @@ class MedicalPharmacyTestBase(SetUpCarepointBase):
         }
 
 
-class TestMedicalPharmacyImportMapper(MedicalPharmacyTestBase):
+class TestCarepointStoreImportMapper(CarepointStoreTestBase):
 
     def setUp(self):
-        super(TestMedicalPharmacyImportMapper, self).setUp()
-        self.Unit = medical_pharmacy.MedicalPharmacyImportMapper
+        super(TestCarepointStoreImportMapper, self).setUp()
+        self.Unit = carepoint_store.CarepointStoreImportMapper
         self.unit = self.Unit(self.mock_env)
 
-    def test_odoo_id(self):
+    def test_odoo_id_store(self):
         """ It should return odoo_id of pharmacies with same name """
-        expect = self.env[self.model.replace('carepoint.', '')].create(
+        expect = self.env['carepoint.store'].create(
+            self.record
+        )
+        res = self.unit.odoo_id(self.record)
+        expect = {'odoo_id': expect.id}
+        self.assertDictEqual(expect, res)
+
+    def test_odoo_id_pharmacy(self):
+        """ It should return new carepoint.store for pharmacy w/ same name """
+        expect = self.env['medical.pharmacy'].create(
             self.record
         )
         res = self.unit.odoo_id(self.record)
@@ -88,11 +97,11 @@ class TestMedicalPharmacyImportMapper(MedicalPharmacyTestBase):
         self.assertDictEqual(expect, res)
 
 
-class TestMedicalPharmacyImporter(MedicalPharmacyTestBase):
+class TestCarepointStoreImporter(CarepointStoreTestBase):
 
     def setUp(self):
-        super(TestMedicalPharmacyImporter, self).setUp()
-        self.Unit = medical_pharmacy.MedicalPharmacyImporter
+        super(TestCarepointStoreImporter, self).setUp()
+        self.Unit = carepoint_store.CarepointStoreImporter
         self.unit = self.Unit(self.mock_env)
         self.unit.carepoint_record = self.record
 

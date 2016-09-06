@@ -80,7 +80,7 @@ class StockWarehouseImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def partner_id(self, record):
-        binder = self.binder_for('carepoint.medical.pharmacy')
+        binder = self.binder_for('carepoint.carepoint.store')
         pharmacy_id = binder.to_odoo(record['store_id'], browse=True)
         return {
             'partner_id': pharmacy_id.partner_id.id,

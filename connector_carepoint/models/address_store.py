@@ -19,66 +19,66 @@ from .address_abstract import (CarepointAddressAbstractImportMapper,
 _logger = logging.getLogger(__name__)
 
 
-class CarepointCarepointAddressPharmacy(models.Model):
-    """ Binding Model for the Carepoint Address Pharmacy """
-    _name = 'carepoint.carepoint.address.pharmacy'
+class CarepointCarepointAddressStore(models.Model):
+    """ Binding Model for the Carepoint Address Store """
+    _name = 'carepoint.carepoint.address.store'
     _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.address.pharmacy': 'odoo_id'}
-    _description = 'Carepoint Address Pharmacy Many2Many Rel'
+    _inherits = {'carepoint.address.store': 'odoo_id'}
+    _description = 'Carepoint Address Store Many2Many Rel'
     _cp_lib = 'store_address'  # Name of model in Carepoint lib (snake_case)
 
     odoo_id = fields.Many2one(
-        comodel_name='carepoint.address.pharmacy',
+        comodel_name='carepoint.address.store',
         string='Company',
         required=True,
         ondelete='cascade'
     )
 
 
-class CarepointAddressPharmacy(models.Model):
+class CarepointAddressStore(models.Model):
     """ Adds the ``One2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _name = 'carepoint.address.pharmacy'
+    _name = 'carepoint.address.store'
     _inherit = 'carepoint.address.abstract'
-    _description = 'Carepoint Address Pharmacy'
+    _description = 'Carepoint Address Store'
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.carepoint.address.pharmacy',
+        comodel_name='carepoint.carepoint.address.store',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
 
 
 @carepoint
-class CarepointAddressPharmacyAdapter(CarepointCRUDAdapter):
-    """ Backend Adapter for the Carepoint Address Pharmacy """
-    _model_name = 'carepoint.carepoint.address.pharmacy'
+class CarepointAddressStoreAdapter(CarepointCRUDAdapter):
+    """ Backend Adapter for the Carepoint Address Store """
+    _model_name = 'carepoint.carepoint.address.store'
 
 
 @carepoint
-class CarepointAddressPharmacyBatchImporter(DelayedBatchImporter):
-    """ Import the Carepoint Address Pharmacys.
+class CarepointAddressStoreBatchImporter(DelayedBatchImporter):
+    """ Import the Carepoint Address Stores.
     For every address in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.carepoint.address.pharmacy']
+    _model_name = ['carepoint.carepoint.address.store']
 
 
 @carepoint
-class CarepointAddressPharmacyImportMapper(
+class CarepointAddressStoreImportMapper(
     CarepointAddressAbstractImportMapper,
 ):
-    _model_name = 'carepoint.carepoint.address.pharmacy'
+    _model_name = 'carepoint.carepoint.address.store'
 
     @mapping
     @only_create
     def partner_id(self, record):
         """ It returns either the commercial partner or parent & defaults """
-        binder = self.binder_for('carepoint.medical.pharmacy')
-        pharmacy_id = binder.to_odoo(record['store_id'], browse=True)
-        _sup = super(CarepointAddressPharmacyImportMapper, self)
+        binder = self.binder_for('carepoint.carepoint.store')
+        store_id = binder.to_odoo(record['store_id'], browse=True)
+        _sup = super(CarepointAddressStoreImportMapper, self)
         return _sup.partner_id(
-            record, pharmacy_id,
+            record, store_id,
         )
 
     @mapping
@@ -88,26 +88,26 @@ class CarepointAddressPharmacyImportMapper(
 
 
 @carepoint
-class CarepointAddressPharmacyImporter(
+class CarepointAddressStoreImporter(
     CarepointAddressAbstractImporter,
 ):
-    _model_name = ['carepoint.carepoint.address.pharmacy']
-    _base_mapper = CarepointAddressPharmacyImportMapper
+    _model_name = ['carepoint.carepoint.address.store']
+    _base_mapper = CarepointAddressStoreImportMapper
 
     def _import_dependencies(self):
         """ Import depends for record """
-        super(CarepointAddressPharmacyImporter, self)._import_dependencies()
+        super(CarepointAddressStoreImporter, self)._import_dependencies()
         self._import_dependency(self.carepoint_record['store_id'],
-                                'carepoint.medical.pharmacy')
+                                'carepoint.carepoint.store')
 
 
 @carepoint
-class CarepointAddressPharmacyUnit(ConnectorUnit):
-    _model_name = 'carepoint.carepoint.address.pharmacy'
+class CarepointAddressStoreUnit(ConnectorUnit):
+    _model_name = 'carepoint.carepoint.address.store'
 
-    def _import_addresses(self, pharmacy_id, partner_binding):
+    def _import_addresses(self, store_id, partner_binding):
         adapter = self.unit_for(CarepointCRUDAdapter)
-        importer = self.unit_for(CarepointAddressPharmacyImporter)
-        address_ids = adapter.search(store_id=pharmacy_id)
+        importer = self.unit_for(CarepointAddressStoreImporter)
+        address_ids = adapter.search(store_id=store_id)
         for address_id in address_ids:
             importer.run(address_id)

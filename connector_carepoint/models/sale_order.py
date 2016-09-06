@@ -106,7 +106,7 @@ class SaleOrderImportMapper(CarepointImportMapper):
 
     @mapping
     def pharmacy_id(self, record):
-        binder = self.binder_for('carepoint.medical.pharmacy')
+        binder = self.binder_for('carepoint.carepoint.store')
         store_id = binder.to_odoo(record['store_id'])
         return {'pharmacy_id': store_id}
 
