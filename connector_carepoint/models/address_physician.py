@@ -4,16 +4,17 @@
 
 import logging
 from openerp import models, fields
+from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
-from ..unit.import_synchronizer import (DelayedBatchImporter,
-                                        CarepointImporter,
-                                        )
+from ..unit.import_synchronizer import DelayedBatchImporter
 
+from .address_abstract import (CarepointAddressAbstractImportMapper,
+                               CarepointAddressAbstractImporter,
+                               )
 
 _logger = logging.getLogger(__name__)
 
@@ -35,19 +36,13 @@ class CarepointCarepointAddressPhysician(models.Model):
 
 
 class CarepointAddressPhysician(models.Model):
-    """ Adds the ``one2many`` relation to the Carepoint bindings
+    """ Adds the ``One2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherits = {'carepoint.address': 'address_id'}
     _name = 'carepoint.address.physician'
+    _inherit = 'carepoint.address.abstract'
     _description = 'Carepoint Address Physician'
 
-    address_id = fields.Many2one(
-        string='Address',
-        comodel_name='carepoint.address',
-        required=True,
-        ondelete='cascade',
-    )
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.carepoint.address.physician',
         inverse_name='odoo_id',
@@ -70,38 +65,21 @@ class CarepointAddressPhysicianBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class CarepointAddressPhysicianImportMapper(CarepointImportMapper):
+class CarepointAddressPhysicianImportMapper(
+    CarepointAddressAbstractImportMapper,
+):
     _model_name = 'carepoint.carepoint.address.physician'
 
     @mapping
     @only_create
-    def parent_id(self, record):
+    def partner_id(self, record):
+        """ It returns either the commercial partner or parent & defaults """
         binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'])
-        partner_id = self.env['medical.physician'].browse(
-            physician_id).partner_id
-        return {
-            'parent_id': partner_id.id,
-        }
-
-    @mapping
-    @only_create
-    def partner_and_address_id(self, record):
-        binder = self.binder_for('carepoint.carepoint.address')
-        address_id = binder.to_odoo(record['addr_id'])
-        address_id = self.env['carepoint.address'].browse(address_id)
-        return {
-            'partner_id': address_id.partner_id.id,
-            'address_id': address_id.id,
-        }
-
-    @mapping
-    def type(self, record):
-        return {'type': 'delivery'}
-
-    @mapping
-    def customer(self, record):
-        return {'customer': False}
+        physician_id = binder.to_odoo(record['md_id'], browse=True)
+        _sup = super(CarepointAddressPhysicianImportMapper, self)
+        return _sup.partner_id(
+            record, physician_id,
+        )
 
     @mapping
     def carepoint_id(self, record):
@@ -110,12 +88,26 @@ class CarepointAddressPhysicianImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class CarepointAddressPhysicianImporter(CarepointImporter):
+class CarepointAddressPhysicianImporter(
+    CarepointAddressAbstractImporter,
+):
     _model_name = ['carepoint.carepoint.address.physician']
     _base_mapper = CarepointAddressPhysicianImportMapper
 
     def _import_dependencies(self):
         """ Import depends for record """
-        record = self.carepoint_record
-        self._import_dependency(record['addr_id'],
-                                'carepoint.carepoint.address')
+        super(CarepointAddressPhysicianImporter, self)._import_dependencies()
+        self._import_dependency(self.carepoint_record['md_id'],
+                                'carepoint.medical.physician')
+
+
+@carepoint
+class CarepointAddressPhysicianUnit(ConnectorUnit):
+    _model_name = 'carepoint.carepoint.address.physician'
+
+    def _import_addresses(self, physician_id, partner_binding):
+        adapter = self.unit_for(CarepointCRUDAdapter)
+        importer = self.unit_for(CarepointAddressPhysicianImporter)
+        address_ids = adapter.search(md_id=physician_id)
+        for address_id in address_ids:
+            importer.run(address_id)
