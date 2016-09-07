@@ -12,12 +12,12 @@ from . import sale_order_line
 from . import procurement_order
 from . import account_invoice_line
 from . import stock_picking
+from . import stock_warehouse
 
 # Medical Models
 from . import medical_pharmacy
 from . import medical_patient
 from . import medical_physician
-from . import medical_medicament
 from . import medical_prescription_order
 from . import medical_prescription_order_line
 
@@ -30,6 +30,8 @@ from . import address_physician
 # CarePoint Mappings/Binds
 from . import account
 from . import carepoint_state
+from . import carepoint_item
+from . import carepoint_vendor
 
 # FDB
 from . import fdb_ndc

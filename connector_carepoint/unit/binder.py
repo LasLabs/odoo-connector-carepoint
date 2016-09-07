@@ -23,7 +23,7 @@ class CarepointModelBinder(CarepointBinder):
     """
     _model_name = [
         'carepoint.medical.pharmacy',
-        'carepoint.medical.medicament',
+        'carepoint.carepoint.item',
         'carepoint.medical.physician',
         'carepoint.medical.patient',
         'carepoint.medical.prescription.order',
@@ -33,11 +33,13 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.carepoint.address.physician',
         'carepoint.carepoint.address.pharmacy',
         'carepoint.carepoint.account',
+        'carepoint.carepoint.vendor',
         'carepoint.account.invoice.line',
         'carepoint.sale.order',
         'carepoint.sale.order.line',
         'carepoint.procurement.order',
         'carepoint.stock.picking',
+        'carepoint.stock.warehouse',
         'carepoint.res.users',
         'carepoint.fdb.ndc',
         'carepoint.fdb.gcn',

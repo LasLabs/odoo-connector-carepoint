@@ -37,21 +37,6 @@ class CarepointMedicalPatient(models.Model):
         required=True,
         ondelete='cascade'
     )
-    backend_id = fields.Many2one(
-        comodel_name='carepoint.backend',
-        string='Carepoint Backend',
-        store=True,
-        readonly=True,
-        # override 'carepoint.binding', can't be INSERTed if True:
-        required=False,
-    )
-    created_at = fields.Date('Created At (on Carepoint)')
-    updated_at = fields.Date('Updated At (on Carepoint)')
-
-    _sql_constraints = [
-        ('odoo_uniq', 'unique(backend_id, odoo_id)',
-         'A Carepoint binding for this patient already exists.'),
-    ]
 
 
 class MedicalPatient(models.Model):

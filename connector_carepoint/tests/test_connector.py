@@ -29,8 +29,11 @@ class TestConnector(SetUpCarepointBase):
         return self.env[self.model].create({
             'name': 'Test Pharm',
             'carepoint_id': self.carepoint_id,
-            'backend_id': self.backend.id,
+            'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
+
+    def test_default_backend_id(self):
+        self.assertEqual(self.backend, self.binding_id.backend_id)
 
     def test_get_environment_gets_backend_record(self):
         """ It should browse for backend_record for id """

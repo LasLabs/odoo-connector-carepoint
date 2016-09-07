@@ -14,6 +14,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 
+
 _logger = logging.getLogger(__name__)
 
 
@@ -31,21 +32,10 @@ class CarepointMedicalPharmacy(models.Model):
         required=True,
         ondelete='cascade'
     )
-    backend_id = fields.Many2one(
-        comodel_name='carepoint.backend',
-        string='Carepoint Backend',
-        store=True,
-        readonly=True,
-        # override 'carepoint.binding', can't be INSERTed if True:
-        required=False,
+    warehouse_id = fields.Many2one(
+        string='Warehouse',
+        comodel_name='stock.warehouse',
     )
-    created_at = fields.Date('Created At (on Carepoint)')
-    updated_at = fields.Date('Updated At (on Carepoint)')
-
-    _sql_constraints = [
-        ('odoo_uniq', 'unique(backend_id, odoo_id)',
-         'A Carepoint binding for this partner already exists.'),
-    ]
 
 
 class MedicalPharmacy(models.Model):
@@ -108,6 +98,12 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
         return {'parent_id': self.backend_record.company_id.partner_id.id}
 
     @mapping
+    def warehouse_id(self, record):
+        binder = self.binder_for('carepoint.stock.warehouse')
+        warehouse_id = binder.to_odoo(record['store_id'])
+        return {'warehouse_id': warehouse_id}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['store_id']}
 
@@ -116,3 +112,12 @@ class MedicalPharmacyImportMapper(PartnerImportMapper):
 class MedicalPharmacyImporter(CarepointImporter):
     _model_name = ['carepoint.medical.pharmacy']
     _base_mapper = MedicalPharmacyImportMapper
+
+    def _after_import(self, binding):
+        self._import_dependency(binding.carepoint_id,
+                                'carepoint.stock.warehouse')
+        binder = self.binder_for('carepoint.stock.warehouse')
+        warehouse_id = binder.to_odoo(binding.carepoint_id)
+        binding.write({
+            'warehouse_id': warehouse_id,
+        })

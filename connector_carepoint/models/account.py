@@ -29,14 +29,6 @@ class CarepointAccount(models.Model):
         required=True,
         ondelete='restrict',
     )
-    backend_id = fields.Many2one(
-        comodel_name='carepoint.backend',
-        string='Carepoint Backend',
-        store=True,
-        readonly=True,
-        # override 'carepoint.binding', can't be INSERTed if True:
-        required=False,
-    )
 
 
 class Account(models.Model):
