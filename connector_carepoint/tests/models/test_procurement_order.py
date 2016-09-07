@@ -308,7 +308,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
                     'origin': self.unit.binder_for().to_odoo().name,
                     'product_uom': line.product_uom.id,
                     'ndc_id': self.unit.binder_for().to_odoo().id,
-                    'product_id': line.product_id,
+                    'product_id': line.product_id.id,
                 })
 
     def test_order_line_procurement_updates_order_line_proc_vals(self):
