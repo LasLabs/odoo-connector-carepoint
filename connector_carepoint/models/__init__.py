@@ -15,7 +15,6 @@ from . import stock_picking
 from . import stock_warehouse
 
 # Medical Models
-from . import medical_pharmacy
 from . import medical_patient
 from . import medical_physician
 from . import medical_prescription_order
@@ -25,11 +24,14 @@ from . import medical_prescription_order_line
 from . import address
 from . import address_abstract
 from . import address_patient
-from . import address_pharmacy
+from . import address_store
+from . import address_organization
 from . import address_physician
 
 # CarePoint Mappings/Binds
 from . import account
+from . import carepoint_store
+from . import carepoint_organization
 from . import carepoint_state
 from . import carepoint_item
 from . import carepoint_vendor

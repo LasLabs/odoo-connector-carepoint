@@ -45,7 +45,7 @@ class TestCarepointBackend(SetUpCarepointBase):
         """ It should run import_batch for pharmacy on backend """
         self.backend.synchronize_metadata()
         batch.assert_called_once_with(
-            session(), 'carepoint.medical.pharmacy', self.backend.id,
+            session(), 'carepoint.carepoint.store', self.backend.id,
         )
 
     @mock.patch('%s.import_batch' % model)
@@ -54,7 +54,7 @@ class TestCarepointBackend(SetUpCarepointBase):
         """ It should check internal structure on all backends """
         self.backend._import_all('model')
         batch.assert_called_once_with(
-            session(), 'carepoint.medical.pharmacy', self.backend.id,
+            session(), 'carepoint.carepoint.store', self.backend.id,
         )
 
     @mock.patch('%s.import_batch' % model)
@@ -73,7 +73,7 @@ class TestCarepointBackend(SetUpCarepointBase):
         """ It should check internal structure on all backends """
         self.backend._import_from_date('model', 'import_patients_from_date')
         batch.assert_called_once_with(
-            session(), 'carepoint.medical.pharmacy', self.backend.id,
+            session(), 'carepoint.carepoint.store', self.backend.id,
         )
 
     @mock.patch('%s.datetime' % model)

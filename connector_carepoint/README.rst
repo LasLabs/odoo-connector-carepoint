@@ -67,6 +67,7 @@ Known Issues / Roadmap
 * Add Rx/OTC Tax delineation
 * ``import_dependency`` usage in ``_after_import`` should be replaced for delay
 * Needs to be split into multiple modules to isolate dependencies
+* Carepoint organizations import as pharmacies, but might be other entities
 
 
 Bug Tracker

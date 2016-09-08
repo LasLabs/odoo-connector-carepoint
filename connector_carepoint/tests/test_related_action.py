@@ -29,7 +29,7 @@ class TestRelatedAction(SetUpCarepointBase):
 
     def setUp(self):
         super(TestRelatedAction, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.binding_id = self._new_record()
         self.job = mock.MagicMock()
         self.job.args = [self.model, self.binding_id.id]

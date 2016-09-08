@@ -87,7 +87,7 @@ class TestSaleOrderImportMapper(SaleOrderTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.pharmacy_id(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.medical.pharmacy'
+                'carepoint.carepoint.store'
             )
 
     def test_pharmacy_id_to_odoo(self):

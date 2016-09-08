@@ -18,7 +18,7 @@ class TestCarepointDeleter(SetUpCarepointBase):
 
     def setUp(self):
         super(TestCarepointDeleter, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.carepoint_id = 'carepoint_id'
         self.binding_id = 1234
         self.Exporter = delete_synchronizer.CarepointDeleter

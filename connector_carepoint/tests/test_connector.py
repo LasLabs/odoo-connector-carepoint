@@ -20,7 +20,7 @@ class TestConnector(SetUpCarepointBase):
 
     def setUp(self):
         super(TestConnector, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.carepoint_id = 123456789
         self.binding_id = self._new_record()
         self.session = mock.MagicMock()

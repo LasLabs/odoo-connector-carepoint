@@ -47,7 +47,7 @@ class TestCarepointImporter(SetUpCarepointBase):
 
     def setUp(self):
         super(TestCarepointImporter, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.carepoint_id = 'carepoint_id'
         self.carepoint_record = {
             'chg_date': fields.Datetime.from_string('2016-05-10 00:00:00'),

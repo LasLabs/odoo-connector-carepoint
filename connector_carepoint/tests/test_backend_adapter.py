@@ -17,7 +17,7 @@ class TestBackendAdapter(SetUpCarepointBase):
         backend_adapter.carepoints = {}
         self.Model = backend_adapter.CarepointCRUDAdapter
 
-    def _init_model(self, model='carepoint.medical.pharmacy'):
+    def _init_model(self, model='carepoint.carepoint.store'):
         self.model = self.env[model]
         self.api_camel = self.__to_camel_case(self.model._cp_lib)
         return self.Model(self.get_carepoint_helper(model))

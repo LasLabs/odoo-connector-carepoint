@@ -20,7 +20,7 @@ class TestBatchImporter(SetUpCarepointBase):
     def setUp(self):
         super(TestBatchImporter, self).setUp()
         self.Importer = import_synchronizer.BatchImporter
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )

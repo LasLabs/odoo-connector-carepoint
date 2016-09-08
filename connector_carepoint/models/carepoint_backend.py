@@ -76,7 +76,7 @@ class CarepointBackend(models.Model):
              "in Odoo.",
     )
     store_ids = fields.One2many(
-        comodel_name='carepoint.medical.pharmacy',
+        comodel_name='carepoint.carepoint.store',
         inverse_name='backend_id',
         string='Store',
         readonly=True,
@@ -224,7 +224,7 @@ class CarepointBackend(models.Model):
     def synchronize_metadata(self):
         session = self.__get_session()
         for backend in self:
-            for model in ('carepoint.medical.pharmacy',
+            for model in ('carepoint.carepoint.store',
                           # 'carepoint.res.users',
                           ):
                 # import directly, do not delay because this

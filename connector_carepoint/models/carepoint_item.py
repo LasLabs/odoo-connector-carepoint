@@ -35,7 +35,7 @@ class CarepointCarepointItem(models.Model):
     )
     store_id = fields.Many2one(
         string='Store',
-        comodel_name='carepoint.medical.pharmacy',
+        comodel_name='carepoint.carepoint.store',
         readonly=True,
     )
 
@@ -110,7 +110,7 @@ class CarepointItemImportMapper(CarepointImportMapper):
 
     @mapping
     def store_id(self, record):
-        binder = self.binder_for('carepoint.medical.pharmacy')
+        binder = self.binder_for('carepoint.carepoint.store')
         store_id = binder.to_odoo(record['store_id'])
         return {'store_id': store_id}
 

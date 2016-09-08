@@ -22,7 +22,8 @@ class CarepointModelBinder(CarepointBinder):
     fields belonging to the Carepoint instance.
     """
     _model_name = [
-        'carepoint.medical.pharmacy',
+        'carepoint.carepoint.store',
+        'carepoint.carepoint.organization',
         'carepoint.carepoint.item',
         'carepoint.medical.physician',
         'carepoint.medical.patient',
@@ -31,7 +32,8 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.carepoint.address',
         'carepoint.carepoint.address.patient',
         'carepoint.carepoint.address.physician',
-        'carepoint.carepoint.address.pharmacy',
+        'carepoint.carepoint.address.organization',
+        'carepoint.carepoint.address.store'
         'carepoint.carepoint.account',
         'carepoint.carepoint.vendor',
         'carepoint.account.invoice.line',

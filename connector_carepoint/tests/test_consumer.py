@@ -16,7 +16,7 @@ class TestConsumer(SetUpCarepointBase):
 
     def setUp(self):
         super(TestConsumer, self).setUp()
-        self.model = 'carepoint.medical.pharmacy'
+        self.model = 'carepoint.carepoint.store'
         self.binding_id = self._new_record()
 
     def _new_record(self):
@@ -52,7 +52,7 @@ class TestConsumer(SetUpCarepointBase):
     def test_delay_export_all_bindings(self):
         """ It should call export_record.delay w/ proper args """
         fields = {'test': 123, 'test2': 456}
-        send = [self.session, 'medical.pharmacy', self.binding_id.odoo_id.id]
+        send = [self.session, 'carepoint.store', self.binding_id.odoo_id.id]
         expect = [self.session, self.model, self.binding_id.id]
         with mock.patch('%s.export_record' % mk_file) as mk:
             consumer.delay_export_all_bindings(*send, vals=fields)
