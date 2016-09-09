@@ -111,6 +111,13 @@ class TestMedicalPatientImporter(MedicalPatientTestBase):
                 mock.call()._import_accounts(
                     self.unit.carepoint_id,
                 ),
+                mock.call(
+                    medical_patient.MedicalPatientDiseaseUnit,
+                    model='carepoint.medical.patient.disease',
+                ),
+                mock.call()._import_by_patient(
+                    self.unit.carepoint_id,
+                ),
             ])
 
 
