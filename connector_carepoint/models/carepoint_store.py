@@ -135,7 +135,7 @@ class CarepointStoreImporter(CarepointImporter):
             'warehouse_id': warehouse_id,
         })
 
-    def _create(self, data):
+    def _create(self, data):  # pragma: no cover
         binding = super(CarepointStoreImporter, self)._create(data)
         add_checkpoint(
             self.session, binding._name, binding.id, binding.backend_id.id
