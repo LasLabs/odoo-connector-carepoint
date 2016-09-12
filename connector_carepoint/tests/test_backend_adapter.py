@@ -2,6 +2,8 @@
 # Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+import mock
+
 from openerp.addons.connector_carepoint.unit import backend_adapter
 
 from .common import SetUpCarepointBase
@@ -194,13 +196,41 @@ class TestBackendAdapter(SetUpCarepointBase):
                 expect,
             )
 
-    def test_create_returns_result(self):
-        """ It should return newly created record """
+    def test_create_gets_pks(self):
+        """ It should get primary keys of model """
         with self.mock_api() as api:
-            res = self._init_model().create(
-                {'data': 'test', 'col': 12323423}
+            model = self._init_model()
+            model.create({'data': 'test', 'col': 12323423})
+            api().get_pks.assert_called_once_with(
+                api()[self.api_camel],
             )
-            self.assertEqual(api().create(), res)
+
+    def test_create_gets_sequences(self):
+        """ It should get next sequence for PK """
+        expect = mock.MagicMock()
+        with self.mock_api() as api:
+            model = self._init_model()
+            api().get_pks.return_value = [expect]
+            model.create({'data': 'test', 'col': 12323423})
+            api().get_next_sequence.assert_called_once_with(
+                expect,
+            )
+
+    def test_create_returns_pks(self):
+        """ It should return comma joined PKs of new record """
+        expect = ['col', 'no_exist']
+        with self.mock_api() as api:
+            model = self._init_model()
+            api().get_pks.return_value = expect
+            expect = {'data': 'test', 'col': 12323423}
+            res = model.create(expect)
+            self.assertEqual(
+                '%s,%s' % (
+                    str(expect['col']),
+                    api().get_next_sequence(),
+                ),
+                res,
+            )
 
     def test_delete_deletes(self):
         """ It should delete w/ proper vals """
@@ -218,14 +248,12 @@ class TestBackendAdapter(SetUpCarepointBase):
             res = self._init_model().delete(123)
             self.assertEqual(api().delete(), res)
 
-    def test_write_updates(self):
-        """ It should update w/ proper vals """
+    def test_write_gets_session(self):
+        """ It should get session for model """
         with self.mock_api() as api:
-            expect = [123, {'data': 'test', 'col': 12323423}]
-            self._init_model().write(*expect)
-            api().update.assert_called_once_with(
+            self._init_model().write(None, None)
+            api()._get_session.assert_called_once_with(
                 api()[self.api_camel],
-                *expect
             )
 
     def test_write_returns_result(self):
@@ -234,4 +262,7 @@ class TestBackendAdapter(SetUpCarepointBase):
             res = self._init_model().write(
                 123, {'data': 'test', 'col': 12323423},
             )
-            self.assertEqual(api().update(), res)
+            self.assertEqual(
+                api()._do_queries(),
+                res,
+            )
