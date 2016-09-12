@@ -57,11 +57,12 @@ class TestCarepointAddressAbstract(AddressAbstractTestBase):
         return self.env['carepoint.address'].create(vals)
 
     def new_patient_address(self):
-        patient = self.new_patient()
-        self.address = self.new_address(patient.partner_id)
+        self.patient = self.new_patient()
+        self.address = self.new_address(self.patient.partner_id)
         return self.model.create({
-            'partner_id': patient.partner_id,
+            'partner_id': self.patient.partner_id.id,
             'address_id': self.address.id,
+            'res_model': 'medical.patient',
         })
 
     def test_compute_partner_id(self):
@@ -92,6 +93,65 @@ class TestCarepointAddressAbstract(AddressAbstractTestBase):
         self.assertEqual(
             expect,
             address.street,
+        )
+
+    def test_medical_entity_id(self):
+        """ It should return patient record """
+        address = self.new_patient_address()
+        self.assertEqual(
+            self.patient,
+            address.medical_entity_id,
+        )
+
+    def test_compute_res_id(self):
+        """ It should compute the Resource ID for record """
+        address = self.new_patient_address()
+        self.assertEqual(
+            self.patient.id,
+            address.res_id,
+        )
+
+    def test_compute_res_id_empty(self):
+        """ It should continue when resource isn't known """
+        address = self.new_patient_address()
+        address.res_model = False
+        self.assertFalse(
+            address.res_id,
+        )
+
+    def test_get_by_partner_existing_address(self):
+        """ It should return partner associated with existing address """
+        address = self.new_patient_address()
+        res = address._get_by_partner(address.partner_id, False, False)
+        self.assertEqual(address, res)
+
+    def test_get_by_partner_create(self):
+        """ It should create new address when non-exist and edit """
+        patient = self.new_patient()
+        res = self.model._get_by_partner(patient.partner_id, True, False)
+        self.assertEqual(patient.partner_id, res.partner_id)
+
+    def test_get_by_partner_edit(self):
+        """ It should update vals on address when edit and existing """
+        expect = 'expect'
+        address = self.new_patient_address()
+        address.partner_id.street = expect
+        res = address._get_by_partner(address.partner_id, True, False)
+        self.assertEqual(expect, res.street)
+
+    def test_get_by_partner_recurse(self):
+        """ It should recurse into children when edit and recurse """
+        parent, child = self.new_patient(), self.new_patient()
+        child.parent_id = parent.partner_id.id
+        self.model._get_by_partner(parent.partner_id, True, True)
+        address = self.model.search([('partner_id', '=', child.partner_id.id)])
+        self.assertTrue(len(address))
+
+    def test_compute_partner_id(self):
+        address = self.new_patient_address()
+        self.assertEqual(
+            self.patient.partner_id.id,
+            address.partner_id.id,
         )
 
 
@@ -172,6 +232,16 @@ class TestAddressAbstractImportMapper(AddressAbstractTestBase):
             expect = self.unit.binder_for().to_odoo()
             self.assertDictEqual({'address_id': expect}, res)
 
+    def test_res_model_and_id(self):
+        """ It should return values dict for medical entity """
+        entity = mock.MagicMock()
+        expect = {
+            'res_id': entity.id,
+            'res_model': entity._name,
+        }
+        res = self.unit.res_model_and_id(None, entity)
+        self.assertDictEqual(expect, res)
+
 
 class TestAddressAbstractImporter(AddressAbstractTestBase):
 
@@ -188,6 +258,70 @@ class TestAddressAbstractImporter(AddressAbstractTestBase):
             mk.assert_has_calls([
                 mock.call(
                     self.record['addr_id'],
+                    'carepoint.carepoint.address',
+                ),
+            ])
+
+
+class TestAddressAbstractExportMapper(AddressAbstractTestBase):
+
+    def setUp(self):
+        super(TestAddressAbstractExportMapper, self).setUp()
+        self.Unit = address_abstract.CarepointAddressAbstractExportMapper
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+
+    def test_addr_id_get_binder(self):
+        """ It should get binder for prescription line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.addr_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.carepoint.address'
+            )
+
+    def test_addr_id_to_backend(self):
+        """ It should get backend record for rx """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_backend.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.addr_id(self.record)
+            self.unit.binder_for().to_backend.assert_called_once_with(
+                self.record.address_id.id,
+            )
+
+    def test_addr_id_return(self):
+        """ It should return formatted addr_id """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.addr_id(self.record)
+            expect = self.unit.binder_for().to_backend()
+            self.assertDictEqual({'addr_id': expect}, res)
+
+    def test_static_defaults(self):
+        """ It should return a dict of default values """
+        self.assertIsInstance(
+            self.unit.static_defaults(self.record),
+            dict,
+        )
+
+
+class TestAddressAbstractExporter(AddressAbstractTestBase):
+
+    def setUp(self):
+        super(TestAddressAbstractExporter, self).setUp()
+        self.Unit = address_abstract.CarepointAddressAbstractExporter
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+        self.unit.binding_record = self.record
+
+    def test_export_dependencies(self):
+        """ It should export all dependencies """
+        with mock.patch.object(self.unit, '_export_dependency') as mk:
+            self.unit._export_dependencies()
+            mk.assert_has_calls([
+                mock.call(
+                    self.record.address_id,
                     'carepoint.carepoint.address',
                 ),
             ])

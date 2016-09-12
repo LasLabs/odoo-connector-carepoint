@@ -88,7 +88,7 @@ class CarepointBaseExporter(Exporter):
 
         self.binding_id = binding_id
         self.binding_record = self._get_odoo_data()
-        self.carepoint_id = self.binder.to_backend(self.binding_id)
+        self.carepoint_id = self.binding_record.carepoint_id
 
         try:
             should_import = self._should_import()
