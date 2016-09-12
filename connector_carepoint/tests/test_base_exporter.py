@@ -38,14 +38,18 @@ class TestBaseExporter(SetUpCarepointBase):
         exporter.carepoint_id = carepoint_id
         exporter.binding_record = binding_record
         exporter.binding_id = binding_id
+        self.exporter = exporter
         return exporter
 
     def _new_record(self, sync_date=False):
-        return self.env[self.model].create({
+        rec = self.env[self.model].create({
             'name': 'Test',
             'sync_date': sync_date,
             'warehouse_id': self.env.ref('stock.warehouse0').id,
+            'carepoint_id': self.carepoint_id,
         })
+        self.binding_id = rec.id
+        return rec
 
     def test_exporter_init_binding_id(self):
         """ It should init binding_id as None """
@@ -192,18 +196,6 @@ class TestBaseExporter(SetUpCarepointBase):
                 self.binding_id, exporter.binding_id,
             )
 
-    def test_run_gets_backend(self):
-        """ It should get the backend for binding """
-        exporter = self._new_exporter(
-            carepoint_id=self.carepoint_id,
-            binding_record=self._new_record('2016-06-12 00:00:00'),
-        )
-        with mock.patch.object(exporter.binder, 'to_backend') as mk:
-            mk.side_effect = EndTestException
-            with self.assertRaises(EndTestException):
-                exporter.run(self.binding_id)
-            mk.assert_called_once_with(self.binding_id)
-
     def test_run_should_import(self):
         """ It should see if the record needs to be imported """
         exporter = self._new_exporter(
@@ -274,7 +266,7 @@ class TestBaseExporter(SetUpCarepointBase):
                     with self.assertRaises(EndTestException):
                         exporter.run(self.binding_id)
                     binder.bind.assert_called_once_with(
-                        binder.to_backend(), self.binding_id,
+                        self.carepoint_id, self.binding_id,
                     )
 
     def test_run_commits_session(self):

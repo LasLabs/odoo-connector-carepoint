@@ -10,6 +10,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
+from ..unit.export_synchronizer import CarepointExporter
 
 from .address import CarepointAddress
 
@@ -139,3 +140,38 @@ class CarepointAddressAbstractImporter(CarepointImporter):
             self.session, binding._name, binding.id, binding.backend_id.id
         )
         return binding
+
+
+@carepoint
+class CarepointAddressAbstractExportMapper(ExportMapper):
+
+    @mapping
+    def addr_id(self, binding):
+        binder = self.binder_for('carepoint.carepoint.address')
+        rec_id = binder.to_backend(binding.address_id.id)
+        return {'addr_id': rec_id}
+
+    @mapping
+    def static_defaults(self, binding):
+        return {
+            'priority': 2,
+            'addr_type_cn': 2,
+            'app_flags': 0,
+        }
+
+
+@carepoint
+class CarepointAddressAbstractExporter(CarepointExporter):
+
+    @mapping
+    def _export_dependencies(self):
+        model = self._model_name
+        if isinstance(model, list):
+            model = model[0]
+            _logger.debug(
+                _('_model_name was a list, using %s from %s') % (
+                    self._model_name, model,
+                )
+            )
+        self._export_dependency(self.binding_record.address_id,
+                                model)

@@ -191,3 +191,79 @@ class TestAddressAbstractImporter(AddressAbstractTestBase):
                     'carepoint.carepoint.address',
                 ),
             ])
+
+
+class TestAddressAbstractExportMapper(AddressAbstractTestBase):
+
+    def setUp(self):
+        super(TestAddressAbstractExportMapper, self).setUp()
+        self.Unit = address_abstract.CarepointAddressAbstractExportMapper
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+
+    def test_addr_id_get_binder(self):
+        """ It should get binder for prescription line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.addr_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.carepoint.address'
+            )
+
+    def test_addr_id_to_backend(self):
+        """ It should get backend record for rx """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_backend.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.addr_id(self.record)
+            self.unit.binder_for().to_backend.assert_called_once_with(
+                self.record.address_id.id,
+            )
+
+    def test_addr_id_return(self):
+        """ It should return formatted addr_id """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.addr_id(self.record)
+            expect = self.unit.binder_for().to_backend()
+            self.assertDictEqual({'addr_id': expect}, res)
+
+    def test_static_defaults(self):
+        """ It should return a dict of default values """
+        self.assertIsInstance(
+            self.unit.static_defaults(self.record),
+            dict,
+        )
+
+
+class TestAddressAbstractExporter(AddressAbstractTestBase):
+
+    def setUp(self):
+        super(TestAddressAbstractExporter, self).setUp()
+        self.Unit = address_abstract.CarepointAddressAbstractExporter
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+        self.unit.binding_record = self.record
+
+    def test_export_dependencies_export(self):
+        """ It should export all dependencies """
+        with mock.patch.object(self.unit, '_export_dependency') as mk:
+            self.unit._export_dependencies()
+            mk.assert_has_calls([
+                mock.call(
+                    self.record.address_id,
+                    self.unit._model_name,
+                ),
+            ])
+
+    def test_export_dependencies_list(self):
+        """ It should correctly handle list _model_name as list """
+        with mock.patch.object(self.unit, '_export_dependency') as mk:
+            self.unit._model_name = ['expect']
+            self.unit._export_dependencies()
+            mk.assert_has_calls([
+                mock.call(
+                    self.record.address_id,
+                    self.unit._model_name[0],
+                ),
+            ])
