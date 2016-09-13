@@ -31,7 +31,9 @@ def delay_export(session, model_name, record_id, vals):
     export_record.delay(session, model_name, record_id, fields=fields)
 
 
-@on_record_write(model_names=['carepoint.address',
+@on_record_write(model_names=['medical.patient',
+                              'carepoint.address',
+                              'carepoint.address.patient',
                               ])
 def delay_export_all_bindings(session, model_name, record_id, vals):
     """ Delay a job which export all the bindings of a record.
@@ -47,7 +49,9 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
                             fields=fields)
 
 
-@on_record_create(model_names=['carepoint.address',
+@on_record_create(model_names=['medical.patient',
+                               'carepoint.address',
+                               'carepoint.address.patient',
                                ])
 def delay_create(session, model_name, record_id, vals):
     """ Create a new binding record, then trigger delayed export
