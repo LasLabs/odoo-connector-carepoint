@@ -7,6 +7,7 @@ from openerp import models, fields, api
 
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
+                                                  changed_by,
                                                   ExportMapper
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
@@ -16,8 +17,7 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
-from ..unit.delete_synchronizer import (CarepointDeleter)
+from ..unit.export_synchronizer import CarepointExporter
 
 
 _logger = logging.getLogger(__name__)
@@ -99,9 +99,11 @@ class CarepointAddress(models.Model):
         """
         vals = {}
         for attr in self.PARTNER_ATTRS:
-            val = getattr(partner, attr, None)
-            if getattr(val, 'id', None):
+            val = getattr(partner, attr, False)
+            if getattr(val, 'id', False):
                 val = val.id
+            if not val:
+                val = False
             vals[attr] = val
         return vals
 
@@ -179,9 +181,32 @@ class CarepointAddressExportMapper(ExportMapper):
 
     direct = [
         ('street', 'addr1'),
-        ('email', 'addr2'),
+        ('street2', 'addr2'),
         ('city', 'city'),
     ]
+
+    @mapping
+    @changed_by('state_id')
+    def state_cd(self, record):
+        return {'state_cd': record.state_id.code}
+
+    @mapping
+    @changed_by('zip')
+    def zip_and_plus_four(self, record):
+        if not record.zip:
+            return
+        _zip = record.zip.replace('-', '')
+        if len(_zip) > 5:
+            return {
+                'zip': _zip[0:5],
+                'zip_plus4': _zip[5:],
+            }
+        return {'zip': _zip}
+
+    @mapping
+    @changed_by('country_id')
+    def country_cd(self, record):
+        return {'country_cd': record.country_id.code}
 
     @mapping
     def addr_id(self, record):
@@ -192,8 +217,3 @@ class CarepointAddressExportMapper(ExportMapper):
 class CarepointAddressExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.address']
     _base_mapper = CarepointAddressExportMapper
-
-
-@carepoint
-class CarepointAddressDeleteSynchronizer(CarepointDeleter):
-    _model_name = ['carepoint.carepoint.address']

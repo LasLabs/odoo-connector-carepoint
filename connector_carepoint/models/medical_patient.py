@@ -17,7 +17,7 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
+from ..unit.export_synchronizer import CarepointExporter
 
 from .address_patient import CarepointAddressPatientUnit
 
@@ -76,7 +76,12 @@ class MedicalPatientImportMapper(PersonImportMapper):
         (trim('email'), 'email'),
         ('birth_date', 'dob'),
         ('death_date', 'dod'),
+        ('pat_status_cn', 'active'),
     ]
+
+    @mapping
+    def safety_cap_yn(self, record):
+        return {'safety_caps_yn': not record['no_safety_caps_yn']}
 
     @mapping
     def gender(self, record):
@@ -124,19 +129,40 @@ class MedicalPatientExportMapper(PersonExportMapper):
         ('email', 'email'),
         ('dob', 'birth_date'),
         ('dod', 'death_date'),
+        ('active', 'pat_status_cn')
     ]
-
-    @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
 
     @mapping
     @changed_by('gender')
     def gender_cd(self, record):
-        return {'gender_cd': record.get('gender').upper()}
+        if record.gender:
+            return {'gender_cd': record.gender.upper()}
+
+    @mapping
+    def static_defaults(self, record):
+        """ It provides all static default mappings """
+        return {
+            'pat_type_cn': 1,
+            'bad_check_yn': 0,
+            'app_flags': 0,
+            'comp_cn': 0,
+            'status_cn': 0,
+        }
+
+    @mapping
+    @changed_by('safety_cap_yn')
+    def no_safety_caps_yn(self, record):
+        return {'no_safety_caps_yn': not record.safety_cap_yn}
 
 
 @carepoint
 class MedicalPatientExporter(CarepointExporter):
     _model_name = ['carepoint.medical.patient']
     _base_mapper = MedicalPatientExportMapper
+
+    def _after_export(self):
+        self.env['carepoint.address.patient']._get_by_partner(
+            self.binding_record.commercial_partner_id,
+            create=True,
+            recurse=True,
+        )

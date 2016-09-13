@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
+from openerp import models, fields, api
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -14,6 +14,8 @@ from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
                                CarepointAddressAbstractImporter,
+                               CarepointAddressAbstractExportMapper,
+                               CarepointAddressAbstractExporter,
                                )
 
 _logger = logging.getLogger(__name__)
@@ -49,6 +51,11 @@ class CarepointAddressPatient(models.Model):
         string='Carepoint Bindings',
     )
 
+    @api.model
+    def _default_res_model(self):
+        """ It returns the res model. """
+        return 'medical.patient'
+
 
 @carepoint
 class CarepointAddressPatientAdapter(CarepointCRUDAdapter):
@@ -82,6 +89,16 @@ class CarepointAddressPatientImportMapper(
         )
 
     @mapping
+    @only_create
+    def res_model_and_id(self, record):
+        binder = self.binder_for('carepoint.medical.patient')
+        patient_id = binder.to_odoo(record['pat_id'], browse=True)
+        _sup = super(CarepointAddressPatientImportMapper, self)
+        return _sup.res_model_and_id(
+            record, patient_id,
+        )
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': '%d,%d' % (record['pat_id'],
                                            record['addr_id'])}
@@ -111,3 +128,24 @@ class CarepointAddressPatientUnit(ConnectorUnit):
         address_ids = adapter.search(pat_id=patient_id)
         for address_id in address_ids:
             importer.run(address_id)
+
+
+@carepoint
+class CarepointAddressPatientExportMapper(
+    CarepointAddressAbstractExportMapper
+):
+    _model_name = 'carepoint.carepoint.address.patient'
+
+    @mapping
+    def pat_id(self, binding):
+        binder = self.binder_for('carepoint.medical.patient')
+        rec_id = binder.to_backend(binding.res_id)
+        return {'pat_id': rec_id}
+
+
+@carepoint
+class CarepointAddressPatientExporter(
+    CarepointAddressAbstractExporter
+):
+    _model_name = 'carepoint.carepoint.address.patient'
+    _base_mapper = CarepointAddressPatientExportMapper

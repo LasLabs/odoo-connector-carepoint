@@ -82,16 +82,7 @@ class TestAddressPatientImporter(AddressPatientTestBase):
     @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
                 spec=address_patient.CarepointAddressAbstractImporter,
                 )
-    def test_import_dependencies_super(self, _super):
-        """ It should call the super """
-        _super()._import_dependencies.side_effect = EndTestException
-        with self.assertRaises(EndTestException):
-            self.unit._import_dependencies()
-
-    @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
-                spec=address_patient.CarepointAddressAbstractImporter,
-                )
-    def test_import_dependencies_super(self, _super):
+    def test_import_dependencies_import(self, _super):
         """ It should import all dependencies """
         with mock.patch.object(self.unit, '_import_dependency') as mk:
             self.unit._import_dependencies()
@@ -139,3 +130,39 @@ class TestCarepointAddressPatientUnit(AddressPatientTestBase):
             mk().search.return_value = [expect]
             self.unit._import_addresses(1, None)
             mk().run.assert_called_once_with(expect)
+
+
+class TestAddressPatientExportMapper(AddressPatientTestBase):
+
+    def setUp(self):
+        super(TestAddressPatientExportMapper, self).setUp()
+        self.Unit = address_patient.CarepointAddressPatientExportMapper
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+
+    def test_pat_id_get_binder(self):
+        """ It should get binder for prescription line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.pat_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.medical.patient'
+            )
+
+    def test_pat_id_to_backend(self):
+        """ It should get backend record for rx """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_backend.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.pat_id(self.record)
+            self.unit.binder_for().to_backend.assert_called_once_with(
+                self.record.res_id,
+            )
+
+    def test_pat_id_return(self):
+        """ It should return formatted pat_id """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.pat_id(self.record)
+            expect = self.unit.binder_for().to_backend()
+            self.assertDictEqual({'pat_id': expect}, res)
