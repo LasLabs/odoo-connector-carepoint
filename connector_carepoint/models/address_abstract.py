@@ -3,9 +3,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
+from openerp import models, fields, api, _
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
+                                                  ExportMapper,
                                                   )
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
@@ -38,11 +39,35 @@ class CarepointAddressAbstract(models.AbstractModel):
         string='Partner',
         comodel_name='res.partner',
         required=True,
+        store=True,
         compute='_compute_partner_id',
         inverse='_set_partner_id',
     )
+    res_model = fields.Char(
+        string='Resource Model',
+        default=lambda s: s._default_res_model(),
+    )
+    res_id = fields.Integer(
+        string='Resource PK',
+        compute='_compute_res_id',
+        store=True,
+    )
+
+    @property
+    @api.multi
+    def medical_entity_id(self):
+        self.ensure_one()
+        return self.env[self.res_model].browse(self.res_id)
+
+    @api.model
+    def _default_res_model(self):
+        """ It returns the res model. Should be overloaded in children """
+        raise NotImplementedError(
+            _('_default_res_model should be implemented in child classes')
+        )
 
     @api.multi
+    @api.depends('partner_id')
     def _compute_partner_id(self):
         """ It sets the partner_id from the address_id """
         for rec_id in self:
@@ -71,6 +96,44 @@ class CarepointAddressAbstract(models.AbstractModel):
                 rec_id.address_id._sync_partner()
             else:
                 rec_id.address_id.write(vals)
+
+    @api.multi
+    @api.depends('partner_id', 'res_model')
+    def _compute_res_id(self):
+        """ It computes the resource ID from model """
+        for rec_id in self:
+            if not all([rec_id.res_model, rec_id.partner_id]):
+                continue
+            medical_entity = self.env[rec_id.res_model].search([
+                ('partner_id', '=', rec_id.partner_id.id),
+            ],
+                limit=1,
+            )
+            rec_id.res_id = medical_entity.id
+
+    @api.model
+    def _get_by_partner(self, partner, create=True, recurse=False):
+        """ It returns the address associated to the partner.
+        Params:
+            partner: Recordset singleton of partner to search for
+            create: Bool determining whether to create address if not exist
+            recurse: Bool determining whether to recurse into children (this
+                is only really useful when create=True)
+        Return:
+            Recordset of partner address
+        """
+        address = self.search([('partner_id', '=', partner.id)], limit=1)
+        vals = self.address_id._get_partner_sync_vals(partner)
+        _logger.info('_get_by_partner %s, %s, %s' % (address, partner, vals))
+        if not address and create:
+            vals['partner_id'] = partner.id
+            address = self.create(vals)
+        else:
+            address.write(vals)
+        if recurse:
+            for child in partner.child_ids:
+                self._get_by_partner(child, create, recurse)
+        return address
 
 
 @carepoint
@@ -116,6 +179,19 @@ class CarepointAddressAbstractImportMapper(CarepointImportMapper):
             })
             partner = self.env['res.partner'].create(vals)
         return {'partner_id': partner.id}
+
+    def res_model_and_id(self, record, medical_entity):
+        """ It returns the vals dict for res_model and res_id
+        Params:
+            record: ``dict`` of carepoint record
+            medical_entity: Recordset with a ``partner_id`` column
+        Return:
+            ``dict`` of values for mapping
+        """
+        return {
+            'res_id': medical_entity.id,
+            'res_model': medical_entity._name,
+        }
 
     @mapping
     @only_create

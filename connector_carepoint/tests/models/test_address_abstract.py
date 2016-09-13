@@ -57,11 +57,12 @@ class TestCarepointAddressAbstract(AddressAbstractTestBase):
         return self.env['carepoint.address'].create(vals)
 
     def new_patient_address(self):
-        patient = self.new_patient()
-        self.address = self.new_address(patient.partner_id)
+        self.patient = self.new_patient()
+        self.address = self.new_address(self.patient.partner_id)
         return self.model.create({
-            'partner_id': patient.partner_id,
+            'partner_id': self.patient.partner_id.id,
             'address_id': self.address.id,
+            'res_model': 'medical.patient',
         })
 
     def test_compute_partner_id(self):
@@ -92,6 +93,21 @@ class TestCarepointAddressAbstract(AddressAbstractTestBase):
         self.assertEqual(
             expect,
             address.street,
+        )
+
+    def test_medical_entity_id(self):
+        """ It should return patient record """
+        address = self.new_patient_address()
+        self.assertEqual(
+            self.patient,
+            address.medical_entity_id,
+        )
+
+    def test_compute_res_id(self):
+        address = self.new_patient_address()
+        self.assertEqual(
+            self.patient.id,
+            address.res_id,
         )
 
 
@@ -171,6 +187,16 @@ class TestAddressAbstractImportMapper(AddressAbstractTestBase):
             res = self.unit.address_id(self.record)
             expect = self.unit.binder_for().to_odoo()
             self.assertDictEqual({'address_id': expect}, res)
+
+    def test_res_model_and_id(self):
+        """ It should return values dict for medical entity """
+        entity = mock.MagicMock()
+        expect = {
+            'res_id': entity.id,
+            'res_model': entity._name,
+        }
+        res = self.unit.res_model_and_id(None, entity)
+        self.assertDictEqual(expect, res)
 
 
 class TestAddressAbstractImporter(AddressAbstractTestBase):
