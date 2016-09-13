@@ -9,12 +9,15 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
+                           PersonExportMapper,
                            trim,
                            )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
+
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ class CarepointMedicalPhysician(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'medical.physician': 'odoo_id'}
     _description = 'Carepoint Physician'
-    _cp_lib = 'doctor'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'doctor'
 
     odoo_id = fields.Many2one(
         comodel_name='medical.physician',
@@ -71,7 +74,7 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
         (trim('url'), 'website'),
         (trim('dea_no'), 'dea_num'),
         (trim('fed_tax_id'), 'vat'),
-        (trim('stat_lic_id'), 'license_num'),
+        (trim('state_lic_id'), 'license_num'),
         (trim('npi_id'), 'npi_num'),
     ]
 
@@ -87,7 +90,7 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
         name = self._get_name(record)
         physician_id = self.env['medical.physician'].search([
             ('name', 'ilike', name),
-            ('email', 'ilike', record.get('email')),
+            ('email', 'ilike', record['email']),
         ],
             limit=1,
         )
@@ -99,3 +102,30 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
 class MedicalPhysicianImporter(CarepointImporter):
     _model_name = ['carepoint.medical.physician']
     _base_mapper = MedicalPhysicianImportMapper
+
+
+@carepoint
+class MedicalPhysicianExportMapper(PersonExportMapper):
+    _model_name = 'carepoint.medical.physician'
+
+    direct = [
+        ('email', 'email'),
+        ('website', 'url'),
+        ('dea_num', 'dea_no'),
+        ('vat', 'fed_tax_id'),
+        ('license_num', 'state_lic_id'),
+        ('npi_num', 'npi_id'),
+    ]
+
+
+@carepoint
+class MedicalPhysicianExporter(CarepointExporter):
+    _model_name = ['carepoint.medical.physician']
+    _base_mapper = MedicalPhysicianExportMapper
+
+    def _after_export(self):
+        self.env['carepoint.address.physician']._get_by_partner(
+            self.binding_record.commercial_partner_id,
+            edit=True,
+            recurse=True,
+        )

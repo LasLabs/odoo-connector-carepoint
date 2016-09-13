@@ -130,3 +130,42 @@ class TestCarepointAddressPhysicianUnit(AddressPhysicianTestBase):
             mk().search.return_value = [expect]
             self.unit._import_addresses(1, None)
             mk().run.assert_called_once_with(expect)
+
+
+class TestCarepointAddressPhysicianExportMapper(
+    AddressPhysicianTestBase
+):
+
+    def setUp(self):
+        super(TestCarepointAddressPhysicianExportMapper, self).setUp()
+        self.Unit = \
+            address_physician.CarepointAddressPhysicianExportMapper
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+
+    def test_md_id_get_binder(self):
+        """ It should get binder for prescription line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.md_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.medical.physician'
+            )
+
+    def test_md_id_to_backend(self):
+        """ It should get backend record for rx """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_backend.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.md_id(self.record)
+            self.unit.binder_for().to_backend.assert_called_once_with(
+                self.record.res_id,
+            )
+
+    def test_md_id_return(self):
+        """ It should return formatted md_id """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.md_id(self.record)
+            expect = self.unit.binder_for().to_backend()
+            self.assertDictEqual({'md_id': expect}, res)
