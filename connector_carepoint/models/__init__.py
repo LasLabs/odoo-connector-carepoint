@@ -19,6 +19,8 @@ from . import medical_patient
 from . import medical_physician
 from . import medical_prescription_order
 from . import medical_prescription_order_line
+from . import medical_pathology
+from . import medical_pathology_code_type
 
 # Address / Relations
 from . import address
