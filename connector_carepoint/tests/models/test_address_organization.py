@@ -80,19 +80,7 @@ class TestAddressOrganizationImporter(AddressOrganizationTestBase):
         self.unit = self.Unit(self.mock_env)
         self.unit.carepoint_record = self.record
 
-    @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
-                spec=address_organization.CarepointAddressAbstractImporter,
-                )
-    def test_import_dependencies_super(self, _super):
-        """ It should call the super """
-        _super()._import_dependencies.side_effect = EndTestException
-        with self.assertRaises(EndTestException):
-            self.unit._import_dependencies()
-
-    @mock.patch('%s.CarepointAddressAbstractImporter' % _file,
-                spec=address_organization.CarepointAddressAbstractImporter,
-                )
-    def test_import_dependencies_super(self, _super):
+    def test_import_dependencies_import(self):
         """ It should import all dependencies """
         with mock.patch.object(self.unit, '_import_dependency') as mk:
             self.unit._import_dependencies()
@@ -140,3 +128,40 @@ class TestCarepointAddressOrganizationUnit(AddressOrganizationTestBase):
             mk().search.return_value = [expect]
             self.unit._import_addresses(1, None)
             mk().run.assert_called_once_with(expect)
+
+
+class TestAddressOrganizationExportMapper(AddressOrganizationTestBase):
+
+    def setUp(self):
+        super(TestAddressOrganizationExportMapper, self).setUp()
+        self.Unit = \
+            address_organization.CarepointAddressOrganizationExportMapper
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+
+    def test_org_id_get_binder(self):
+        """ It should get binder for prescription line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.org_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.carepoint.organization'
+            )
+
+    def test_org_id_to_backend(self):
+        """ It should get backend record for rx """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_backend.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.org_id(self.record)
+            self.unit.binder_for().to_backend.assert_called_once_with(
+                self.record.res_id,
+            )
+
+    def test_org_id_return(self):
+        """ It should return formatted org_id """
+        with mock.patch.object(self.unit, 'binder_for'):
+            res = self.unit.org_id(self.record)
+            expect = self.unit.binder_for().to_backend()
+            self.assertDictEqual({'org_id': expect}, res)
