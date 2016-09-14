@@ -30,7 +30,6 @@ class FdbPemMogc(models.Model):
     )
     monograph = fields.Text(
         compute='_compute_monograph',
-        store=True,
     )
     update_yn = fields.Boolean()
 
