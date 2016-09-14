@@ -16,6 +16,10 @@ class FdbNdc(models.Model):
         ondelete='cascade',
         required=True,
     )
+    lbl_mfg_id = fields.Many2one(
+        string='Label Manufacturer',
+        comodel_name='fdb.lbl.rid',
+    )
     lblrid = fields.Char()
     gcn_seqno = fields.Char()
     ps = fields.Char()

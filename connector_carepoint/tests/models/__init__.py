@@ -24,3 +24,8 @@ from . import test_medical_patient
 
 from . import test_medical_pathology
 from . import test_medical_pathology_type_code
+
+from . import test_fdb_img
+from . import test_fdb_img_date
+from . import test_fdb_img_mfg
+from . import test_fdb_img_id

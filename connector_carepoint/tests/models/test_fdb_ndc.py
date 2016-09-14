@@ -35,6 +35,7 @@ class FdbNdcTestBase(SetUpCarepointBase):
             'gpi': 2,
             'dea': 3,
             'hcfa_unit': 4,
+            'lblrid': ' lblrid ',
             'bn': '  bn  ',
         }
 
@@ -259,6 +260,34 @@ class TestFdbNdcImportMapper(FdbNdcTestBase):
                     res,
                 )
 
+    def test_lbl_mfg_id_get_binder(self):
+        """ It should get binder for record type """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.lbl_mfg_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.fdb.lbl.rid'
+            )
+
+    def test_lbl_mfg_id_to_odoo(self):
+        """ It should get Odoo record for binding """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_odoo.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.lbl_mfg_id(self.record)
+            self.unit.binder_for().to_odoo.assert_called_once_with(
+                self.record['lblrid'].strip(),
+            )
+
+    def test_lbl_mfg_id_return(self):
+        """ It should return proper vals dict """
+        with mock.patch.object(self.unit, 'binder_for'):
+            lbl_mfg_id = self.unit.binder_for().to_odoo()
+            expect = {'lbl_mfg_id': lbl_mfg_id}
+            res = self.unit.lbl_mfg_id(self.record)
+            self.assertDictEqual(expect, res)
+
 
 class TestFdbNdcImporter(FdbNdcTestBase):
 
@@ -282,3 +311,20 @@ class TestFdbNdcImporter(FdbNdcTestBase):
                     'carepoint.fdb.gcn',
                 ),
             ])
+
+    def test_after_import_unit(self):
+        """ It should get proper unit """
+        with mock.patch.object(self.unit, 'unit_for'):
+            self.unit._after_import(None)
+            self.unit.unit_for.assert_called_once_with(
+                fdb_ndc.FdbImgIdUnit,
+                model='carepoint.fdb.img.id',
+            )
+
+    def test_after_import_import(self):
+        """ It should run import method on unit """
+        with mock.patch.object(self.unit, 'unit_for'):
+            self.unit._after_import(None)
+            self.unit.unit_for()._import_by_ndc.assert_called_once_with(
+                self.record['ndc'].strip(),
+            )

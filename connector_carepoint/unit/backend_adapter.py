@@ -85,7 +85,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
             path: :type:`str` SMB path of image
 
         Returns:
-            :type:`str` Binary string representation of file
+            :type:`str` Base64 encoded binary file
         """
         return self.carepoint.get_file(path).read().encode('base64')
 
