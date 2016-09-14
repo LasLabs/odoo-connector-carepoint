@@ -116,7 +116,8 @@ class CarepointAddressAbstract(models.AbstractModel):
         """ It returns the address associated to the partner.
         Params:
             partner: Recordset singleton of partner to search for
-            create: Bool determining whether to create address if not exist
+            edit: Bool determining whether to create new or edit existing
+                address
             recurse: Bool determining whether to recurse into children (this
                 is only functional when edit=True)
         Return:
@@ -124,7 +125,7 @@ class CarepointAddressAbstract(models.AbstractModel):
         """
         address = self.search([('partner_id', '=', partner.id)], limit=1)
         vals = self.address_id._get_partner_sync_vals(partner)
-        _logger.info('_get_by_partner %s, %s, %s' % (address, partner, vals))
+        _logger.debug('_get_by_partner %s, %s, %s' % (address, partner, vals))
         if not edit:
             return address
         if not address:

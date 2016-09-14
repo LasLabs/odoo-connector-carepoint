@@ -56,6 +56,7 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
                                'carepoint.address.patient',
                                'carepoint.organization',
                                'carepoint.address.organization',
+                               'carepoint.account',
                                ])
 def delay_create(session, model_name, record_id, vals):
     """ Create a new binding record, then trigger delayed export
