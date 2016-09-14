@@ -20,3 +20,4 @@ from . import test_address_patient
 from . import test_address_store
 from . import test_address_organization
 from . import test_address_physician
+from . import test_medical_patient

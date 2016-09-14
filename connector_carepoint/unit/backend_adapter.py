@@ -113,12 +113,20 @@ class CarepointCRUDAdapter(CRUDAdapter):
 
     def create(self, data):
         """ Wrapper to create a record on the external system
-        :param data: Data to create record with
-        :type data: dict
-        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        Params:
+            data: ``dict`` of Data to create record with
+        Returns:
+            ``str`` of external carepoint_id
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.create(model_obj, data)
+        pks = self.carepoint.get_pks(model_obj)
+        out_pks = []
+        for pk in pks:
+            if not data.get(pk):
+                data[pk] = self.carepoint.get_next_sequence(pk)
+            out_pks.append(str(data[pk]))
+        self.carepoint.create(model_obj, data)
+        return ','.join(out_pks)
 
     def write(self, _id, data):
         """ Update record on the external system
@@ -126,10 +134,18 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type _id: int
         :param data: Data to create record with
         :type data: dict
-        :rtype: :class:`sqlalchemy.ext.declarative.Declarative`
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
         model_obj = self.__get_cp_model()
-        return self.carepoint.update(model_obj, _id, data)
+        session = self.carepoint._get_session(model_obj)
+
+        def __update():
+            record = self.read(_id)
+            for key, val in data.iteritems():
+                setattr(record, key, val)
+            return record
+
+        return self.carepoint._do_queries(session, __update)
 
     def delete(self, _id):
         """ Delete record on the external system
