@@ -91,24 +91,27 @@ class TestMedicalPatientImporter(MedicalPatientTestBase):
         self.unit.carepoint_record = self.record
 
     def test_after_import_get_unit(self):
-        """ It should get unit for address importer """
+        """ It should get unit for importers """
         expect = mock.MagicMock()
         with mock.patch.object(self.unit, 'unit_for'):
             self.unit._after_import(expect)
-            self.unit.unit_for.assert_called_once_with(
-                medical_patient.CarepointAddressPatientUnit,
-                model='carepoint.carepoint.address.patient',
-            )
-
-    def test_after_import_get_unit(self):
-        """ It should get unit for address importer """
-        expect = mock.MagicMock()
-        with mock.patch.object(self.unit, 'unit_for'):
-            self.unit._after_import(expect)
-            self.unit.unit_for()._import_addresses.assert_called_once_with(
-                self.unit.carepoint_id,
-                expect,
-            )
+            self.unit.unit_for.assert_has_calls([
+                mock.call(
+                    medical_patient.CarepointAddressPatientUnit,
+                    model='carepoint.carepoint.address.patient',
+                ),
+                mock.call()._import_addresses(
+                    self.unit.carepoint_id,
+                    expect,
+                ),
+                mock.call(
+                    medical_patient.CarepointAccountUnit,
+                    model='carepoint.carepoint.account',
+                ),
+                mock.call()._import_accounts(
+                    self.unit.carepoint_id,
+                ),
+            ])
 
 
 class TestMedicalPatientExportMapper(MedicalPatientTestBase):
@@ -140,3 +143,35 @@ class TestMedicalPatientExportMapper(MedicalPatientTestBase):
                 'no_safety_caps_yn'
             ],
         )
+
+
+class TestMedicalPatientExporter(MedicalPatientTestBase):
+
+    def setUp(self):
+        super(TestMedicalPatientExporter, self).setUp()
+        self.Unit = medical_patient.MedicalPatientExporter
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+        self.unit.binding_record = self.record
+
+    def test_after_export_address_get_by_partner(self):
+        """ It should get addresses by partner """
+        with mock.patch.object(self.unit.session, 'env') as env:
+            self.unit._after_export()
+            get = env['carepoint.address.patient']._get_by_partner
+            get.assert_called_once_with(
+                self.record.commercial_partner_id,
+                edit=True,
+                recurse=True,
+            )
+
+    def test_after_export_account_get_by_patient(self):
+        """ It should get accounts by patient """
+        with mock.patch.object(self.unit.session, 'env') as env:
+            self.unit._after_export()
+            get = env['carepoint.account']._get_by_patient
+            get.assert_called_once_with(
+                self.record.odoo_id,
+                create=True,
+                recurse=True,
+            )

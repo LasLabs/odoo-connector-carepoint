@@ -20,6 +20,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import CarepointExporter
 
 from .address_patient import CarepointAddressPatientUnit
+from .carepoint_account import CarepointAccountUnit
 
 _logger = logging.getLogger(__name__)
 
@@ -114,10 +115,13 @@ class MedicalPatientImporter(CarepointImporter):
     _base_mapper = MedicalPatientImportMapper
 
     def _after_import(self, partner_binding):
-        """ Import the addresses """
+        """ Import the addresses and accounts """
         book = self.unit_for(CarepointAddressPatientUnit,
                              model='carepoint.carepoint.address.patient')
         book._import_addresses(self.carepoint_id, partner_binding)
+        account = self.unit_for(CarepointAccountUnit,
+                                model='carepoint.carepoint.account')
+        account._import_accounts(self.carepoint_id)
 
 
 @carepoint
@@ -164,5 +168,10 @@ class MedicalPatientExporter(CarepointExporter):
         self.env['carepoint.address.patient']._get_by_partner(
             self.binding_record.commercial_partner_id,
             edit=True,
+            recurse=True,
+        )
+        self.env['carepoint.account']._get_by_patient(
+            self.binding_record.odoo_id,
+            create=True,
             recurse=True,
         )

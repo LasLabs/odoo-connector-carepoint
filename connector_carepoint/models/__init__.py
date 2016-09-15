@@ -31,7 +31,7 @@ from . import address_organization
 from . import address_physician
 
 # CarePoint Mappings/Binds
-from . import account
+from . import carepoint_account
 from . import carepoint_store
 from . import carepoint_organization
 from . import carepoint_state
