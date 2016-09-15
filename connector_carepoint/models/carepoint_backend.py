@@ -48,6 +48,21 @@ class CarepointBackend(models.Model):
     ],
         default=CarepointDb.ODBC_DRIVER,
     )
+    db_pool_size = fields.Integer(
+        required=True,
+        default=20,
+        help='This is passed to SQLAlchemy `create_engine`',
+    )
+    db_max_overflow = fields.Integer(
+        required=True,
+        default=20,
+        help='This is passed to SQLAlchemy `create_engine`',
+    )
+    db_pool_timeout = fields.Integer(
+        required=True,
+        default=30,
+        help='This is passed to SQLAlchemy `create_engine`',
+    )
     server = fields.Char(
         required=True,
         help="IP/DNS to Carepoint database",
@@ -313,7 +328,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def import_medical_prescription(self):
-        self._import_from_date('carepoint.medical.prescription.order.line',
+        self._import_from_date('carepoint.rx.ord.ln',
                                'import_prescriptions_from_date')
         return True
 

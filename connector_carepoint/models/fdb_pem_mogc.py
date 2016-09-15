@@ -10,6 +10,7 @@ from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
+                                        import_record,
                                         )
 from .fdb_pem_moe import FdbPemMoeAdapter
 
@@ -94,7 +95,10 @@ class FdbPemMogcImporter(CarepointImporter):
         domain = {'pemono': record['pemono']}
         attributes = ['pemono', 'pemono_sn']
         for rec_id in pem_adapter.search_read(attributes, **domain):
-            self._import_dependency('{0},{1}'.format(rec_id['pemono'],
-                                                     rec_id['pemono_sn'],
-                                                     ),
-                                    'carepoint.fdb.pem.moe')
+            import_record.delay(
+                self.session,
+                'carepoint.fdb.pem.moe',
+                self.backend_record.id,
+                '{0},{1}'.format(rec_id['pemono'], rec_id['pemono_sn']),
+                force=False,
+            )

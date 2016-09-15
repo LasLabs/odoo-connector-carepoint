@@ -102,7 +102,7 @@ class TestSaleOrderLineImportMapper(SaleOrderLineTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.prescription_data(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.medical.prescription.order.line'
+                'carepoint.rx.ord.ln'
             )
 
     def test_prescription_data_to_odoo(self):
@@ -226,7 +226,7 @@ class TestSaleOrderLineImporter(SaleOrderLineTestBase):
             mk.assert_has_calls([
                 mock.call(
                     self.record['rx_id'],
-                    'carepoint.medical.prescription.order.line',
+                    'carepoint.rx.ord.ln',
                 ),
                 mock.call(
                     self.record['order_id'],

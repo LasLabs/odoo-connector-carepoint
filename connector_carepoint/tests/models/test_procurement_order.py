@@ -137,7 +137,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.name(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.medical.prescription.order.line'
+                'carepoint.rx.ord.ln'
             )
 
     def test_name_to_odoo(self):
@@ -167,7 +167,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.order_line_procurement_data(self.record)
             self.unit.binder_for.assert_called_with(
-                'carepoint.medical.prescription.order.line'
+                'carepoint.rx.ord.ln'
             )
 
     def test_order_line_procurement_data_rx_line_to_odoo(self):
@@ -240,7 +240,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
         with mock.patch.object(self.unit, 'binder_for'):
             filtered = \
                 self.unit.binder_for().to_odoo().order_line.filtered
-            write = filtered()[0].write
+            write = filtered()[0].with_context().write
             write.side_effect = EndTestException
             with self.assertRaises(EndTestException):
                 self.unit.order_line_procurement_data(self.record)
@@ -279,6 +279,18 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
                     _prepare_procurement_group(),
                 )
 
+    def test_order_line_procurement_line_no_export(self):
+        """ It should get no export context on line """
+        with mock.patch.object(self.unit, 'binder_for'):
+            with mock.patch.object(self.unit.session, 'env'):
+                line = \
+                    self.unit.binder_for().to_odoo().order_line.filtered()[0]
+                line = line.with_context
+                line.side_effect = EndTestException
+                with self.assertRaises(EndTestException):
+                    self.unit.order_line_procurement_data(self.record)
+                line.assert_called_once_with(connector_no_export=True)
+
     def test_order_line_procurement_preps_order_line_proc(self):
         """ It should prepare order line procurements """
         with mock.patch.object(self.unit, 'binder_for'):
@@ -286,6 +298,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
                 create = env['procurement.group'].create
                 line = \
                     self.unit.binder_for().to_odoo().order_line.filtered()[0]
+                line = line.with_context()
                 line._prepare_order_line_procurement.side_effect = \
                     EndTestException
                 with self.assertRaises(EndTestException):
@@ -300,6 +313,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
             with mock.patch.object(self.unit.session, 'env'):
                 line = \
                     self.unit.binder_for().to_odoo().order_line.filtered()[0]
+                line = line.with_context()
                 proc = line._prepare_order_line_procurement()
                 proc.update.side_effect = EndTestException
                 with self.assertRaises(EndTestException):
@@ -317,6 +331,7 @@ class TestProcurementOrderImportMapper(ProcurementOrderTestBase):
             with mock.patch.object(self.unit.session, 'env'):
                 line = \
                     self.unit.binder_for().to_odoo().order_line.filtered()[0]
+                line = line.with_context()
                 proc = line._prepare_order_line_procurement()
                 res = self.unit.order_line_procurement_data(self.record)
                 self.assertEqual(proc, res)
@@ -337,7 +352,7 @@ class TestProcurementOrderImporter(ProcurementOrderTestBase):
             mk.assert_has_calls([
                 mock.call(
                     self.record['rx_id'],
-                    'carepoint.medical.prescription.order.line',
+                    'carepoint.rx.ord.ln',
                 ),
                 mock.call(
                     self.record['disp_ndc'].strip(),

@@ -143,7 +143,7 @@ class TestStockPickingImporter(StockPickingTestBase):
             mk.assert_has_calls([
                 mock.call(
                     self.record['rx_id'],
-                    'carepoint.medical.prescription.order.line',
+                    'carepoint.rx.ord.ln',
                 ),
                 mock.call(
                     self.record['order_id'],

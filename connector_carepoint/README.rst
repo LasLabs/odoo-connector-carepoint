@@ -8,15 +8,22 @@ CarePoint Connector
 
 This module provides CarePoint connector functionality.
 
+Note that record creation will take place on the current user's company's
+default Carepoint backend.
+
+Records imported from other backends will maintain their relation with that
+backend when exporting updates.
+
 The following two-way sync logic is implemented:
 
 * Odoo Patient / CarePoint Patient
+* Odoo Physician / CarePoint Doctor
+* Odoo Pharmacy / Careoint Organization
+* Odoo Prescription & Line / CarePoint Prescription
 
 The following logic is impented on a one-way (CarePoint to Odoo) basis:
 
-* Odoo Pharmacy / CarePoint Store
-* Odoo Physician / CarePoint Doctor
-* Odoo Prescription & Line / CarePoint Prescription
+* Odoo Pharmacy Warehouse / CarePoint Store
 * Odoo Order / CarePoint Order
 * Odoo Order Line / CarePoint Order Line
 * Odoo NDC / FDB NDC
@@ -25,7 +32,6 @@ The following logic is impented on a one-way (CarePoint to Odoo) basis:
 * Odoo Dosage / FDB Unit
 * Odoo Unit of Measure / FDB Strength
 * Odoo Drug Route / FDB Route
-
 
 Installation
 ============
@@ -59,13 +65,18 @@ To use this module, you need to:
 Known Issues / Roadmap
 ======================
 
-* More intelligent PK handling, and allowance of searches without
+* Automatic failed connection renegotiation
+* Add more retryable errors (such as in event of temp db d/c)
+* Multiple DB connections not currently supported (namespace isolation required)
+* Have to reboot server after reinstall to kill dup namespaces
 * Medicament creation in NDC is bad & should use medicament importer instead
 * Medicament category setting is not enforced - also need Rx/OTC delineation
 * Add Rx/OTC Tax delineation
-* ``import_dependency`` usage in ``_after_import`` should be replaced for delay
+* ``_import_dependency`` usage in ``_after_import`` should be replaced for delay
 * Needs to be split into multiple modules to isolate dependencies
 * Carepoint organizations import as pharmacies, but might be other entities
+* Prescription lines are in a bad namespace due to `OCA/connector#20
+  <https://github.com/OCA/connector/issues/209>`_
 
 
 Bug Tracker

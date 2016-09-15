@@ -146,7 +146,7 @@ class TestAddressOrganizationExportMapper(AddressOrganizationTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.org_id(self.record)
             self.unit.binder_for.assert_called_once_with(
-                'carepoint.carepoint.organization'
+                'carepoint.org.bind'
             )
 
     def test_org_id_to_backend(self):

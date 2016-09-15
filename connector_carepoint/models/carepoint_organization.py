@@ -27,7 +27,7 @@ _logger = logging.getLogger(__name__)
 
 class CarepointCarepointOrganization(models.Model):
     """ Binding Model for the Carepoint Organization """
-    _name = 'carepoint.carepoint.organization'
+    _name = 'carepoint.org.bind'
     _inherit = 'carepoint.binding'
     _inherits = {'carepoint.organization': 'odoo_id'}
     _description = 'Carepoint Organization'
@@ -56,7 +56,7 @@ class CarepointOrganization(models.Model):
         ondelete='cascade',
     )
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.carepoint.organization',
+        comodel_name='carepoint.org.bind',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
@@ -65,7 +65,7 @@ class CarepointOrganization(models.Model):
 @carepoint
 class CarepointOrganizationAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Organization """
-    _model_name = 'carepoint.carepoint.organization'
+    _model_name = 'carepoint.org.bind'
 
 
 @carepoint
@@ -73,12 +73,12 @@ class CarepointOrganizationBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Organizations.
     For every organization in the list, a delayed job is created.
     """
-    _model_name = ['carepoint.carepoint.organization']
+    _model_name = ['carepoint.org.bind']
 
 
 @carepoint
 class CarepointOrganizationImportMapper(PartnerImportMapper):
-    _model_name = 'carepoint.carepoint.organization'
+    _model_name = 'carepoint.org.bind'
 
     direct = [
         (trim('name'), 'name'),
@@ -110,7 +110,7 @@ class CarepointOrganizationImportMapper(PartnerImportMapper):
 
 @carepoint
 class CarepointOrganizationImporter(CarepointImporter):
-    _model_name = ['carepoint.carepoint.organization']
+    _model_name = ['carepoint.org.bind']
     _base_mapper = CarepointOrganizationImportMapper
 
     def _after_import(self, partner_binding):
@@ -125,7 +125,7 @@ class CarepointOrganizationImporter(CarepointImporter):
 
 @carepoint
 class CarepointOrganizationExportMapper(ExportMapper):
-    _model_name = 'carepoint.carepoint.organization'
+    _model_name = 'carepoint.org.bind'
 
     direct = [
         (none('name'), 'name'),
@@ -142,7 +142,7 @@ class CarepointOrganizationExportMapper(ExportMapper):
 
 @carepoint
 class CarepointOrganizationExporter(CarepointExporter):
-    _model_name = ['carepoint.carepoint.organization']
+    _model_name = ['carepoint.org.bind']
     _base_mapper = CarepointOrganizationExportMapper
 
     def _after_export(self):

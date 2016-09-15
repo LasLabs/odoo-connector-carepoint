@@ -154,7 +154,8 @@ class CarepointImporter(Importer):
         _logger.debug(
             '%d created from carepoint %s',
             binding,
-            self.carepoint_id)
+            self.carepoint_id,
+        )
         return binding
 
     def _update_data(self, map_record, **kwargs):
@@ -168,7 +169,8 @@ class CarepointImporter(Importer):
         _logger.debug(
             '%d updated from carepoint %s',
             binding,
-            self.carepoint_id)
+            self.carepoint_id,
+        )
         return
 
     def _after_import(self, binding):
