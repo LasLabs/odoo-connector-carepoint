@@ -16,7 +16,7 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-from ..unit.export_synchronizer import (CarepointExporter)
+from ..unit.export_synchronizer import CarepointExporter
 
 from .address_organization import CarepointAddressOrganizationUnit
 
@@ -139,3 +139,10 @@ class CarepointOrganizationExportMapper(ExportMapper):
 class CarepointOrganizationExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.organization']
     _base_mapper = CarepointOrganizationExportMapper
+
+    def _after_export(self):
+        self.env['carepoint.organization']._get_by_partner(
+            self.binding_record.commercial_partner_id,
+            edit=True,
+            recurse=True,
+        )

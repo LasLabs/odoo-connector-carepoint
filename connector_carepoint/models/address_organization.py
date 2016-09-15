@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
+from openerp import models, fields, api
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -14,6 +14,8 @@ from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
                                CarepointAddressAbstractImporter,
+                               CarepointAddressAbstractExportMapper,
+                               CarepointAddressAbstractExporter,
                                )
 
 _logger = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ class CarepointCarepointAddressOrganization(models.Model):
 
     odoo_id = fields.Many2one(
         comodel_name='carepoint.address.organization',
-        string='Company',
+        string='Address',
         required=True,
         ondelete='cascade'
     )
@@ -48,6 +50,11 @@ class CarepointAddressOrganization(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+
+    @api.model
+    def _default_res_model(self):
+        """ It returns the res model. """
+        return 'carepoint.organization'
 
 
 @carepoint
@@ -113,3 +120,24 @@ class CarepointAddressOrganizationUnit(ConnectorUnit):
         address_ids = adapter.search(org_id=organization_id)
         for address_id in address_ids:
             importer.run(address_id)
+
+
+@carepoint
+class CarepointAddressOrganizationExportMapper(
+    CarepointAddressAbstractExportMapper
+):
+    _model_name = 'carepoint.carepoint.address.organization'
+
+    @mapping
+    def org_id(self, binding):
+        binder = self.binder_for('carepoint.carepoint.organization')
+        rec_id = binder.to_backend(binding.res_id)
+        return {'org_id': rec_id}
+
+
+@carepoint
+class CarepointAddressOrganizationExporter(
+    CarepointAddressAbstractExporter
+):
+    _model_name = 'carepoint.carepoint.address.organization'
+    _base_mapper = CarepointAddressOrganizationExportMapper
