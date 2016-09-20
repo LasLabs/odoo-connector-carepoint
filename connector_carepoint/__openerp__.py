@@ -13,6 +13,7 @@
     'depends': [
         'connector',
         'first_databank',
+        'medical_physician_us',
         'delivery',
         'l10n_multilang',
         'l10n_us',

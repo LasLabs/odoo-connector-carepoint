@@ -96,3 +96,24 @@ class TestCarepointOrganizationExportMapper(CarepointOrganizationTestBase):
             {'org_id': self.record.carepoint_id},
             res,
         )
+
+
+class TestCarepointOrganizationExporter(CarepointOrganizationTestBase):
+
+    def setUp(self):
+        super(TestCarepointOrganizationExporter, self).setUp()
+        self.Unit = carepoint_organization.CarepointOrganizationExporter
+        self.unit = self.Unit(self.mock_env)
+        self.record = mock.MagicMock()
+        self.unit.binding_record = self.record
+
+    def test_after_export_address_get_by_partner(self):
+        """ It should get addresses by partner """
+        with mock.patch.object(self.unit.session, 'env') as env:
+            self.unit._after_export()
+            get = env['carepoint.address.organization']._get_by_partner
+            get.assert_called_once_with(
+                self.record.commercial_partner_id,
+                edit=True,
+                recurse=True,
+            )

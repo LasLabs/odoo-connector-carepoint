@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
+from openerp import models, fields, api
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -14,6 +14,8 @@ from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
                                CarepointAddressAbstractImporter,
+                               CarepointAddressAbstractExportMapper,
+                               CarepointAddressAbstractExporter,
                                )
 
 _logger = logging.getLogger(__name__)
@@ -25,11 +27,11 @@ class CarepointCarepointAddressPhysician(models.Model):
     _inherit = 'carepoint.binding'
     _inherits = {'carepoint.address.physician': 'odoo_id'}
     _description = 'Carepoint Address Physician Many2Many Rel'
-    _cp_lib = 'doctor_address'  # Name of model in Carepoint lib (snake_case)
+    _cp_lib = 'doctor_address'
 
     odoo_id = fields.Many2one(
         comodel_name='carepoint.address.physician',
-        string='Company',
+        string='Address',
         required=True,
         ondelete='cascade'
     )
@@ -48,6 +50,11 @@ class CarepointAddressPhysician(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+
+    @api.model
+    def _default_res_model(self):
+        """ It returns the res model. """
+        return 'medical.physician'
 
 
 @carepoint
@@ -75,10 +82,20 @@ class CarepointAddressPhysicianImportMapper(
     def partner_id(self, record):
         """ It returns either the commercial partner or parent & defaults """
         binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'], browse=True)
+        physician = binder.to_odoo(record['md_id'], browse=True)
         _sup = super(CarepointAddressPhysicianImportMapper, self)
         return _sup.partner_id(
-            record, physician_id,
+            record, physician,
+        )
+
+    @mapping
+    @only_create
+    def res_model_and_id(self, record):
+        binder = self.binder_for('carepoint.medical.physician')
+        physician = binder.to_odoo(record['md_id'], browse=True)
+        _sup = super(CarepointAddressPhysicianImportMapper, self)
+        return _sup.res_model_and_id(
+            record, physician,
         )
 
     @mapping
@@ -111,3 +128,24 @@ class CarepointAddressPhysicianUnit(ConnectorUnit):
         address_ids = adapter.search(md_id=physician_id)
         for address_id in address_ids:
             importer.run(address_id)
+
+
+@carepoint
+class CarepointAddressPhysicianExportMapper(
+    CarepointAddressAbstractExportMapper
+):
+    _model_name = 'carepoint.carepoint.address.physician'
+
+    @mapping
+    def md_id(self, binding):
+        binder = self.binder_for('carepoint.medical.physician')
+        rec_id = binder.to_backend(binding.res_id)
+        return {'md_id': rec_id}
+
+
+@carepoint
+class CarepointAddressPhysicianExporter(
+    CarepointAddressAbstractExporter
+):
+    _model_name = 'carepoint.carepoint.address.physician'
+    _base_mapper = CarepointAddressPhysicianExportMapper
