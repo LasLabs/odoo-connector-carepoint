@@ -56,14 +56,14 @@ class CarepointCRUDAdapter(CRUDAdapter):
         res = self.carepoint.search(model_obj, filters, [pk])
         return [getattr(row, pk) for row in res]
 
-    def read(self, _id, attributes=None):
+    def read(self, _id, attributes=None, return_all=False):
         """ Gets record by id and returns the object
         :param _id: Id of record to get from Db. Can be comma sep str
             for multiple indexes
         :type _id: mixed
         :param attributes: Attributes to rcv from db. None for *
         :type attributes: list or None
-        :rtype: dict
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
 
         @TODO: Fix the conjoined index lookups, this is pretty flaky
         """
@@ -76,7 +76,8 @@ class CarepointCRUDAdapter(CRUDAdapter):
                 domain[pks[idx]] = id_part
         except AttributeError:
             domain[pks[0]] = _id
-        return self.carepoint.search(model_obj, domain, attributes)[0]
+        res = self.carepoint.search(model_obj, domain, attributes)
+        return res if return_all else res[0]
 
     def read_image(self, path):
         """ Returns an image resource from CarePoint
@@ -136,16 +137,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type data: dict
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
-        model_obj = self.__get_cp_model()
-        session = self.carepoint._get_session(model_obj)
-
-        def __update():
-            record = self.read(_id)
-            for key, val in data.iteritems():
-                setattr(record, key, val)
-            return record
-
-        return self.carepoint._do_queries(session, __update)
+        record = self.read(_id, return_all=True)
+        record.update(data)
+        record.session.commit()
+        return record
 
     def delete(self, _id):
         """ Delete record on the external system
