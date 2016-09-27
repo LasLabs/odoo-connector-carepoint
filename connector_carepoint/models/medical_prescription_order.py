@@ -7,6 +7,7 @@ from openerp import fields
 from openerp import models
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -116,11 +117,11 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [
-        ('date_start_treatment', 'start_date'),
-        ('date_stop_treatment', 'expire_date'),
-        ('qty', 'written_qty'),
-        ('frequency', 'freq_of_admin'),
-        ('quantity', 'units_per_dose'),
+        (none('date_start_treatment'), 'start_date'),
+        (none('date_stop_treatment'), 'expire_date'),
+        (none('qty'), 'written_qty'),
+        (none('frequency'), 'freq_of_admin'),
+        (none('quantity'), 'units_per_dose'),
         # Note that the col naming seems to be reversed *shrug*
         # ('refill_qty_original', 'refills_left'),
         # ('refill_qty_remain', 'refills_orig'),

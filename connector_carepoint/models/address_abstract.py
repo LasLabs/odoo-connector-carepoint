@@ -233,8 +233,8 @@ class CarepointAddressAbstractExportMapper(ExportMapper):
     @mapping
     def static_defaults(self, binding):
         return {
-            'priority': 2,
-            'addr_type_cn': 2,
+            'priority': 1,
+            'addr_type_cn': 1,
             'app_flags': 0,
         }
 

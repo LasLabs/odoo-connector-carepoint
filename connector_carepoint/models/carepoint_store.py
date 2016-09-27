@@ -6,6 +6,7 @@ import logging
 from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
@@ -83,9 +84,9 @@ class CarepointStoreImportMapper(PartnerImportMapper):
         (trim('fed_tax_id'), 'vat'),
         (trim('url'), 'website'),
         (trim('email'), 'email'),
-        ('nabp', 'nabp_num'),
-        ('medcaid_no', 'medicaid_num'),
-        ('NPI', 'npi_num'),
+        (none('nabp'), 'nabp_num'),
+        (none('medcaid_no'), 'medicaid_num'),
+        (none('NPI'), 'npi_num'),
         ('add_date', 'created_at'),
         ('chg_date', 'updated_at'),
     ]

@@ -6,6 +6,7 @@ import logging
 from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
@@ -109,12 +110,12 @@ class MedicalPhysicianExportMapper(PersonExportMapper):
     _model_name = 'carepoint.medical.physician'
 
     direct = [
-        ('email', 'email'),
-        ('website', 'url'),
-        ('dea_num', 'dea_no'),
-        ('vat', 'fed_tax_id'),
-        ('license_num', 'state_lic_id'),
-        ('npi_num', 'npi_id'),
+        (none('email'), 'email'),
+        (none('website'), 'url'),
+        (none('dea_num'), 'dea_no'),
+        (none('vat'), 'fed_tax_id'),
+        (none('license_num'), 'state_lic_id'),
+        (none('npi_num'), 'npi_id'),
     ]
 
 
