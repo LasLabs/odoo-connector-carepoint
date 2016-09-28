@@ -9,7 +9,7 @@ class FdbAllergenGroup(models.Model):
     _name = 'fdb.allergen.group'
     _description = 'Fdb Allergen Group'
 
-    code = fields.Char(
+    dam_code = fields.Char(
         help='DAM Specific Allergen Group Code',
     )
     name = fields.Char()

@@ -38,7 +38,9 @@ class TestMedicalPatientDiseaseImportMapper(MedicalPatientDiseaseTestBase):
 
     def test_pathology_id(self):
         """ It should get ICD9 pathology of right code """
-        code_type_id = self.env.ref('medical_pathology.pathology_code_01')
+        code_type_id = model_obj.create({
+            'name': 'ICD9CM Disease/Injury',
+        })
         expect = self.env['medical.pathology'].create({
             'name': 'Pathology',
             'code_type_id': code_type_id.id,
@@ -77,6 +79,7 @@ class TestMedicalPatientDiseaseImportMapper(MedicalPatientDiseaseTestBase):
             expect = self.unit.binder_for().to_odoo()
             self.assertDictEqual({'patient_id': expect}, res)
 
+
     def test_physician_id_get_binder(self):
         """ It should get binder for prescription line """
         with mock.patch.object(self.unit, 'binder_for'):
@@ -94,7 +97,7 @@ class TestMedicalPatientDiseaseImportMapper(MedicalPatientDiseaseTestBase):
             with self.assertRaises(EndTestException):
                 self.unit.physician_id(self.record)
             self.unit.binder_for().to_odoo.assert_called_once_with(
-                self.record['caring_md_id'],
+                self.record['caring_md_id'].strip(),
             )
 
     def test_physician_id_return(self):
@@ -183,40 +186,19 @@ class TestMedicalPatientDiseaseImporter(MedicalPatientDiseaseTestBase):
 
     def test_after_import_dependencies_pathology_unit(self):
         """ It should get unit for pathology """
-        with mock.patch.object(self.unit, '_import_dependency'):
+        with mock.patch.object(self.unit, '_import_dependency') as mk:
             with mock.patch.object(self.unit, 'unit_for'):
                 self.unit._import_dependencies()
-                self.unit.unit_for.assert_has_calls([
-                    mock.call(
-                        medical_patient_disease.MedicalPathologyUnit,
-                        'carepoint.medical.pathology',
-                    ),
-                    mock.call()._import_by_code(
-                        self.record['icd9'].strip(),
-                    )
-                ])
+                self.unit.unit_for.assert_called_once_with(
+                    medical_patient_disease.MedicalPatientDiseaseUnit,
+                    'carepoint.medical.pathology',
+                )
 
-
-class TestMedicalPatientDiseaseExporter(MedicalPatientDiseaseTestBase):
-
-    def setUp(self):
-        super(TestMedicalPatientDiseaseExporter, self).setUp()
-        self.Unit = medical_patient_disease.MedicalPatientDiseaseExporter
-        self.unit = self.Unit(self.mock_env)
-        self.unit.carepoint_record = self.record
-
-    def test_after_export_dependencies(self):
-        """ It should export all depedencies """
-        with mock.patch.object(self.unit, '_export_dependency') as mk:
+    def test_after_import_dependencies_pathology_import(self):
+        """ It should import pathologies by code """
+        with mock.patch.object(self.unit, '_import_dependency') as mk:
             with mock.patch.object(self.unit, 'unit_for'):
-                self.unit._export_dependencies()
-                mk.assert_has_calls([
-                    mock.call(
-                        self.record['pat_id'],
-                        'carepoint.medical.patient',
-                    ),
-                    mock.call(
-                        self.record['caring_md_id'],
-                        'carepoint.medical.physician',
-                    ),
-                ])
+                self.unit._import_dependencies()
+                self.unit.unit_for()._import_by_code.assert_called_once_with(
+                    record['icd9'].strip(),
+                )

@@ -19,3 +19,4 @@ from . import fdb_pem_moe
 from . import fdb_allergen
 from . import fdb_allergen_rel
 from . import fdb_allergen_group
+from . import fdb_allergen_desc

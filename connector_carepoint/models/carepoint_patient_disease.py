@@ -29,60 +29,68 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
-class CarepointMedicalPatientDisease(models.Model):
+class CarepointCarepointPatientDisease(models.Model):
     """ Binding Model for the Carepoint Store """
-    _name = 'carepoint.medical.patient.disease'
+    _name = 'carepoint.carepoint.patient.disease'
     _inherit = 'carepoint.binding'
-    _inherits = {'medical.patient.disease': 'odoo_id'}
+    _inherits = {'carepoint.patient.disease': 'odoo_id'}
     _description = 'Carepoint Patient Disease'
     _cp_lib = 'patient_disease'
 
     odoo_id = fields.Many2one(
-        comodel_name='medical.patient.disease',
+        comodel_name='carepoint.patient.disease',
         string='Company',
         required=True,
         ondelete='cascade'
     )
 
 
-class MedicalPatientDisease(models.Model):
+class CarepointPatientDisease(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
-    _inherit = 'medical.patient.disease'
+    _name = 'carepoint.patient.disease'
+    _description = 'Carepoint Patient Disease'
+    _inherits = {'medical.patient.disease': 'disease_id'}
 
     carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.medical.patient.disease',
+        comodel_name='carepoint.carepoint.patient.disease',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
+    )
+    disease_id = fields.Many2one(
+        string='Disease',
+        comodel_name='medical.patient.disease',
+        required=True,
+        ondelete='cascade',
     )
 
 
 @carepoint
-class MedicalPatientDiseaseAdapter(CarepointCRUDAdapter):
+class CarepointPatientDiseaseAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint Store """
-    _model_name = 'carepoint.medical.patient.disease'
+    _model_name = 'carepoint.carepoint.patient.disease'
 
 
 @carepoint
-class MedicalPatientDiseaseBatchImporter(DelayedBatchImporter):
-    _model_name = ['carepoint.medical.patient.disease']
+class CarepointPatientDiseaseBatchImporter(DelayedBatchImporter):
+    _model_name = ['carepoint.carepoint.patient.disease']
 
 
 @carepoint
-class MedicalPatientDiseaseUnit(ConnectorUnit):
-    _model_name = 'carepoint.medical.patient.disease'
+class CarepointPatientDiseaseUnit(ConnectorUnit):
+    _model_name = 'carepoint.carepoint.patient.disease'
 
     def _import_by_patient(self, carepoint_patient_id):
-        adapter = self.unit_for(MedicalPatientDiseaseAdapter)
-        importer = self.unit_for(MedicalPatientDiseaseImporter)
+        adapter = self.unit_for(CarepointPatientDiseaseAdapter)
+        importer = self.unit_for(CarepointPatientDiseaseImporter)
         for record in adapter.search(pat_id=carepoint_patient_id):
             importer.run(record)
 
 
 @carepoint
-class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
-    _model_name = 'carepoint.medical.patient.disease'
+class CarepointPatientDiseaseImportMapper(PartnerImportMapper):
+    _model_name = 'carepoint.carepoint.patient.disease'
 
     direct = [
         ('onset_date', 'diagnosed_date'),
@@ -102,7 +110,7 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
     @mapping
     @only_create
     def patient_id(self, record):
-        binder = self.binder_for('carepoint.medical.patient')
+        binder = self.binder_for('carepoint.carepoint.patient')
         record_id = binder.to_odoo(record['pat_id'])
         return {'patient_id': record_id}
 
@@ -119,14 +127,14 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
 
 
 @carepoint
-class MedicalPatientDiseaseImporter(CarepointImporter):
-    _model_name = ['carepoint.medical.patient.disease']
-    _base_mapper = MedicalPatientDiseaseImportMapper
+class CarepointPatientDiseaseImporter(CarepointImporter):
+    _model_name = ['carepoint.carepoint.patient.disease']
+    _base_mapper = CarepointPatientDiseaseImportMapper
 
     def _import_dependencies(self):
         record = self.carepoint_record
         self._import_dependency(record['pat_id'],
-                                'carepoint.medical.patient')
+                                'carepoint.carepoint.patient')
         self._import_dependency(record['caring_md_id'],
                                 'carepoint.medical.physician')
         pathology = self.unit_for(MedicalPathologyUnit,
@@ -134,7 +142,7 @@ class MedicalPatientDiseaseImporter(CarepointImporter):
         pathology._import_by_code(record['icd9'].strip())
 
     def _create(self, data):   # pragma: no cover
-        binding = super(MedicalPatientDiseaseImporter, self)._create(data)
+        binding = super(CarepointPatientDiseaseImporter, self)._create(data)
         add_checkpoint(
             self.session, binding._name, binding.id, binding.backend_id.id
         )
@@ -142,8 +150,8 @@ class MedicalPatientDiseaseImporter(CarepointImporter):
 
 
 @carepoint
-class MedicalPatientDiseaseExportMapper(ExportMapper):
-    _model_name = 'carepoint.medical.patient.disease'
+class CarepointPatientDiseaseExportMapper(ExportMapper):
+    _model_name = 'carepoint.carepoint.patient.disease'
 
     direct = [
         (none('diagnosed_date'), 'onset_date'),
@@ -155,13 +163,13 @@ class MedicalPatientDiseaseExportMapper(ExportMapper):
 
 
 @carepoint
-class MedicalPatientDiseaseExporter(CarepointExporter):
-    _model_name = 'carepoint.medical.patient.disease'
-    _base_mapper = MedicalPatientDiseaseExportMapper
+class CarepointPatientDiseaseExporter(CarepointExporter):
+    _model_name = 'carepoint.carepoint.patient.disease'
+    _base_mapper = CarepointPatientDiseaseExportMapper
 
     def _export_dependencies(self):
         record = self.carepoint_record
         self._export_dependency(record['pat_id'],
-                                'carepoint.medical.patient')
+                                'carepoint.carepoint.patient')
         self._export_dependency(record['caring_md_id'],
                                 'carepoint.medical.physician')

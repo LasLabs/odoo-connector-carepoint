@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Copyright 2016 LasLabs Inc.
+    License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+-->
+
+<odoo>
+    
+    <record id="pathology_carepoint_allergy" model="medical.pathology.code.type">
+        <field name="name">Allergy</field>
+        <field name="code">ALR</field>
+        <field name="code_type_id"
+               ref="medical_patient_disease_allergy.pathology_code_allergy"
+               />
+    </record>
+    
+</odoo>

@@ -5,7 +5,7 @@
 {
     'name': 'CarePoint Connector',
     'description': 'Two-Way Sync With CarePoint',
-    'version': '9.0.1.3.0',
+    'version': '9.0.1.4.0',
     'category': 'Connector',
     'author': "LasLabs",
     'license': 'AGPL-3',
@@ -17,6 +17,7 @@
         'delivery',
         'l10n_multilang',
         'l10n_us',
+        'medical_patient_disease_allergy',
     ],
     "external_dependencies": {
         "python": [
@@ -30,6 +31,7 @@
         'data/carepoint_state_data.xml',
         'data/carepoint_carepoint_account_data.xml',
         'data/ir_cron_data.xml',
+        'data/medical_pathology_code_type.xml',
         'security/ir.model.access.csv',
     ],
     'installable': True,

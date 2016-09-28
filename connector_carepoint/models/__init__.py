@@ -21,7 +21,6 @@ from . import medical_prescription_order
 from . import medical_prescription_order_line
 from . import medical_pathology
 from . import medical_pathology_code_type
-from . import medical_patient_disease
 
 # Address / Relations
 from . import address
@@ -46,6 +45,8 @@ from . import carepoint_organization
 from . import carepoint_state
 from . import carepoint_item
 from . import carepoint_vendor
+from . import carepoint_patient_disease
+from . import carepoint_patient_allergy
 
 # FDB
 from . import fdb_ndc
@@ -62,3 +63,7 @@ from . import fdb_img_date
 from . import fdb_unit
 from . import fdb_pem_moe
 from . import fdb_pem_mogc
+from . import fdb_allergen
+from . import fdb_allergen_desc
+from . import fdb_allergen_group
+from . import fdb_allergen_rel

@@ -8,14 +8,11 @@ from openerp import models, fields
 class FdbAllergenRel(models.Model):
     _name = 'fdb.allergen.rel'
     _description = 'Fdb Allergen Rel'
-    _inherits = {'fdb.allergen.group': 'group_id'}
 
-    group_id = fields.Many2one(
-        string='Group',
-        comodel_name='fdb.allergen.group',
-        index=True,
-        required=True,
-        ondelete='cascade',
+    code = fields.Char(
+        help='Hierarchical Ingredient Code',
     )
-    sequence = fields.Integer()
-    hic_rel_no = fields.Integer()
+    name = fields.Char()
+    hic_root = fields.Integer()
+    potentially_inactive = fields.Boolean()
+    state = fields.Integer()
