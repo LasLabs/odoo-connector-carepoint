@@ -10,6 +10,7 @@ from . import test_fdb_ndc
 
 from . import test_account_invoice_line
 from . import test_medical_prescription_order_line
+from . import test_medical_patient_disease
 
 from . import test_sale_order_line
 from . import test_sale_order

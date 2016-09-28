@@ -22,6 +22,7 @@ from ..unit.export_synchronizer import CarepointExporter
 
 from .address_patient import CarepointAddressPatientUnit
 from .carepoint_account import CarepointAccountUnit
+from .medical_patient_disease import MedicalPatientDiseaseUnit
 
 _logger = logging.getLogger(__name__)
 
@@ -123,6 +124,9 @@ class MedicalPatientImporter(CarepointImporter):
         account = self.unit_for(CarepointAccountUnit,
                                 model='carepoint.carepoint.account')
         account._import_accounts(self.carepoint_id)
+        disease = self.unit_for(MedicalPatientDiseaseUnit,
+                                model='carepoint.medical.patient.disease')
+        disease._import_by_patient(self.carepoint_id)
 
 
 @carepoint
