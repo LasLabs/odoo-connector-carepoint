@@ -6,9 +6,6 @@ from carepoint import Carepoint
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
 
 
-carepoints = {}
-
-
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
 
@@ -18,16 +15,13 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """
         super(CarepointCRUDAdapter, self).__init__(connector_env)
-        global carepoints  # @TODO: Better way to handle this
         backend = self.backend_record
-        if carepoints.get(backend.server) is None:
-            carepoints[backend.server] = Carepoint(
-                server=backend.server,
-                user=backend.username,
-                passwd=backend.password,
-                db_args={'drv': backend.db_driver},
-            )
-        self.carepoint = carepoints[backend.server]
+        self.carepoint = Carepoint(
+            server=backend.server,
+            user=backend.username,
+            passwd=backend.password,
+            db_args={'drv': backend.db_driver},
+        )
 
     def __to_camel_case(self, snake_case):
         """ Convert the snake_case to CamelCase

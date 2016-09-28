@@ -44,29 +44,6 @@ class TestBackendAdapter(SetUpCarepointBase):
                 db_args={'drv': self.backend.db_driver},
             )
 
-    def test_init_does_not_dup_connection(self):
-        """ It should only open one connection per server """
-        with self.mock_api() as api:
-            self._init_model()
-            self._init_model()
-            api.assert_called_once_with(
-                server=self.backend.server,
-                user=self.backend.username,
-                passwd=self.backend.password,
-                db_args={'drv': self.backend.db_driver},
-            )
-
-    def test_init_assigns_global(self):
-        """ It should assign connection to global carepoint cache """
-        with self.mock_api() as api:
-            expect = 'expect'
-            api.return_value = expect
-            self._init_model()
-            self.assertEqual(
-                expect,
-                backend_adapter.carepoints[self.backend.server],
-            )
-
     def test_init_assigns_instance(self):
         """ It should assign carepoint instance variable during init """
         with self.mock_api() as api:
