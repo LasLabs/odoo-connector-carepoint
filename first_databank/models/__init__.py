@@ -16,3 +16,6 @@ from . import fdb_img_date
 from . import fdb_unit
 from . import fdb_pem_mogc
 from . import fdb_pem_moe
+from . import fdb_allergen
+from . import fdb_allergen_rel
+from . import fdb_allergen_group
