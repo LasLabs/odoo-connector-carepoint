@@ -8,7 +8,8 @@ from openerp import models, fields, api
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
-                                                  ExportMapper
+                                                  ExportMapper,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -180,9 +181,9 @@ class CarepointAddressExportMapper(ExportMapper):
     _model_name = 'carepoint.carepoint.address'
 
     direct = [
-        ('street', 'addr1'),
-        ('street2', 'addr2'),
-        ('city', 'city'),
+        (none('street'), 'addr1'),
+        (none('street2'), 'addr2'),
+        (none('city'), 'city'),
     ]
 
     @mapping

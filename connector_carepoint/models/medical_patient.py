@@ -7,6 +7,7 @@ from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
                                                   only_create,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
@@ -75,8 +76,8 @@ class MedicalPatientImportMapper(PersonImportMapper):
     direct = [
         (trim('ssn'), 'ref'),
         (trim('email'), 'email'),
-        ('birth_date', 'dob'),
-        ('death_date', 'dod'),
+        (none('birth_date'), 'dob'),
+        (none('death_date'), 'dod'),
         ('pat_status_cn', 'active'),
     ]
 
@@ -129,10 +130,10 @@ class MedicalPatientExportMapper(PersonExportMapper):
     _model_name = 'carepoint.medical.patient'
 
     direct = [
-        ('ref', 'ssn'),
-        ('email', 'email'),
-        ('dob', 'birth_date'),
-        ('dod', 'death_date'),
+        (none('ref'), 'ssn'),
+        (none('email'), 'email'),
+        (none('dob'), 'birth_date'),
+        (none('dod'), 'death_date'),
         ('active', 'pat_status_cn')
     ]
 

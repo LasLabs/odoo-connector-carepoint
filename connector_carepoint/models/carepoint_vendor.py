@@ -7,6 +7,7 @@ from openerp import models, fields
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   changed_by,
                                                   only_create,
+                                                  none,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
@@ -152,14 +153,14 @@ class CarepointVendorExportMapper(PersonExportMapper):
     _model_name = 'carepoint.carepoint.vendor'
 
     direct = [
-        ('name', 'COMPANY'),
-        ('street', 'ADDR1'),
-        ('street2', 'ADDR2'),
-        ('city', 'CITY'),
-        ('zip', 'ZIPCODE'),
-        ('ref', 'FEDID'),
-        ('phone', 'PHONE'),
-        ('fax', 'FAX'),
+        (none('name'), 'COMPANY'),
+        (none('street'), 'ADDR1'),
+        (none('street2'), 'ADDR2'),
+        (none('city'), 'CITY'),
+        (none('zip'), 'ZIPCODE'),
+        (none('ref'), 'FEDID'),
+        (none('phone'), 'PHONE'),
+        (none('fax'), 'FAX'),
     ]
 
     @mapping
