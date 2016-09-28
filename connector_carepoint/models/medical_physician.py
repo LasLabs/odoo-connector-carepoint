@@ -18,6 +18,9 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from ..unit.export_synchronizer import CarepointExporter
 
+from .address_physician import CarepointAddressPhysicianUnit
+from .phone_physician import CarepointPhonePhysicianUnit
+
 
 _logger = logging.getLogger(__name__)
 
@@ -103,6 +106,15 @@ class MedicalPhysicianImporter(CarepointImporter):
     _model_name = ['carepoint.medical.physician']
     _base_mapper = MedicalPhysicianImportMapper
 
+    def _after_import(self, partner_binding):
+        """ Import the addresses and accounts """
+        book = self.unit_for(CarepointAddressPhysicianUnit,
+                             model='carepoint.carepoint.address.physician')
+        book._import_addresses(self.carepoint_id, partner_binding)
+        phone = self.unit_for(CarepointPhonePhysicianUnit,
+                              model='carepoint.carepoint.phone.physician')
+        phone._import_phones(self.carepoint_id, partner_binding)
+
 
 @carepoint
 class MedicalPhysicianExportMapper(PersonExportMapper):
@@ -125,6 +137,11 @@ class MedicalPhysicianExporter(CarepointExporter):
 
     def _after_export(self):
         self.env['carepoint.address.physician']._get_by_partner(
+            self.binding_record.commercial_partner_id,
+            edit=True,
+            recurse=True,
+        )
+        self.env['carepoint.phone.physician']._get_by_partner(
             self.binding_record.commercial_partner_id,
             edit=True,
             recurse=True,

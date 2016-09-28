@@ -69,6 +69,30 @@ class TestMedicalPhysicianImporter(MedicalPhysicianTestBase):
         self.unit = self.Unit(self.mock_env)
         self.unit.carepoint_record = self.record
 
+    def test_after_import_get_unit(self):
+        """ It should get unit for importers """
+        expect = mock.MagicMock()
+        with mock.patch.object(self.unit, 'unit_for'):
+            self.unit._after_import(expect)
+            self.unit.unit_for.assert_has_calls([
+                mock.call(
+                    medical_physician.CarepointAddressPhysicianUnit,
+                    model='carepoint.carepoint.address.physician',
+                ),
+                mock.call()._import_addresses(
+                    self.unit.carepoint_id,
+                    expect,
+                ),
+                mock.call(
+                    medical_physician.CarepointPhonePhysicianUnit,
+                    model='carepoint.carepoint.phone.physician',
+                ),
+                mock.call()._import_phones(
+                    self.unit.carepoint_id,
+                    expect,
+                ),
+            ])
+
 
 class TestMedicalPhysicianExportMapper(MedicalPhysicianTestBase):
 
@@ -92,9 +116,10 @@ class TestMedicalPhysicianExporter(MedicalPhysicianTestBase):
         """ It should get addresses by partner """
         with mock.patch.object(self.unit.session, 'env') as env:
             self.unit._after_export()
-            get = env['carepoint.address.physician']._get_by_partner
-            get.assert_called_once_with(
+            get = env['']._get_by_partner
+            call = mock.call(
                 self.record.commercial_partner_id,
                 edit=True,
                 recurse=True,
             )
+            get.assert_has_calls([call, call])

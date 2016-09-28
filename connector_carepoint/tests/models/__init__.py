@@ -27,6 +27,13 @@ from . import test_address_store
 from . import test_address_organization
 from . import test_address_physician
 
+from . import test_phone_abstract
+from . import test_phone
+from . import test_phone_patient
+from . import test_phone_store
+from . import test_phone_organization
+from . import test_phone_physician
+
 from . import test_medical_patient
 from . import test_medical_physician
 from . import test_medical_pathology
