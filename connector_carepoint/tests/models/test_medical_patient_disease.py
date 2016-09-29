@@ -195,3 +195,28 @@ class TestMedicalPatientDiseaseImporter(MedicalPatientDiseaseTestBase):
                         self.record['icd9'].strip(),
                     )
                 ])
+
+
+class TestMedicalPatientDiseaseExporter(MedicalPatientDiseaseTestBase):
+
+    def setUp(self):
+        super(TestMedicalPatientDiseaseExporter, self).setUp()
+        self.Unit = medical_patient_disease.MedicalPatientDiseaseExporter
+        self.unit = self.Unit(self.mock_env)
+        self.unit.carepoint_record = self.record
+
+    def test_after_export_dependencies(self):
+        """ It should export all depedencies """
+        with mock.patch.object(self.unit, '_export_dependency') as mk:
+            with mock.patch.object(self.unit, 'unit_for'):
+                self.unit._export_dependencies()
+                mk.assert_has_calls([
+                    mock.call(
+                        self.record['pat_id'],
+                        'carepoint.medical.patient',
+                    ),
+                    mock.call(
+                        self.record['caring_md_id'],
+                        'carepoint.medical.physician',
+                    ),
+                ])

@@ -7,6 +7,10 @@ from openerp import models, fields
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
+                                                  none,
+                                                  m2o_to_backend,
+                                                  follow_m2o_relations,
+                                                  ExportMapper,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
@@ -14,6 +18,7 @@ from ..unit.mapper import PartnerImportMapper
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
 
 from .medical_pathology import MedicalPathologyUnit
 
@@ -134,3 +139,29 @@ class MedicalPatientDiseaseImporter(CarepointImporter):
             self.session, binding._name, binding.id, binding.backend_id.id
         )
         return binding
+
+
+@carepoint
+class MedicalPatientDiseaseExportMapper(ExportMapper):
+    _model_name = 'carepoint.medical.patient.disease'
+
+    direct = [
+        (none('diagnosed_date'), 'onset_date'),
+        (none('healed_date'), 'resolution_date'),
+        (m2o_to_backend('patient_id'), 'pat_id'),
+        (m2o_to_backend('physician_id'), 'caring_md_id'),
+        (follow_m2o_relations('pathology_id.code'), 'icd9'),
+    ]
+
+
+@carepoint
+class MedicalPatientDiseaseExporter(CarepointExporter):
+    _model_name = 'carepoint.medical.patient.disease'
+    _base_mapper = MedicalPatientDiseaseExportMapper
+
+    def _export_dependencies(self):
+        record = self.carepoint_record
+        self._export_dependency(record['pat_id'],
+                                'carepoint.medical.patient')
+        self._export_dependency(record['caring_md_id'],
+                                'carepoint.medical.physician')
