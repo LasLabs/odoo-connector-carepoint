@@ -20,6 +20,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import CarepointExporter
 
 from .address_organization import CarepointAddressOrganizationUnit
+from .phone_organization import CarepointPhoneOrganizationUnit
 
 _logger = logging.getLogger(__name__)
 
@@ -117,6 +118,9 @@ class CarepointOrganizationImporter(CarepointImporter):
         book = self.unit_for(CarepointAddressOrganizationUnit,
                              model='carepoint.carepoint.address.organization')
         book._import_addresses(self.carepoint_id, partner_binding)
+        phone = self.unit_for(CarepointPhoneOrganizationUnit,
+                              model='carepoint.carepoint.phone.organization')
+        phone._import_phones(self.carepoint_id, partner_binding)
 
 
 @carepoint
@@ -142,7 +146,12 @@ class CarepointOrganizationExporter(CarepointExporter):
     _base_mapper = CarepointOrganizationExportMapper
 
     def _after_export(self):
-        self.env['carepoint.organization']._get_by_partner(
+        self.env['carepoint.address.organization']._get_by_partner(
+            self.binding_record.commercial_partner_id,
+            edit=True,
+            recurse=True,
+        )
+        self.env['carepoint.phone.organization']._get_by_partner(
             self.binding_record.commercial_partner_id,
             edit=True,
             recurse=True,

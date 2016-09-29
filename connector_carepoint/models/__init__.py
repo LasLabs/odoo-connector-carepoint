@@ -31,6 +31,14 @@ from . import address_store
 from . import address_organization
 from . import address_physician
 
+# Phone / Relations
+from . import phone
+from . import phone_abstract
+from . import phone_patient
+from . import phone_store
+from . import phone_organization
+from . import phone_physician
+
 # CarePoint Mappings/Binds
 from . import carepoint_account
 from . import carepoint_store

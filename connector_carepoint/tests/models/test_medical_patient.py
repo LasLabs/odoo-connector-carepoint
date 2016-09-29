@@ -105,6 +105,14 @@ class TestMedicalPatientImporter(MedicalPatientTestBase):
                     expect,
                 ),
                 mock.call(
+                    medical_patient.CarepointPhonePatientUnit,
+                    model='carepoint.carepoint.phone.patient',
+                ),
+                mock.call()._import_phones(
+                    self.unit.carepoint_id,
+                    expect,
+                ),
+                mock.call(
                     medical_patient.CarepointAccountUnit,
                     model='carepoint.carepoint.account',
                 ),
@@ -161,16 +169,17 @@ class TestMedicalPatientExporter(MedicalPatientTestBase):
         self.record = mock.MagicMock()
         self.unit.binding_record = self.record
 
-    def test_after_export_address_get_by_partner(self):
-        """ It should get addresses by partner """
+    def test_after_export_get_by_partner(self):
+        """ It should get addresses and phones by partner """
         with mock.patch.object(self.unit.session, 'env') as env:
             self.unit._after_export()
-            get = env['carepoint.address.patient']._get_by_partner
-            get.assert_called_once_with(
+            get = env['']._get_by_partner
+            call = mock.call(
                 self.record.commercial_partner_id,
                 edit=True,
                 recurse=True,
             )
+            get.assert_has_calls([call, call])
 
     def test_after_export_account_get_by_patient(self):
         """ It should get accounts by patient """

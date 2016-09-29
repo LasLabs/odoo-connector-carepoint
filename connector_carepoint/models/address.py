@@ -72,6 +72,7 @@ class CarepointAddress(models.Model):
         string='Partner',
         comodel_name='res.partner',
         readonly=True,
+        ondelete='cascade',
     )
 
     carepoint_bind_ids = fields.One2many(

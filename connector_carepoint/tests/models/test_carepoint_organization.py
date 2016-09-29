@@ -111,9 +111,10 @@ class TestCarepointOrganizationExporter(CarepointOrganizationTestBase):
         """ It should get addresses by partner """
         with mock.patch.object(self.unit.session, 'env') as env:
             self.unit._after_export()
-            get = env['carepoint.address.organization']._get_by_partner
-            get.assert_called_once_with(
+            get = env['']._get_by_partner
+            call = mock.call(
                 self.record.commercial_partner_id,
                 edit=True,
                 recurse=True,
             )
+            get.assert_has_calls([call, call])
