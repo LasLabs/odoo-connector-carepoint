@@ -101,11 +101,17 @@ class TestBackendAdapter(SetUpCarepointBase):
                 attr_expect,
             )
 
-    def test_read_returns(self):
+    def test_read_returns_first(self):
         """ It should return first record result """""
         with self.mock_api() as api:
             res = self._init_model().read(123, ['expect', 'no_expect'])
             self.assertEqual(api().search()[0], res)
+
+    def test_read_returns_all(self):
+        """ It should return first record result """""
+        with self.mock_api() as api:
+            res = self._init_model().read(123, ['expect', 'no_expect'], True)
+            self.assertEqual(api().search(), res)
 
     def test_read_image_gets_file(self):
         """ It should get proper file path from server """
@@ -225,21 +231,40 @@ class TestBackendAdapter(SetUpCarepointBase):
             res = self._init_model().delete(123)
             self.assertEqual(api().delete(), res)
 
-    def test_write_gets_session(self):
-        """ It should get session for model """
+    def test_write_reads(self):
+        """ It should get record for id """
+        expect1, expect2 = 123, {'test': 'TEST'}
+        with self.mock_api():
+            model = self._init_model()
+            with mock.patch.object(model, 'read') as read:
+                model.write(expect1, expect2)
+                read.assert_called_once_with(
+                    expect1,
+                    return_all=True,
+                )
+
+    def test_write_updates(self):
+        """ It should update record w/ data """
+        expect1, expect2 = 123, {'test': 'TEST'}
         with self.mock_api() as api:
-            self._init_model().write(None, None)
-            api()._get_session.assert_called_once_with(
-                api()[self.api_camel],
+            self._init_model().write(expect1, expect2)
+            api().search().update.assert_called_once_with(
+                expect2,
             )
 
-    def test_write_returns_result(self):
-        """ It should return result of write operation """
+    def test_write_commits(self):
+        """ It should commit update to session """
+        expect1, expect2 = 123, {'test': 'TEST'}
         with self.mock_api() as api:
-            res = self._init_model().write(
-                123, {'data': 'test', 'col': 12323423},
-            )
+            self._init_model().write(expect1, expect2)
+            api().search().session.commit.assert_called_once_with()
+
+    def test_write_returns(self):
+        """ It should return record object """
+        expect1, expect2 = 123, {'test': 'TEST'}
+        with self.mock_api() as api:
+            res = self._init_model().write(expect1, expect2)
             self.assertEqual(
-                api()._do_queries(),
-                res,
+                api().search(),
+                res
             )
