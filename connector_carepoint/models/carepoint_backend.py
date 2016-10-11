@@ -14,9 +14,12 @@ from ..unit.import_synchronizer import (import_batch,
                                         )
 from ..backend import carepoint
 
-from carepoint.db import Db as CarepointDb
-
 _logger = logging.getLogger(__name__)
+
+try:
+    from carepoint.db import Db as CarepointDb
+except ImportError:
+    _logger.warning('Cannot import CarePoint')
 
 IMPORT_DELTA_BUFFER = 30  # seconds
 
