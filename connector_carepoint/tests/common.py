@@ -12,7 +12,10 @@ from contextlib import contextmanager
 import openerp.tests.common as common
 from openerp.addons.connector.session import ConnectorSession
 
-from carepoint.db import Db as CarepointDb
+try:
+    from carepoint.db import Db as CarepointDb
+except ImportError:
+    pass
 
 
 backend_adapter = 'openerp.addons.connector_carepoint.unit.backend_adapter'
