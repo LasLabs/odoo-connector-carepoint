@@ -285,14 +285,6 @@ class CarepointBackend(models.Model):
                                     force=True,
                                     )
 
-    @api.model
-    def cron_import_medical_prescription(self):
-        self.search([]).import_medical_prescription()
-
-    @api.model
-    def cron_import_sale_order(self):
-        self.search([]).import_sale_order()
-
     @api.multi
     def import_carepoint_item(self):
         self._import_from_date('carepoint.carepoint.item',
@@ -305,11 +297,19 @@ class CarepointBackend(models.Model):
                                'import_patients_from_date')
         return True
 
+    @api.model
+    def cron_import_medical_patient(self):
+        self.search([]).import_medical_patient()
+
     @api.multi
     def import_medical_physician(self):
         self._import_from_date('carepoint.medical.physician',
                                'import_physicians_from_date')
         return True
+
+    @api.model
+    def cron_import_medical_physician(self):
+        self.search([]).import_medical_physician()
 
     @api.multi
     def import_medical_prescription(self):
@@ -317,10 +317,18 @@ class CarepointBackend(models.Model):
                                'import_prescriptions_from_date')
         return True
 
+    @api.model
+    def cron_import_medical_prescription(self):
+        self.search([]).import_medical_prescription()
+
     @api.multi
     def import_sale_order(self):
         self._import_from_date('carepoint.sale.order.line',
                                'import_sales_from_date')
+
+    @api.model
+    def cron_import_sale_order(self):
+        self.search([]).import_sale_order()
 
     @api.multi
     def import_stock_picking(self):
@@ -333,13 +341,14 @@ class CarepointBackend(models.Model):
                                'import_invoices_from_date',
                                'primary_pay_date')
 
-    # @api.multi
-    # def import_address(self):
-    #     # self._import_from_date('carepoint.carepoint.address',
-    #     #                        'import_addresses_from_date')
-    #     self._import_all('carepoint.carepoint.address.pharmacy')
-    #     self._import_all('carepoint.carepoint.address.physician')
-    #     self._import_all('carepoint.carepoint.address.patient')
+    @api.multi
+    def import_address(self):
+        self._import_from_date('carepoint.carepoint.address',
+                               'import_addresses_from_date')
+
+    @api.model
+    def cron_import_address(self):
+        self.search([]).import_address()
 
     @api.multi
     def import_fdb(self):

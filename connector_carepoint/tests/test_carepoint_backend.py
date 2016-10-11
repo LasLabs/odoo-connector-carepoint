@@ -128,6 +128,42 @@ class TestCarepointBackend(SetUpCarepointBase):
             self.backend.cron_import_medical_prescription()
             mk().import_medical_prescription.assert_called_once_with()
 
+    def test_cron_import_medical_patient_search(self):
+        """ It should search for all backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_medical_patient()
+            mk.assert_called_once_with([])
+
+    def test_cron_import_medical_patient_import(self):
+        """ It should call import on found backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_medical_patient()
+            mk().import_medical_patient.assert_called_once_with()
+
+    def test_cron_import_medical_physician_search(self):
+        """ It should search for all backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_medical_physician()
+            mk.assert_called_once_with([])
+
+    def test_cron_import_medical_physician_import(self):
+        """ It should call import on found backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_medical_physician()
+            mk().import_medical_physician.assert_called_once_with()
+
+    def test_cron_import_address_search(self):
+        """ It should search for all backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_address()
+            mk.assert_called_once_with([])
+
+    def test_cron_import_address_import(self):
+        """ It should call import on found backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_address()
+            mk().import_address.assert_called_once_with()
+
     def test_cron_import_sale_order_search(self):
         """ It should search for all backends """
         with mock.patch.object(self.backend, 'search') as mk:
@@ -165,6 +201,15 @@ class TestCarepointBackend(SetUpCarepointBase):
             mk.assert_called_once_with(
                 'carepoint.medical.physician',
                 'import_physicians_from_date',
+            )
+
+    def test_import_addresses(self):
+        """ It should import proper model on date field """
+        with mock.patch.object(self.backend, '_import_from_date') as mk:
+            self.backend.import_address()
+            mk.assert_called_once_with(
+                'carepoint.carepoint.address',
+                'import_addresses_from_date',
             )
 
     def test_import_medical_prescription(self):
