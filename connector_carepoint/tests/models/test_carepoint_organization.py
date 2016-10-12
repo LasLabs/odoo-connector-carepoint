@@ -19,7 +19,7 @@ class CarepointOrganizationTestBase(SetUpCarepointBase):
 
     def setUp(self):
         super(CarepointOrganizationTestBase, self).setUp()
-        self.model = 'carepoint.carepoint.organization'
+        self.model = 'carepoint.org.bind'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )

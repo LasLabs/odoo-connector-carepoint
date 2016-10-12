@@ -89,7 +89,7 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def prescription_data(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
+        binder = self.binder_for('carepoint.rx.ord.ln')
         line_id = binder.to_odoo(record['rx_id'], browse=True)
         return {'prescription_order_line_id': line_id.id,
                 'product_id': line_id.medicament_id.product_id.id,
@@ -129,7 +129,7 @@ class SaleOrderLineImporter(CarepointImporter):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
-                                'carepoint.medical.prescription.order.line')
+                                'carepoint.rx.ord.ln')
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
 

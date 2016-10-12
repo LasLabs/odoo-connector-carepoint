@@ -90,7 +90,7 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
 
     @mapping
     def name(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
+        binder = self.binder_for('carepoint.rx.ord.ln')
         rx_id = binder.to_odoo(record['rx_id'], browse=True)
         name = 'RX %s - %s' % (record['rx_id'],
                                rx_id.medicament_id.display_name)
@@ -100,7 +100,7 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
     @only_create
     def order_line_procurement_data(self, record):
 
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
+        binder = self.binder_for('carepoint.rx.ord.ln')
         rx_id = binder.to_odoo(record['rx_id'], browse=True)
         binder = self.binder_for('carepoint.sale.order')
         sale_id = binder.to_odoo(record['order_id'], browse=True)
@@ -109,7 +109,7 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
         line_id = sale_id.order_line.filtered(
             lambda r: r.prescription_order_line_id.id == rx_id.id
         )
-        line_id = line_id[0]
+        line_id = line_id[0].with_context(connector_no_export=True)
 
         # Set the sale line to what was dispensed
         # This is a hack circumventing lack of qty in CP until now
@@ -153,7 +153,7 @@ class ProcurementOrderImporter(CarepointImporter):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
-                                'carepoint.medical.prescription.order.line')
+                                'carepoint.rx.ord.ln')
         self._import_dependency(record['disp_ndc'].strip(),
                                 'carepoint.fdb.ndc')
         self._import_dependency(record['order_id'],

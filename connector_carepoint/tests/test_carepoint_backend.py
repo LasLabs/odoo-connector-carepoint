@@ -217,7 +217,7 @@ class TestCarepointBackend(SetUpCarepointBase):
         with mock.patch.object(self.backend, '_import_from_date') as mk:
             self.backend.import_medical_prescription()
             mk.assert_called_once_with(
-                'carepoint.medical.prescription.order.line',
+                'carepoint.rx.ord.ln',
                 'import_prescriptions_from_date',
             )
 

@@ -56,6 +56,18 @@ class CarepointBaseExporter(Exporter):
                             self.backend_record.id, self.carepoint_id,
                             force=True)
 
+    def _immediate_import(self):
+        """ Perform an immediate import of the record
+        Adapt in the sub-classes when the model is not imported
+        using ``import_record``.
+        """
+        # force is True because the sync_date will be more recent
+        # so the import would be skipped
+        assert self.carepoint_id
+        import_record(self.session, self.model._name,
+                      self.backend_record.id, self.carepoint_id,
+                      force=True)
+
     def _should_import(self):
         """ Before the export, compare the update date
         in Carepoint and the last sync date in Odoo,
@@ -102,6 +114,7 @@ class CarepointBaseExporter(Exporter):
         result = self._run(*args, **kwargs)
 
         self.binder.bind(self.carepoint_id, self.binding_id)
+
         # Commit so we keep the external ID when there are several
         # exports (due to dependencies) and one of them fails.
         # The commit will also release the lock acquired on the binding

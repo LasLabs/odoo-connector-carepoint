@@ -24,7 +24,7 @@ class MedicalPrescriptionOrderLineTestBase(SetUpCarepointBase):
 
     def setUp(self):
         super(MedicalPrescriptionOrderLineTestBase, self).setUp()
-        self.model = 'carepoint.medical.prescription.order.line'
+        self.model = 'carepoint.rx.ord.ln'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )

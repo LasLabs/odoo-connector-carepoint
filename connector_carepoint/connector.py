@@ -7,9 +7,12 @@ from openerp.addons.connector.connector import ConnectorEnvironment
 from openerp.addons.connector.checkpoint import checkpoint
 
 
-def get_environment(session, model_name, backend_id):
+def get_environment(session, model_name, backend_id=None):
     """ Create an environment to work with.  """
-    backend_record = session.env['carepoint.backend'].browse(backend_id)
+    if not backend_id:
+        backend_record = session.env[model_name]._default_backend_id()
+    else:
+        backend_record = session.env['carepoint.backend'].browse(backend_id)
     env = ConnectorEnvironment(backend_record, session, model_name)
     return env
     # @TODO: Multiple lang support. Seems not needed.

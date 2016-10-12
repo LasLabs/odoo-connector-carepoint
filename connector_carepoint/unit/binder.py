@@ -2,10 +2,15 @@
 # Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-
+import logging
 import openerp
+
 from openerp.addons.connector.connector import Binder
+
 from ..backend import carepoint
+
+
+_logger = logging.getLogger(__name__)
 
 
 class CarepointBinder(Binder):
@@ -23,7 +28,7 @@ class CarepointModelBinder(CarepointBinder):
     """
     _model_name = [
         'carepoint.carepoint.store',
-        'carepoint.carepoint.organization',
+        'carepoint.org.bind',
         'carepoint.carepoint.item',
         'carepoint.medical.physician',
         'carepoint.medical.patient',
@@ -34,6 +39,7 @@ class CarepointModelBinder(CarepointBinder):
         'carepoint.carepoint.phone.physician',
         'carepoint.carepoint.phone.organization',
         'carepoint.carepoint.phone.store',
+        'carepoint.rx.ord.ln',
         'carepoint.carepoint.address',
         'carepoint.carepoint.address.patient',
         'carepoint.carepoint.address.physician',
@@ -170,3 +176,29 @@ class CarepointModelBinder(CarepointBinder):
             raise ValueError('Cannot unwrap model %s, because it has '
                              'no odoo_id field' % self.model._name)
         return column.comodel_name
+
+    def create_bind(self, record):
+        """ It creates a new binding for the input, non-bound record
+
+        It also attempts to identify polymorphic inherits, assigning those
+        record IDs as part of the create values in order to circumvent auto
+        record creation via the delegation mechanism.
+
+        :param record: Singleton of non-bound record
+        :param backend: Singleton of backend record. False for default
+        :return: Singleton of binding record
+        """
+        _logger.debug('In create_bind w/ %s and %s', self.model, record)
+        binding_record = self.model.search([
+            ('odoo_id', '=', record.id),
+            ('backend_id', '=', self.backend_record.id),
+        ])
+        if binding_record:
+            binding_record.assert_one()
+            return binding_record
+        vals = {
+            'odoo_id': record.id,
+            'backend_id': self.backend_record.id,
+        }
+        _logger.debug('Creating bind record with %s', vals)
+        return self.model.create(vals)

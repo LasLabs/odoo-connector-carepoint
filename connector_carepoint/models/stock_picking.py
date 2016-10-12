@@ -105,7 +105,7 @@ class StockPickingImporter(CarepointImporter):
         """ Import depends for record """
         record = self.carepoint_record
         self._import_dependency(record['rx_id'],
-                                'carepoint.medical.prescription.order.line')
+                                'carepoint.rx.ord.ln')
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
         # unit = self.unit_for(

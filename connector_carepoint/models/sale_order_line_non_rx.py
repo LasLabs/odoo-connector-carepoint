@@ -82,7 +82,7 @@ class SaleOrderLineNonRxImportMapper(CarepointImportMapper):
 
     @mapping
     def prescription_data(self, record):
-        binder = self.binder_for('carepoint.medical.prescription.order.line')
+        binder = self.binder_for('carepoint.rx.ord.ln')
         line_id = self.env['medical.prescription.order.line'].browse(
             binder.to_odoo(record['rx_id'])
         )

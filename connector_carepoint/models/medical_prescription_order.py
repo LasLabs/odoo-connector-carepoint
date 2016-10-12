@@ -105,12 +105,6 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
         self._import_dependency(record['md_id'],
                                 'carepoint.medical.physician')
 
-    #
-    # def _after_import(self, partner_binding):
-    #     """ Import the addresses """
-    #     book = self.unit_for(PartnerAddressBook, model='carepoint.address')
-    #     book.import_addresses(self.carepoint_id, partner_binding.id)
-
 
 @carepoint
 class MedicalPrescriptionOrderExportMapper(ExportMapper):

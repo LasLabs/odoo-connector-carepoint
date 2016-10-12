@@ -130,7 +130,7 @@ class CarepointAddressOrganizationExportMapper(
 
     @mapping
     def org_id(self, binding):
-        binder = self.binder_for('carepoint.carepoint.organization')
+        binder = self.binder_for('carepoint.org.bind')
         rec_id = binder.to_backend(binding.res_id)
         return {'org_id': rec_id}
 
