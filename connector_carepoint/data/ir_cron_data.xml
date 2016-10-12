@@ -18,7 +18,7 @@
         <field name="args">()</field>
     </record>
 
-    <record id="ir_cron_connector_carepoint_sale_order_order" model="ir.cron">
+    <record id="ir_cron_connector_carepoint_sale_order" model="ir.cron">
         <field name="name">Fetch Updated CarePoint Sales</field>
         <field name="interval_number">10</field>
         <field name="interval_type">minutes</field>
@@ -26,6 +26,39 @@
         <field name="doall" eval="False"/>
         <field name="model">carepoint.backend</field>
         <field name="function">cron_import_sale_order</field>
+        <field name="args">()</field>
+    </record>
+    
+    <record id="ir_cron_connector_carepoint_medical_physician" model="ir.cron">
+        <field name="name">Fetch Updated CarePoint Physicians</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model">carepoint.backend</field>
+        <field name="function">cron_import_medical_physician</field>
+        <field name="args">()</field>
+    </record>
+    
+    <record id="ir_cron_connector_carepoint_medical_patient" model="ir.cron">
+        <field name="name">Fetch Updated CarePoint Patients</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model">carepoint.backend</field>
+        <field name="function">cron_import_medical_patient</field>
+        <field name="args">()</field>
+    </record>
+
+    <record id="ir_cron_connector_carepoint_address" model="ir.cron">
+        <field name="name">Fetch Updated CarePoint Addresses</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model">carepoint.backend</field>
+        <field name="function">cron_import_address</field>
         <field name="args">()</field>
     </record>
 
