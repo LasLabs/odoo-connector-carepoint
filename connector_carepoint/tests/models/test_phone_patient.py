@@ -31,6 +31,11 @@ class PhonePatientTestBase(SetUpCarepointBase):
             'phone_id': 2,
         }
 
+    def new_patient(self):
+        return self.env['medical.patient'].create({
+            'name': 'This is a patient',
+        })
+
 
 class TestPhonePatientImportMapper(PhonePatientTestBase):
 
@@ -57,6 +62,56 @@ class TestPhonePatientImportMapper(PhonePatientTestBase):
                 self.unit.partner_id(self.record)
             self.unit.binder_for().to_odoo.assert_called_once_with(
                 self.record['pat_id'], browse=True,
+            )
+
+    def test_partner_id_return(self):
+        """ It should return partner id dict """
+        with mock.patch.object(self.unit, 'binder_for'):
+            patient = self.new_patient()
+            self.unit.binder_for().to_odoo.return_value = patient
+            res = self.unit.partner_id(self.record)
+            self.assertEqual(
+                patient.partner_id.id, res['partner_id'],
+            )
+
+    def test_res_model_and_id_get_binder(self):
+        """ It should get binder for patient """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.res_model_and_id(self.record)
+            self.unit.binder_for.assert_called_once_with(
+                'carepoint.medical.patient'
+            )
+
+    def test_res_model_and_id_to_odoo(self):
+        """ It should get Odoo record for patient """
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_odoo.side_effect = EndTestException
+            with self.assertRaises(EndTestException):
+                self.unit.res_model_and_id(self.record)
+            self.unit.binder_for().to_odoo.assert_called_once_with(
+                self.record['pat_id'], browse=True,
+            )
+
+    def test_res_model_and_id_return_model(self):
+        """ It should return proper model """
+        with mock.patch.object(self.unit, 'binder_for'):
+            patient = self.new_patient()
+            self.unit.binder_for().to_odoo.return_value = patient
+            res = self.unit.res_model_and_id(self.record)
+            self.assertEqual(
+                patient._name, res['res_model'],
+            )
+
+    def test_res_model_and_id_return_id(self):
+        """ It should return proper model """
+        with mock.patch.object(self.unit, 'binder_for'):
+            patient = self.new_patient()
+            self.unit.binder_for().to_odoo.return_value = patient
+            res = self.unit.res_model_and_id(self.record)
+            self.assertEqual(
+                patient.id, res['res_id'],
             )
 
     def test_carepoint_id(self):

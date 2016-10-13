@@ -17,8 +17,12 @@ from .phone import CarepointPhone
 
 from ..connector import add_checkpoint
 
-
 _logger = logging.getLogger(__name__)
+
+try:
+    from carepoint.models.phone_mixin import EnumPhoneType
+except ImportError:
+    _logger.warning('Cannot import EnumPhoneType from carepoint')
 
 
 class CarepointPhoneAbstract(models.AbstractModel):
@@ -81,21 +85,10 @@ class CarepointPhoneAbstract(models.AbstractModel):
     def _set_partner_id(self):
         """ It sets the partner_id and attrs on the phone_id """
         for rec_id in self:
-            need_sync = True
-            if rec_id.partner_id != rec_id.phone_id.partner_id:
-                rec_id.phone_id.write({'partner_id': rec_id.partner_id.id})
-            if not CarepointPhoneAbstractImportMapper._has_empty_phone(
-                rec_id
-            ):
-                vals = self.env['carepoint.phone']._get_partner_sync_vals(
-                    rec_id.partner_id,
-                )
-                if any(vals.values()):
-                    need_sync = False
-            if need_sync:
-                rec_id.phone_id._sync_partner()
-            else:
-                rec_id.phone_id.write(vals)
+            rec_id.phone_id.write({
+                'partner_id': rec_id.partner_id.id,
+                'phone': rec_id.partner_id[rec_id.partner_field_name]
+            })
 
     @api.multi
     @api.depends('partner_id', 'res_model')
@@ -123,42 +116,42 @@ class CarepointPhoneAbstract(models.AbstractModel):
         Return:
             Recordset of partner phone
         """
-        phone = self.search([('partner_id', '=', partner.id)], limit=1)
-        vals = self.phone_id._get_partner_sync_vals(partner)
-        _logger.debug('_get_by_partner %s, %s, %s' % (phone, partner, vals))
+        phones = self.search([('partner_id', '=', partner.id)])
+        partner_vals = self.phone_id._get_partner_sync_vals(partner)
+        _logger.debug(
+            '_get_by_partner %s, %s, %s', phones, partner, partner_vals,
+        )
         if not edit:
-            return phone
-        if not phone:
-            vals['partner_id'] = partner.id
-            phone = self.create(vals)
-        else:
-            phone.write(vals)
+            return phones
+        for phone in phones:
+            phone.write({
+                'phone': partner_vals[phone.partner_field_name],
+            })
+            del partner_vals[phone.partner_field_name]
+        for name, val in partner_vals.iteritems():
+            phones += self.create({
+                'partner_id': partner.id,
+                'partner_field_name': name,
+                'phone': val,
+            })
         if recurse:
             for child in partner.child_ids:
                 self._get_by_partner(child, edit, recurse)
-        return phone
+        return phones
 
 
 @carepoint
 class CarepointPhoneAbstractImportMapper(CarepointImportMapper):
 
-    @staticmethod
-    def _has_empty_phone(partner):
-        """ It determines if the provided partner has an empty phone.
-        Currently only looks at ``street`` and ``street2``.
-        """
-        return not partner.phone
-
-    def _get_partner_defaults(self, record):
-        """ It provides a method for partner defaults
-        This could be handy to provide custom defaults via modules
-        Params:
-            record: ``dict`` of carepoint record
-        """
-        return {
-            'type': 'delivery',
-            'customer': True,
-        }
+    # It provides a mapping for Carepoint Phone Types to Odoo
+    #   @TODO: Figure out a way to support all the types & prioritize
+    PHONE_MAP = {
+        'business': 'phone',
+        'mobile': 'mobile',
+        'home': 'phone',
+        'business_fax': 'fax',
+        'home_fax': 'fax',
+    }
 
     def partner_id(self, record, medical_entity):
         """ It returns either the existing partner or a new one
@@ -168,19 +161,7 @@ class CarepointPhoneAbstractImportMapper(CarepointImportMapper):
         Return:
             ``dict`` of values for mapping
         """
-        if CarepointPhoneAbstractImportMapper._has_empty_phone(
-            medical_entity.commercial_partner_id
-        ):
-            _logger.info('Empty phone, sending %s',
-                         medical_entity.commercial_partner_id)
-            partner = medical_entity.commercial_partner_id
-        else:
-            _logger.info('Full phone, sending defaults')
-            vals = self._get_partner_defaults(record)
-            vals.update({
-                'parent_id': medical_entity.commercial_partner_id.id,
-            })
-            partner = self.env['res.partner'].create(vals)
+        partner = medical_entity.partner_id
         return {'partner_id': partner.id}
 
     def res_model_and_id(self, record, medical_entity):
@@ -195,6 +176,18 @@ class CarepointPhoneAbstractImportMapper(CarepointImportMapper):
             'res_id': medical_entity.id,
             'res_model': medical_entity._name,
         }
+
+    @mapping
+    def partner_field_name(self, record):
+        """ It determines what type of phone number this is """
+        phone_type = EnumPhoneType(record['phone_type_cn'])
+        try:
+            return {'partner_field_name': self.PHONE_MAP[phone_type.name]}
+        except KeyError:
+            _logger.warning(_('Cannot find a phone type for "%s"'),
+                            phone_type.name,
+                            )
+            return
 
     @mapping
     @only_create
@@ -224,17 +217,44 @@ class CarepointPhoneAbstractImporter(CarepointImporter):
 @carepoint
 class CarepointPhoneAbstractExportMapper(ExportMapper):
 
+    PHONE_MAP = {
+        'phone': 'business',
+        'mobile': 'mobile',
+        'fax': 'business_fax',
+    }
+
     @mapping
     def phone_id(self, binding):
         binder = self.binder_for('carepoint.carepoint.phone')
         rec_id = binder.to_backend(binding.phone_id.id)
         return {'phone_id': rec_id}
 
+    def _get_phone_type(self, field_name):
+        try:
+            return EnumPhoneType[
+                self.PHONE_MAP.get(field_name, 'business')
+            ]
+        except KeyError:
+            _logger.warning(
+                _('Cannot find phone type for field name "%s"'),
+                field_name,
+            )
+            return
+
+    @mapping
+    def phone_type_cn(self, binding):
+        phone_type = self._get_phone_type(
+            binding.partner_field_name,
+        )
+        if phone_type:
+            return {
+                'phone_type_cn': phone_type.value,
+            }
+
     @mapping
     def static_defaults(self, binding):
         return {
             'priority': 1,
-            'phone_type_cn': 1,
             'app_flags': 0,
         }
 

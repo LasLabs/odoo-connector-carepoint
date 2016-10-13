@@ -179,6 +179,7 @@ class CarepointBackend(models.Model):
     import_prescriptions_from_date = fields.Datetime()
     import_sales_from_date = fields.Datetime()
     import_addresses_from_date = fields.Datetime()
+    import_phones_from_date = fields.Datetime()
     import_pickings_from_date = fields.Datetime()
     import_invoices_from_date = fields.Datetime()
     company_id = fields.Many2one(
@@ -218,7 +219,7 @@ class CarepointBackend(models.Model):
                 ))
 
     @api.model
-    def __get_session(self):
+    def __get_model_session(self):
         return ConnectorSession(
             self.env.cr, self.env.uid, context=self.env.context
         )
@@ -240,7 +241,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def synchronize_metadata(self):
-        session = self.__get_session()
+        session = self.__get_model_session()
         for backend in self:
             for model in ('carepoint.carepoint.store',
                           # 'carepoint.res.users',
@@ -253,7 +254,7 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def _import_all(self, model):
-        session = self.__get_session()
+        session = self.__get_model_session()
         for backend in self:
             backend.check_carepoint_structure()
             import_batch.delay(session, model, backend.id)
@@ -261,7 +262,7 @@ class CarepointBackend(models.Model):
     @api.multi
     def _import_from_date(self, model, from_date_field,
                           chg_date_field='chg_date'):
-        session = self.__get_session()
+        session = self.__get_model_session()
         import_start_time = datetime.now()
         for backend in self:
             backend.check_carepoint_structure()
@@ -290,7 +291,7 @@ class CarepointBackend(models.Model):
     @api.model
     def resync_all(self, binding_model):
         """ Resync all bindings for model """
-        session = self.__get_session()
+        session = self.__get_model_session()
         for record_id in self.env[binding_model].search([]):
             for binding_id in record_id.carepoint_bind_ids:
                 import_record.delay(session,
@@ -299,6 +300,17 @@ class CarepointBackend(models.Model):
                                     binding_id.carepoint_id,
                                     force=True,
                                     )
+
+    @api.model
+    def force_sync(self, binding_model, remote_pk, backend_id):
+        """ Force sycronization based on model and primary key """
+        session = self.__get_model_session()
+        import_record.delay(session,
+                            binding_model,
+                            backend_id,
+                            remote_pk,
+                            force=True,
+                            )
 
     @api.multi
     def import_carepoint_item(self):
@@ -364,6 +376,15 @@ class CarepointBackend(models.Model):
     @api.model
     def cron_import_address(self):
         self.search([]).import_address()
+
+    @api.multi
+    def import_phone(self):
+        self._import_from_date('carepoint.carepoint.phone',
+                               'import_phones_from_date')
+
+    @api.model
+    def cron_import_phone(self):
+        self.search([]).import_phone()
 
     @api.multi
     def import_fdb(self):

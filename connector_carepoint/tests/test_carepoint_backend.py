@@ -176,6 +176,12 @@ class TestCarepointBackend(SetUpCarepointBase):
             self.backend.cron_import_sale_order()
             mk().import_sale_order.assert_called_once_with()
 
+    def test_cron_import_phone_import(self):
+        """ It should call import on found backends """
+        with mock.patch.object(self.backend, 'search') as mk:
+            self.backend.cron_import_phone()
+            mk().import_phone.assert_called_once_with()
+
     def test_import_carepoint_item(self):
         """ It should import proper model on date field """
         with mock.patch.object(self.backend, '_import_from_date') as mk:
@@ -247,6 +253,15 @@ class TestCarepointBackend(SetUpCarepointBase):
                 'carepoint.account.invoice.line',
                 'import_invoices_from_date',
                 'primary_pay_date',
+            )
+
+    def test_import_phone(self):
+        """ It should import proper model on date field """
+        with mock.patch.object(self.backend, '_import_from_date') as mk:
+            self.backend.import_phone()
+            mk.assert_called_once_with(
+                'carepoint.carepoint.phone',
+                'import_phones_from_date',
             )
 
     def test_import_fdb(self):

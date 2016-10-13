@@ -61,5 +61,16 @@
         <field name="function">cron_import_address</field>
         <field name="args">()</field>
     </record>
+    
+    <record id="ir_cron_connector_carepoint_address" model="ir.cron">
+        <field name="name">Fetch Updated CarePoint Phones</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+        <field name="model">carepoint.backend</field>
+        <field name="function">cron_import_phone</field>
+        <field name="args">()</field>
+    </record>
 
 </odoo>

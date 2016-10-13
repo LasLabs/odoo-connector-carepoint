@@ -91,6 +91,8 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
 
     @mapping
     def pathology_id(self, record):
+        if not record['icd9']:
+            return
         pathology_id = self.env['medical.pathology'].search([
             ('code', '=', record['icd9'].strip()),
             ('code_type_id.name', '=ilike', 'ICD9%'),
@@ -129,9 +131,10 @@ class MedicalPatientDiseaseImporter(CarepointImporter):
                                 'carepoint.medical.patient')
         self._import_dependency(record['caring_md_id'],
                                 'carepoint.medical.physician')
-        pathology = self.unit_for(MedicalPathologyUnit,
-                                  'carepoint.medical.pathology')
-        pathology._import_by_code(record['icd9'].strip())
+        if record['icd9']:
+            pathology = self.unit_for(MedicalPathologyUnit,
+                                      'carepoint.medical.pathology')
+            pathology._import_by_code(record['icd9'].strip())
 
     def _create(self, data):   # pragma: no cover
         binding = super(MedicalPatientDiseaseImporter, self)._create(data)

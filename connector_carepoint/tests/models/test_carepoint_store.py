@@ -36,18 +36,18 @@ class TestCarepointStoreImportMapper(CarepointStoreTestBase):
 
     def test_odoo_id_store(self):
         """ It should return odoo_id of pharmacies with same name """
-        expect = self.env['carepoint.store'].create(
-            self.record
-        )
+        expect = self.env['carepoint.store'].create({
+            'name': self.record['name'],
+        })
         res = self.unit.odoo_id(self.record)
         expect = {'odoo_id': expect.id}
         self.assertDictEqual(expect, res)
 
     def test_odoo_id_pharmacy(self):
         """ It should return new carepoint.store for pharmacy w/ same name """
-        expect = self.env['medical.pharmacy'].create(
-            self.record
-        )
+        expect = self.env['medical.pharmacy'].create({
+            'name': self.record['name'],
+        })
         res = self.unit.odoo_id(self.record)
         expect = {'odoo_id': expect.id}
         self.assertDictEqual(expect, res)

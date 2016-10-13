@@ -148,8 +148,8 @@ class CarepointAddressImportMapper(CarepointImportMapper):
 
     @mapping
     def zip(self, record):
-        zip_plus4 = record['zip_plus4'].strip()
-        _zip = record['zip'].strip()
+        zip_plus4 = (record['zip_plus4'] or '').strip()
+        _zip = (record['zip'] or '').strip()
         if zip_plus4:
             _zip = '%s-%s' % (_zip, zip_plus4)
         return {'zip': _zip}

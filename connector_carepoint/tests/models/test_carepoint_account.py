@@ -17,7 +17,7 @@ class AccountTestBase(SetUpCarepointBase):
 
     def setUp(self):
         super(AccountTestBase, self).setUp()
-        self.model = 'carepoint.address.abstract'
+        self.model = 'carepoint.account'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )
@@ -46,7 +46,7 @@ class TestCarepointAccount(AccountTestBase):
     def new_patient_account(self):
         self.patient = self.new_patient()
         return self.model.create({
-            'partner_id': self.patient.partner_id.id,
+            'patient_id': self.patient.id,
         })
 
     def test_get_by_patient_existing_account(self):

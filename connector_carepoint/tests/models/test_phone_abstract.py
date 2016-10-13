@@ -8,6 +8,11 @@ from openerp.addons.connector_carepoint.models import phone_abstract
 
 from ..common import SetUpCarepointBase
 
+try:
+    from carepoint.models.phone_mixin import EnumPhoneType
+except ImportError:
+    pass
+
 
 class EndTestException(Exception):
     pass
@@ -23,10 +28,16 @@ class PhoneAbstractTestBase(SetUpCarepointBase):
         )
         self.record = {
             'phone_id': 123,
+            'phone_type_cn': EnumPhoneType.home,
         }
 
     def new_partner(self):
-        return self.env['res.partner'].create({'name': 'Partner'})
+        return self.env['res.partner'].create({
+            'name': 'Partner',
+            'phone': 'phone',
+            'fax': 'fax',
+            'mobile': 'mobile',
+        })
 
     def new_patient(self, partner=None):
         if not partner:
@@ -42,15 +53,12 @@ class TestCarepointPhoneAbstract(PhoneAbstractTestBase):
         super(TestCarepointPhoneAbstract, self).setUp()
         self.model = self.env['carepoint.phone.patient']
 
-    def new_phone(self, partner=None):
+    def new_phone(self, partner=None, field='phone'):
         if partner is None:
             partner = self.new_partner()
         vals = {
-            'phone': 'Street',
-            'phone2': 'Street 2',
-            'zip': 89074,
-            'state_id': self.env.ref('base.state_us_23').id,
-            'country_id': self.env.ref('base.us').id,
+            'partner_field_name': field,
+            'phone': partner[field],
         }
         if partner:
             vals['partner_id'] = partner.id
@@ -126,18 +134,49 @@ class TestCarepointPhoneAbstract(PhoneAbstractTestBase):
         self.assertEqual(phone, res)
 
     def test_get_by_partner_create(self):
-        """ It should create new phone when non-exist and edit """
+        """ It should create new phones when non-existing """
         patient = self.new_patient()
         res = self.model._get_by_partner(patient.partner_id, True, False)
-        self.assertEqual(patient.partner_id, res.partner_id)
+        for phone in res:
+            self.assertEqual(patient.partner_id, phone.partner_id)
+
+    def test_get_by_partner_create_fields(self):
+        """ It should create new phones with proper field names """
+        patient = self.new_patient()
+        res = self.model._get_by_partner(patient.partner_id, True, False)
+        found_vals = []
+        for phone in res:
+            self.assertEqual(
+                patient[phone.partner_field_name],
+                phone.phone,
+            )
+            found_vals.append(phone.partner_field_name)
+        self.assertEqual(
+            3, len(found_vals), 'Did not create proper amount of phones',
+        )
 
     def test_get_by_partner_edit(self):
         """ It should update vals on phone when edit and existing """
-        expect = 'expect'
-        phone = self.new_patient_phone()
-        phone.partner_id.phone = expect
-        res = phone._get_by_partner(phone.partner_id, True, False)
-        self.assertEqual(expect, res.phone)
+        expect = {
+            'phone': 'phone1',
+            'mobile': 'mobile1',
+            'fax': 'fax1',
+        }
+        partner = self.new_partner()
+        partner.write(expect)
+        res = self.model._get_by_partner(
+            partner, True, False,
+        )
+        found_vals = []
+        for phone in res:
+            self.assertEqual(
+                partner[phone.partner_field_name],
+                phone.phone,
+            )
+            found_vals.append(phone.partner_field_name)
+        self.assertEqual(
+            3, len(found_vals), 'Did not create proper amount of phones',
+        )
 
     def test_get_by_partner_recurse(self):
         """ It should recurse into children when edit and recurse """
@@ -162,28 +201,6 @@ class TestPhoneAbstractImportMapper(PhoneAbstractTestBase):
         self.Unit = phone_abstract.CarepointPhoneAbstractImportMapper
         self.unit = self.Unit(self.mock_env)
 
-    def test_get_partner_defaults(self):
-        """ It should return proper vals dict """
-        expect = {
-            'type': 'delivery',
-            'customer': True,
-        }
-        res = self.unit._get_partner_defaults(self.record)
-        self.assertDictEqual(expect, res)
-
-    def test_has_empty_phone_empty(self):
-        """ It should return True when phone is empty """
-        partner = self.new_partner()
-        res = self.unit._has_empty_phone(partner)
-        self.assertTrue(res)
-
-    def test_has_empty_phone_full(self):
-        """ It should return False when partner has phone """
-        partner = self.new_partner()
-        partner.phone = 'phone'
-        res = self.unit._has_empty_phone(partner)
-        self.assertFalse(res)
-
     def test_partner_id_empty(self):
         """ It should return partner when empty phone """
         patient = self.new_patient()
@@ -192,18 +209,6 @@ class TestPhoneAbstractImportMapper(PhoneAbstractTestBase):
         )
         expect = {'partner_id': patient.commercial_partner_id.id}
         self.assertDictEqual(expect, res)
-
-    def test_partner_id_full(self):
-        """ It should return new partner when full phone """
-        patient = self.new_patient()
-        patient.commercial_partner_id.phone = 'phone'
-        res = self.unit.partner_id(
-            self.record, patient,
-        )
-        self.assertNotEqual(
-            patient.commercial_partner_id.id,
-            res.get('partner_id'),
-        )
 
     def test_phone_id_get_binder(self):
         """ It should get binder for prescription line """
@@ -240,6 +245,14 @@ class TestPhoneAbstractImportMapper(PhoneAbstractTestBase):
             'res_model': entity._name,
         }
         res = self.unit.res_model_and_id(None, entity)
+        self.assertDictEqual(expect, res)
+
+    def test_partner_field_name(self):
+        """ It should return field name for phone type"""
+        expect = {
+            'partner_field_name': self.unit.PHONE_MAP['home'],
+        }
+        res = self.unit.partner_field_name(self.record)
         self.assertDictEqual(expect, res)
 
 
@@ -297,6 +310,13 @@ class TestPhoneAbstractExportMapper(PhoneAbstractTestBase):
             res = self.unit.phone_id(self.record)
             expect = self.unit.binder_for().to_backend()
             self.assertDictEqual({'phone_id': expect}, res)
+
+    def test_phone_type_cn(self):
+        """ It should return the proper Enum val """
+        self.record.partner_field_name = 'mobile'
+        res = self.unit.phone_type_cn(self.record)
+        expect = EnumPhoneType['mobile']
+        self.assertDictEqual({'phone_type_cn': expect.value}, res)
 
     def test_static_defaults(self):
         """ It should return a dict of default values """

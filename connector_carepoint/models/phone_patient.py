@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
+from openerp import models, fields, api, _
 from openerp.addons.connector.connector import ConnectorUnit
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
@@ -19,6 +19,11 @@ from .phone_abstract import (CarepointPhoneAbstractImportMapper,
                              )
 
 _logger = logging.getLogger(__name__)
+
+try:
+    from carepoint.models.phone_mixin import EnumPhoneType
+except ImportError:
+    _logger.warning('Cannot import EnumPhoneType from carepoint')
 
 
 class CarepointCarepointPhonePatient(models.Model):
@@ -135,6 +140,24 @@ class CarepointPhonePatientExportMapper(
     CarepointPhoneAbstractExportMapper
 ):
     _model_name = 'carepoint.carepoint.phone.patient'
+
+    PHONE_MAP = {
+        'phone': 'home',
+        'mobile': 'mobile',
+        'fax': 'home_fax',
+    }
+
+    def _get_phone_type(self, field_name):
+        try:
+            return EnumPhoneType[
+                self.PHONE_MAP.get(field_name, 'home')
+            ]
+        except KeyError:
+            _logger.warning(
+                _('Cannot find phone type for field name "%s"'),
+                field_name,
+            )
+            return
 
     @mapping
     def pat_id(self, binding):
