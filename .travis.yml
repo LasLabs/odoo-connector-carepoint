@@ -17,6 +17,7 @@ addons:
       - python-serial
       - python-yaml
       - python-pysqlite2
+      - unixodbc-dev
 
 env:
   global:
