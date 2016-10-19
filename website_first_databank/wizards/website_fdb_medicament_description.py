@@ -107,7 +107,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         """
         self.ensure_one()
         return {
-            'medicament': self.medicament_id,
+            'medicament': self.medicament_ids[0],
             'monograph': self.monograph_id,
             'sections': self.monograph_id._get_sections_dict(),
             'section_headers': dict((k, v) for k, v in TYPES),
