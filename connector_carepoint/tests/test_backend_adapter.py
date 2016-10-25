@@ -16,7 +16,6 @@ class TestBackendAdapter(SetUpCarepointBase):
 
     def setUp(self):
         super(TestBackendAdapter, self).setUp()
-        backend_adapter.carepoints = {}
         self.Model = backend_adapter.CarepointCRUDAdapter
 
     def _init_model(self, model='carepoint.carepoint.store'):
@@ -51,6 +50,42 @@ class TestBackendAdapter(SetUpCarepointBase):
             api.return_value = expect
             res = self._init_model()
             self.assertEqual(expect, res.carepoint)
+
+    def test_get_cp_model_resets(self):
+        """ It should guard a reconnectable exception and clear globals """
+        with self.mock_api():
+            model = self._init_model()
+            model.carepoint = mock.MagicMock()
+            model.carepoint.__getitem__.side_effect = [
+                model.RECONNECT_EXCEPTIONS[0],
+            ]
+            model.carepoint._init_env.side_effect = self.EndTestException
+            with self.assertRaises(self.EndTestException):
+                model.search()
+
+    def test_get_cp_model_recurse(self):
+        """ It should recurse when reconnectable exception is identified """
+        with self.mock_api():
+            model = self._init_model()
+            model.carepoint = mock.MagicMock()
+            model.carepoint.__getitem__.side_effect = [
+                model.RECONNECT_EXCEPTIONS[0],
+                self.EndTestException,
+            ]
+            with self.assertRaises(self.EndTestException):
+                model.search()
+
+    def test_get_cp_model_raise(self):
+        """ It should guard a reconnectable exception and clear globals """
+        with self.mock_api():
+            model = self._init_model()
+            model.carepoint = mock.MagicMock()
+            model.carepoint.__getitem__.side_effect = [
+                model.RECONNECT_EXCEPTIONS[0],
+                model.RECONNECT_EXCEPTIONS[0],
+            ]
+            with self.assertRaises(model.RECONNECT_EXCEPTIONS[0]):
+                model.search()
 
     def test_search_gets_pks(self):
         """ It should get the primary keys of the db """

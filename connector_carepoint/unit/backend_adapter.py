@@ -5,6 +5,11 @@
 from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
 
 try:
+    from sqlalchemy.exc import InvalidRequestError
+except ImportError:
+    pass
+
+try:
     from carepoint import Carepoint
 except ImportError:
     pass
@@ -12,6 +17,10 @@ except ImportError:
 
 class CarepointCRUDAdapter(CRUDAdapter):
     """ External Records Adapter for Carepoint """
+
+    RECONNECT_EXCEPTIONS = [
+        InvalidRequestError,
+    ]
 
     def __init__(self, connector_env):
         """ Ready the DB adapter
@@ -36,13 +45,19 @@ class CarepointCRUDAdapter(CRUDAdapter):
         parts = snake_case.split('_')
         return "".join(x.title() for x in parts)
 
-    def __get_cp_model(self):
+    def __get_cp_model(self, retry=True):
         """ Get the correct model object by name from Carepoint lib
         :rtype: :class:`sqlalchemy.schema.Table`
         """
         name = self.connector_env.model._cp_lib
         camel_name = self.__to_camel_case(name)
-        return self.carepoint[camel_name]
+        try:
+            return self.carepoint[camel_name]
+        except tuple(self.RECONNECT_EXCEPTIONS):
+            if retry:
+                self.carepoint._init_env(True)
+                return self.__get_cp_model(False)
+            raise
 
     def search(self, **filters):
         """ Search table by filters and return record ids
