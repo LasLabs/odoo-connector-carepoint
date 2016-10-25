@@ -62,6 +62,11 @@ def mock_adapter(unit):
         yield API
 
 
+class EndTestException(Exception):
+    """ It is a dummy Exception used to stop tests """
+    pass
+
+
 class CarepointHelper(object):
     """ Emulate a ConnectorEnvironment """
 
@@ -151,6 +156,7 @@ class SetUpCarepointBase(common.TransactionCase):
         })
         self.mock_api = mock_api
         self.mock_adapter = mock_adapter
+        self.EndTestException = EndTestException
 
     def get_carepoint_helper(self, model_name):
         return CarepointHelper(
