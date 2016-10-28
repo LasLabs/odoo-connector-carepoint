@@ -62,6 +62,8 @@ class CarepointCRUDAdapter(CRUDAdapter):
     def search(self, **filters):
         """ Search table by filters and return record ids
         :param filters: Filters to apply to search
+        :param pk_index: (int) Index of primary key to use (in order of
+            property definition on associated model Class)
         :rtype: list
         """
         model_obj = self.__get_cp_model()

@@ -8,6 +8,7 @@ from openerp import models
 from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper,
                                                   none,
+                                                  convert,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -67,7 +68,9 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
 class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.medical.prescription.order'
 
-    direct = []
+    direct = [
+        ('start_date', 'date_prescription'),
+    ]
 
     @mapping
     def patient_id(self, record):
@@ -84,8 +87,8 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
     @mapping
     def partner_id(self, record):
         binder = self.binder_for('carepoint.carepoint.store')
-        pharmacy_id = binder.to_odoo(record['store_id'])
-        return {'partner_id': pharmacy_id}
+        store = binder.to_odoo(record['store_id'], browse=True)
+        return {'partner_id': store.pharmacy_id.id}
 
     @mapping
     def carepoint_id(self, record):
@@ -111,8 +114,8 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [
-        (none('date_start_treatment'), 'start_date'),
-        (none('date_stop_treatment'), 'expire_date'),
+        (convert('date_prescription', fields.Datetime.from_string),
+         'start_date'),
         (none('qty'), 'written_qty'),
         (none('frequency'), 'freq_of_admin'),
         (none('quantity'), 'units_per_dose'),

@@ -82,3 +82,12 @@ class TestMapper(SetUpCarepointBase):
         rec = self._new_record()
         res = modifier(False, rec, False)
         self.assertFalse(res)
+
+    def test_add_to(self):
+        """ It should return a to int modifier """
+        modifier = mapper.add_to('int', 1)
+        rec = self._new_record()
+        res = modifier(False, rec, False)
+        self.assertEqual(
+            int(rec['int']) + 1, res
+        )

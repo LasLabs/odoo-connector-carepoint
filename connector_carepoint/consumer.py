@@ -34,11 +34,15 @@ def delay_export(session, model_name, record_id, vals):
 @on_record_write(model_names=['medical.prescription.order.line',
                               'medical.patient',
                               'carepoint.address',
+                              'carepoint.phone',
                               'carepoint.address.patient',
+                              'carepoint.phone.patient',
                               'carepoint.organization',
                               'carepoint.address.organization',
+                              'carepoint.phone.organization',
                               'medical.physician',
                               'carepoint.address.physician',
+                              'carepoint.phone.physician',
                               ])
 def delay_export_all_bindings(session, model_name, record_id, vals):
     """ Delay a job which export all the bindings of a record.
@@ -57,12 +61,16 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
 @on_record_create(model_names=['medical.prescription.order.line',
                                'medical.patient',
                                'carepoint.address',
+                               'carepoint.phone',
                                'carepoint.address.patient',
+                               'carepoint.phone.patient',
                                'carepoint.organization',
                                'carepoint.address.organization',
+                               'carepoint.phone.organization',
                                'carepoint.account',
                                'medical.physician',
                                'carepoint.address.physician',
+                               'carepoint.phone.physician',
                                ])
 def delay_create(session, model_name, record_id, vals):
     """ Create a new binding record, then trigger delayed export
@@ -93,3 +101,9 @@ def delay_create(session, model_name, record_id, vals):
 #     if carepoint_id:
 #         export_delete_record.delay(session, model_name,
 #                                    record.backend_id.id, carepoint_id)
+
+
+@on_record_write(model_names=['carepoint.phone'])
+def sync_phone_to_partner(session, model_name, record_id, vals):
+    """ Triggers phone sync to partner when written """
+    session.env[model_name].browse(record_id)._sync_partner()

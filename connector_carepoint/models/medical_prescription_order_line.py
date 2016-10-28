@@ -9,9 +9,10 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   only_create,
                                                   changed_by,
                                                   ExportMapper,
+                                                  convert,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import CarepointImportMapper, add_to
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -118,7 +119,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
         ('written_qty', 'qty'),
         ('freq_of_admin', 'frequency'),
         ('units_entered', 'quantity'),
-        ('refills_left', 'refill_qty_remain'),
+        (add_to('refills_left', -1), 'refill_qty_remain'),
         ('refills_orig', 'refill_qty_original')
     ]
 
@@ -239,14 +240,17 @@ class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
     _model_name = 'carepoint.rx.ord.ln'
 
     direct = [
-        ('date_start_treatment', 'start_date'),
-        ('date_stop_treatment', 'expire_date'),
-        ('date_stop_treatment', 'expire_date'),
+        (convert('date_start_treatment', fields.Datetime.from_string),
+         'start_date'),
+        (convert('date_stop_treatment', fields.Datetime.from_string),
+         'expire_date'),
+        (convert('date_stop_treatment', fields.Datetime.from_string),
+         'expire_date'),
         ('qty', 'written_qty'),
         ('frequency', 'freq_of_admin'),
         ('quantity', 'units_entered'),
         ('refill_qty_original', 'refills_orig'),
-        ('refill_qty_remain', 'refills_left'),
+        (add_to('refill_qty_remain', 1), 'refills_left'),
     ]
 
     @mapping

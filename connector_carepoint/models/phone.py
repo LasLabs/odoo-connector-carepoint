@@ -53,6 +53,8 @@ class CarepointPhone(models.Model):
 
     PARTNER_ATTRS = [
         'phone',
+        'mobile',
+        'fax',
     ]
 
     phone = fields.Char()
@@ -62,6 +64,9 @@ class CarepointPhone(models.Model):
         readonly=True,
         ondelete='cascade',
     )
+    partner_field_name = fields.Char(
+        default='phone',
+    )
 
     carepoint_bind_ids = fields.One2many(
         comodel_name='carepoint.carepoint.phone',
@@ -70,14 +75,12 @@ class CarepointPhone(models.Model):
     )
 
     @api.multi
-    @api.depends('partner_id', *PARTNER_ATTRS)
     def _sync_partner(self):
         for rec_id in self:
-            if not len(rec_id.partner_id):
+            if not rec_id.partner_id:
                 continue
-            rec_id.partner_id.write(
-                self._get_partner_sync_vals(self)
-            )
+            field_name = rec_id.partner_field_name
+            rec_id.partner_id[field_name] = rec_id.phone
 
     @api.model
     def _get_partner_sync_vals(self, partner):
@@ -87,15 +90,7 @@ class CarepointPhone(models.Model):
         Returns:
             ``dict`` of values for create or write
         """
-        vals = {}
-        for attr in self.PARTNER_ATTRS:
-            val = getattr(partner, attr, False)
-            if getattr(val, 'id', False):
-                val = val.id
-            if not val:
-                val = False
-            vals[attr] = val
-        return vals
+        return {attr: partner[attr] for attr in self.PARTNER_ATTRS}
 
 
 @carepoint
@@ -130,9 +125,9 @@ class CarepointPhoneImportMapper(CarepointImportMapper):
 
     @mapping
     def phone(self, record):
-        phone_no = record['phone_no'].strip()
-        area_code = record['area_code'].strip()
-        ext = record['extension'].strip()
+        phone_no = (record['phone_no'] or '').strip()
+        area_code = (record['area_code'] or '').strip()
+        ext = (record['extension'] or '').strip()
         phone = '%s-%s' % (phone_no[0:3], phone_no[3:])
         if not area_code:
             area_code = '000'
@@ -159,8 +154,11 @@ class CarepointPhoneExportMapper(ExportMapper):
     @mapping
     @changed_by('phone')
     def phone(self, record):
+        if not record.phone:
+            return
+        country = record.partner_id.country_id.code or 'US'
         try:
-            phone = phonenumbers.parse(record.phone)
+            phone = phonenumbers.parse(record.phone, country)
         except phonenumbers.phonenumberutil.NumberParseException:
             return
         national_number = str(phone.national_number)
@@ -168,8 +166,7 @@ class CarepointPhoneExportMapper(ExportMapper):
             'area_code': national_number[0:3],
             'phone_no': national_number[3:],
         }
-        if phone.extension:
-            vals['extension'] = phone.extension
+        vals['extension'] = phone.extension or ''
         return vals
 
     @mapping

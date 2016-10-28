@@ -73,6 +73,21 @@ def to_int(field):
     return modifier
 
 
+def add_to(field, number):
+    """ A modifier intended to be used on the ``direct`` mappings.
+    Add a number to the field value
+    Example::
+        direct = [(add_to('source', 1.5), 'target')]
+    :param field: (str) name of the source field in the record
+    :param number: (float|int) Number to add to source value
+    """
+
+    def modifier(self, record, to_attr):
+        value = record[field]
+        return float(value) + number
+    return modifier
+
+
 class CarepointImportMapper(ImportMapper):
 
     @mapping

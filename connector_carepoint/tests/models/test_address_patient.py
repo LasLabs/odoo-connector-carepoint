@@ -38,6 +38,7 @@ class TestAddressPatientImportMapper(AddressPatientTestBase):
         super(TestAddressPatientImportMapper, self).setUp()
         self.Unit = address_patient.CarepointAddressPatientImportMapper
         self.unit = self.Unit(self.mock_env)
+        self.model = self.env['medical.patient']
 
     def test_partner_id_get_binder(self):
         """ It should get binder for patient """
@@ -69,6 +70,33 @@ class TestAddressPatientImportMapper(AddressPatientTestBase):
             ),
         }
         self.assertDictEqual(expect, res)
+
+    def test_partner_id(self):
+        """ It should return proper model and ID for patient """
+        record = self.model.create({
+            'name': 'Test patient',
+        })
+        expect = {
+            'partner_id': record.commercial_partner_id.id,
+        }
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_odoo.return_value = record
+            res = self.unit.partner_id(self.record)
+            self.assertDictEqual(expect, res)
+
+    def test_res_model_and_id(self):
+        """ It should return proper model and ID for patient """
+        record = self.model.create({
+            'name': 'Test patient',
+        })
+        expect = {
+            'res_model': record._name,
+            'res_id': record.id,
+        }
+        with mock.patch.object(self.unit, 'binder_for'):
+            self.unit.binder_for().to_odoo.return_value = record
+            res = self.unit.res_model_and_id(self.record)
+            self.assertDictEqual(expect, res)
 
 
 class TestAddressPatientImporter(AddressPatientTestBase):
@@ -166,3 +194,10 @@ class TestAddressPatientExportMapper(AddressPatientTestBase):
             res = self.unit.pat_id(self.record)
             expect = self.unit.binder_for().to_backend()
             self.assertDictEqual({'pat_id': expect}, res)
+
+    def test_static_defaults(self):
+        """ It should return a dict of default values """
+        self.assertIsInstance(
+            self.unit.static_defaults(self.record),
+            dict,
+        )

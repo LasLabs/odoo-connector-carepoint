@@ -137,6 +137,11 @@ class CarepointAddressPatientExportMapper(
     _model_name = 'carepoint.carepoint.address.patient'
 
     @mapping
+    def static_defaults(self, binding):
+        sup = super(CarepointAddressPatientExportMapper, self)
+        return sup.static_defaults(binding, 'home')
+
+    @mapping
     def pat_id(self, binding):
         binder = self.binder_for('carepoint.medical.patient')
         rec_id = binder.to_backend(binding.res_id)

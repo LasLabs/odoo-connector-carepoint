@@ -46,7 +46,7 @@ class TestCarepointAccount(AccountTestBase):
     def new_patient_account(self):
         self.patient = self.new_patient()
         return self.model.create({
-            'partner_id': self.patient.partner_id.id,
+            'patient_id': self.patient.id,
         })
 
     def test_get_by_patient_existing_account(self):

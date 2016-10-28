@@ -17,8 +17,12 @@ from .address import CarepointAddress
 
 from ..connector import add_checkpoint
 
-
 _logger = logging.getLogger(__name__)
+
+try:
+    from carepoint.models.address_mixin import EnumAddressType
+except ImportError:
+    _logger.warning('Cannot import EnumPhoneType from carepoint')
 
 
 class CarepointAddressAbstract(models.AbstractModel):
@@ -231,12 +235,16 @@ class CarepointAddressAbstractExportMapper(ExportMapper):
         return {'addr_id': rec_id}
 
     @mapping
-    def static_defaults(self, binding):
-        return {
+    def static_defaults(self, binding, addr_type='business'):
+        res = {
             'priority': 1,
-            'addr_type_cn': 1,
             'app_flags': 0,
         }
+        try:
+            res['addr_type_cn'] = EnumAddressType[addr_type].value
+        except KeyError:
+            pass
+        return res
 
 
 @carepoint

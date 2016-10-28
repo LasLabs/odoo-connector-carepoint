@@ -32,6 +32,43 @@ class CarepointPhoneTestBase(SetUpCarepointBase):
         }
 
 
+class TestCarepointPhone(CarepointPhoneTestBase):
+
+    def setUp(self):
+        super(TestCarepointPhone, self).setUp()
+        self.model = self.env['carepoint.phone']
+        self.phone_field = 'mobile'
+
+    def new_partner(self):
+        return self.env['res.partner'].create({
+            'name': 'Test Partner',
+            'phone': 'phone',
+            'fax': 'fax',
+            'mobile': 'mobile',
+        })
+
+    def new_phone(self, partner=None, phone_field='mobile'):
+        if partner is None:
+            partner = self.new_partner()
+        return self.model.create({
+            'phone': partner[phone_field],
+            'partner_field_name': phone_field,
+            'partner_id': partner.id,
+        })
+
+    def test_sync_partner(self):
+        """ It should set proper attributes on partner when updated """
+        partner = self.new_partner()
+        fields = 'phone', 'mobile', 'fax'
+        phones = []
+        for field in fields:
+            expect = 'new %s' % field
+            phones.append(self.new_phone(partner, field))
+            phones[-1].write({'phone': expect})
+        for field in fields:
+            self.assertEqual('new %s' % field, partner[field])
+
+
 class TestCarepointPhoneImportMapper(CarepointPhoneTestBase):
 
     def setUp(self):
@@ -115,6 +152,41 @@ class TestCarepointPhoneExportMapper(CarepointPhoneTestBase):
         self.Unit = phone.CarepointPhoneExportMapper
         self.unit = self.Unit(self.mock_env)
         self.record = mock.MagicMock()
+        self.phone = {
+            'code': '1',
+            'area': '888',
+            'phone': '1234567',
+            'ext': '123',
+        }
+        self.record.phone = '%(area)s%(phone)s x%(ext)s' % self.phone
+        self.record.partner_id.country_id.code = False
+
+    def test_phone_none(self):
+        """ It should not try to parse a blank number """
+        self.record.phone = False
+        res = self.unit.phone(self.record)
+        self.assertFalse(res)
+
+    def test_phone_area_code(self):
+        """ It should return proper area code """
+        res = self.unit.phone(self.record)
+        self.assertEqual(self.phone['area'], res['area_code'])
+
+    def test_phone_national(self):
+        """ It should return proper national number """
+        res = self.unit.phone(self.record)
+        self.assertEqual(self.phone['phone'], res['phone_no'])
+
+    def test_phone_extension(self):
+        """ It should return proper extension """
+        res = self.unit.phone(self.record)
+        self.assertEqual(self.phone['ext'], res['extension'])
+
+    def test_phone_extension_none(self):
+        """ It should handle blank extensions """
+        self.record.phone = '%(area)s%(phone)s' % self.phone
+        res = self.unit.phone(self.record)
+        self.assertEqual('', res['extension'])
 
     def test_phone_id(self):
         """ It should return proper vals dict """
