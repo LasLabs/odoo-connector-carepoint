@@ -4,14 +4,14 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import (
+from odoo.addons.connector_carepoint.models import (
     fdb_img_date
 )
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.%s' % (
+model = 'odoo.addons.connector_carepoint.models.%s' % (
     'fdb_img_date'
 )
 

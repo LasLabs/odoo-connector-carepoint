@@ -4,9 +4,9 @@
 
 import logging
 import re
-from openerp import models, fields, _
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  )
+from odoo import models, fields, _
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..unit.mapper import trim
@@ -16,12 +16,22 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 from .fdb_unit import ureg
 from psycopg2 import IntegrityError
-from openerp.exceptions import ValidationError
+from odoo.exceptions import ValidationError
 
 from .fdb_img_id import FdbImgIdUnit
 
 
 _logger = logging.getLogger(__name__)
+
+
+class FdbNdc(models.Model):
+    _inherit = 'fdb.ndc'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.fdb.ndc',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointFdbNdc(models.Model):
@@ -36,16 +46,6 @@ class CarepointFdbNdc(models.Model):
         comodel_name='fdb.ndc',
         required=True,
         ondelete='restrict'
-    )
-
-
-class FdbNdc(models.Model):
-    _inherit = 'fdb.ndc'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.ndc',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

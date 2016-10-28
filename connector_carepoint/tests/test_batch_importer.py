@@ -4,11 +4,11 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.unit import import_synchronizer
+from odoo.addons.connector_carepoint.unit import import_synchronizer
 
 from .common import SetUpCarepointBase
 
-model = 'openerp.addons.connector_carepoint.unit.import_synchronizer'
+model = 'odoo.addons.connector_carepoint.unit.import_synchronizer'
 
 
 class EndTestException(Exception):

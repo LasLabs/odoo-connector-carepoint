@@ -3,14 +3,14 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import fields
-from openerp import models
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  ExportMapper,
-                                                  none,
-                                                  convert,
-                                                  backend_to_m2o,
-                                                  )
+from odoo import fields
+from odoo import models
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               ExportMapper,
+                                               none,
+                                               convert,
+                                               backend_to_m2o,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
@@ -20,6 +20,19 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import (CarepointExporter)
 
 _logger = logging.getLogger(__name__)
+
+
+class MedicalPrescriptionOrder(models.Model):
+    """ Adds the ``one2many`` relation to the Carepoint bindings
+    (``carepoint_bind_ids``)
+    """
+    _inherit = 'medical.prescription.order'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.medical.prescription.order',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointMedicalPrescriptionOrder(models.Model):
@@ -35,19 +48,6 @@ class CarepointMedicalPrescriptionOrder(models.Model):
         string='Prescription Line',
         required=True,
         ondelete='cascade'
-    )
-
-
-class MedicalPrescriptionOrder(models.Model):
-    """ Adds the ``one2many`` relation to the Carepoint bindings
-    (``carepoint_bind_ids``)
-    """
-    _inherit = 'medical.prescription.order'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.medical.prescription.order',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

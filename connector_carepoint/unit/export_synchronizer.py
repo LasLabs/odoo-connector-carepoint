@@ -8,13 +8,13 @@ from contextlib import contextmanager
 
 import psycopg2
 
-import openerp
-from openerp.tools.translate import _
-from openerp.addons.connector.queue.job import job, related_action
-from openerp.addons.connector.unit.synchronizer import Exporter
-from openerp.addons.connector.exception import (IDMissingInBackend,
-                                                RetryableJobError,
-                                                )
+import odoo
+from odoo.tools.translate import _
+from odoo.addons.connector.queue.job import job, related_action
+from odoo.addons.connector.unit.synchronizer import Exporter
+from odoo.addons.connector.exception import (IDMissingInBackend,
+                                             RetryableJobError,
+                                             )
 from .import_synchronizer import import_record
 from ..connector import get_environment
 from ..related_action import unwrap_binding
@@ -85,7 +85,7 @@ class CarepointBaseExporter(Exporter):
         if not record['chg_date']:
             # In many cases it can be empty, in doubt, import it
             return False
-        sync_date = openerp.fields.Datetime.from_string(sync)
+        sync_date = odoo.fields.Datetime.from_string(sync)
         carepoint_date = record['chg_date']
         return sync_date < carepoint_date
 
@@ -241,7 +241,7 @@ class CarepointExporter(CarepointBaseExporter):
         # wrap is typically True if the relation is for instance a
         # 'product.product' record but the binding model is
         # 'carepoint.product.product'
-        wrap = relation._model._name != binding_model
+        wrap = relation._name != binding_model
 
         if wrap and hasattr(relation, binding_field):
             domain = [('odoo_id', '=', relation.id),

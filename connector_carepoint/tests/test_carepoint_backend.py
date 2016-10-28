@@ -7,15 +7,15 @@ from datetime import timedelta, datetime
 
 from .common import SetUpCarepointBase
 
-from openerp import fields
-from openerp.exceptions import ValidationError
+from odoo import fields
+from odoo.exceptions import ValidationError
 
-from openerp.addons.connector_carepoint.models.carepoint_backend import (
+from odoo.addons.connector_carepoint.models.carepoint_backend import (
     IMPORT_DELTA_BUFFER
 )
 
 
-model = 'openerp.addons.connector_carepoint.models.carepoint_backend'
+model = 'odoo.addons.connector_carepoint.models.carepoint_backend'
 
 
 class TestCarepointBackend(SetUpCarepointBase):

@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.unit import binder
+from odoo.addons.connector_carepoint.unit import binder
 
 from .common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.unit.binder'
+model = 'odoo.addons.connector_carepoint.unit.binder'
 
 
 class TestBinder(SetUpCarepointBase):
@@ -119,27 +119,27 @@ class TestBinder(SetUpCarepointBase):
         with self.assertRaises(AssertionError):
             binder.bind(False, True)
 
-    @mock.patch('%s.openerp' % model)
-    def test_bind_context_no_export(self, openerp):
+    @mock.patch('%s.odoo' % model)
+    def test_bind_context_no_export(self, odoo):
         """ It should use a connector_no_export context """
         binder = self._new_binder()
         rec = mock.MagicMock()
-        openerp.models.BaseModel = type(rec)
+        odoo.models.BaseModel = type(rec)
         binder.bind(self.carepoint_id, rec)
         rec.with_context.assert_called_once_with(
             connector_no_export=True,
         )
 
-    @mock.patch('%s.openerp' % model)
-    def test_bind_writes(self, openerp):
+    @mock.patch('%s.odoo' % model)
+    def test_bind_writes(self, odoo):
         """ It should write binding and sync time to record """
         rec = mock.MagicMock()
-        openerp.models.BaseModel = type(rec)
+        odoo.models.BaseModel = type(rec)
         binder = self._new_binder()
         binder.bind(self.carepoint_id, rec)
         rec.with_context().write.assert_called_once_with({
             'carepoint_id': str(self.carepoint_id),
-            'sync_date': openerp.fields.Datetime.now(),
+            'sync_date': odoo.fields.Datetime.now(),
         })
 
     def test_unwrap_binding_id_browse(self):

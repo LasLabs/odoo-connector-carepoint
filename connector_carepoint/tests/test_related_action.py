@@ -5,14 +5,14 @@
 import mock
 from contextlib import contextmanager
 
-from openerp import _
+from odoo import _
 
-from openerp.addons.connector_carepoint import related_action
+from odoo.addons.connector_carepoint import related_action
 
 from .common import SetUpCarepointBase
 
 
-mk_file = 'openerp.addons.connector_carepoint.related_action'
+mk_file = 'odoo.addons.connector_carepoint.related_action'
 
 
 @contextmanager

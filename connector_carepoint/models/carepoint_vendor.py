@@ -3,12 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
-                                                  none,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               changed_by,
+                                               only_create,
+                                               none,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
@@ -22,32 +22,6 @@ from ..unit.export_synchronizer import (CarepointExporter)
 
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointVendor(models.Model):
-    """ Binding Model for the Carepoint Vendor """
-    _name = 'carepoint.carepoint.vendor'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.vendor': 'odoo_id'}
-    _description = 'Carepoint Vendor'
-    _cp_lib = 'VEND'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.vendor',
-        string='Vendor',
-        required=True,
-        ondelete='cascade'
-    )
-    backend_id = fields.Many2one(
-        comodel_name='carepoint.backend',
-        string='Carepoint Backend',
-        store=True,
-        readonly=True,
-        # override 'carepoint.binding', can't be INSERTed if True:
-        required=False,
-    )
-    created_at = fields.Date('Created At (on Carepoint)')
-    updated_at = fields.Date('Updated At (on Carepoint)')
 
 
 class CarepointVendor(models.Model):
@@ -67,6 +41,22 @@ class CarepointVendor(models.Model):
         comodel_name='carepoint.carepoint.vendor',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
+    )
+
+
+class CarepointCarepointVendor(models.Model):
+    """ Binding Model for the Carepoint Vendor """
+    _name = 'carepoint.carepoint.vendor'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.vendor': 'odoo_id'}
+    _description = 'Carepoint Vendor'
+    _cp_lib = 'VEND'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.vendor',
+        string='Vendor',
+        required=True,
+        ondelete='cascade'
     )
 
 

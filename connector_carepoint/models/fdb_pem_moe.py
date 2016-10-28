@@ -3,9 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
 from ..backend import carepoint
@@ -14,6 +14,16 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 
 _logger = logging.getLogger(__name__)
+
+
+class FdbPemMoe(models.Model):
+    _inherit = 'fdb.pem.moe'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.fdb.pem.moe',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointFdbPemMoe(models.Model):
@@ -28,16 +38,6 @@ class CarepointFdbPemMoe(models.Model):
         comodel_name='fdb.pem.moe',
         required=True,
         ondelete='restrict'
-    )
-
-
-class FdbPemMoe(models.Model):
-    _inherit = 'fdb.pem.moe'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.pem.moe',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

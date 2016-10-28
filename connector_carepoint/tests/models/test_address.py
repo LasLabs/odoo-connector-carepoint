@@ -4,7 +4,7 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import address
+from odoo.addons.connector_carepoint.models import address
 
 from ...unit.backend_adapter import CarepointCRUDAdapter
 

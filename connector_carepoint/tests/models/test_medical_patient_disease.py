@@ -4,7 +4,7 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import medical_patient_disease
+from odoo.addons.connector_carepoint.models import medical_patient_disease
 
 from ..common import SetUpCarepointBase
 

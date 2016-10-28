@@ -4,10 +4,10 @@
 
 import logging
 from datetime import datetime, timedelta
-from openerp import models, fields, api, _
-from openerp.exceptions import ValidationError
-from openerp.addons.connector.session import ConnectorSession
-from openerp.addons.base.res.res_partner import _tz_get
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+from odoo.addons.connector.session import ConnectorSession
+from odoo.addons.base.res.res_partner import _tz_get
 from ..unit.import_synchronizer import (import_batch,
                                         import_record,
                                         DirectBatchImporter,

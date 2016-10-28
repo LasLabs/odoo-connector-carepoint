@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.unit import backend_adapter
+from odoo.addons.connector_carepoint.unit import backend_adapter
 
 from .common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.unit.backend_adapter'
+model = 'odoo.addons.connector_carepoint.unit.backend_adapter'
 
 
 class TestBackendAdapter(SetUpCarepointBase):

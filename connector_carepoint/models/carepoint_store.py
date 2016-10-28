@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  none,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               none,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.mapper import PartnerImportMapper, trim
@@ -19,26 +19,6 @@ from ..connector import add_checkpoint
 
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointStore(models.Model):
-    """ Binding Model for the Carepoint Store """
-    _name = 'carepoint.carepoint.store'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.store': 'odoo_id'}
-    _description = 'Carepoint Pharmacy (Store)'
-    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.store',
-        string='Company',
-        required=True,
-        ondelete='cascade'
-    )
-    warehouse_id = fields.Many2one(
-        string='Warehouse',
-        comodel_name='stock.warehouse',
-    )
 
 
 class CarepointStore(models.Model):
@@ -58,6 +38,26 @@ class CarepointStore(models.Model):
         comodel_name='carepoint.carepoint.store',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
+    )
+
+
+class CarepointCarepointStore(models.Model):
+    """ Binding Model for the Carepoint Store """
+    _name = 'carepoint.carepoint.store'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.store': 'odoo_id'}
+    _description = 'Carepoint Pharmacy (Store)'
+    _cp_lib = 'store'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.store',
+        string='Company',
+        required=True,
+        ondelete='cascade'
+    )
+    warehouse_id = fields.Many2one(
+        string='Warehouse',
+        comodel_name='stock.warehouse',
     )
 
 

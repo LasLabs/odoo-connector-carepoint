@@ -3,10 +3,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
 from ..backend import carepoint
@@ -15,6 +15,16 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 
 _logger = logging.getLogger(__name__)
+
+
+class FdbNdcCsExt(models.Model):
+    _inherit = 'fdb.ndc.cs.ext'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.fdb.ndc.cs.ext',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointFdbNdcCsExt(models.Model):
@@ -29,16 +39,6 @@ class CarepointFdbNdcCsExt(models.Model):
         comodel_name='fdb.ndc.cs.ext',
         required=True,
         ondelete='restrict'
-    )
-
-
-class FdbNdcCsExt(models.Model):
-    _inherit = 'fdb.ndc.cs.ext'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.ndc.cs.ext',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

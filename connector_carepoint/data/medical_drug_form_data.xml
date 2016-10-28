@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-    <data noupdate="1">
+<odoo noupdate="1">
 
-        <record model="medical.drug.form" id="MISS">
-            <field name="name">Missing Data</field>
-            <field name="code">MISS</field>
-        </record>
+    <record model="medical.drug.form" id="MISS">
+        <field name="name">Missing Data</field>
+        <field name="code">MISS</field>
+    </record>
 
-    </data>
-</openerp>
+</odoo>

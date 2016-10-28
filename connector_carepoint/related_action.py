@@ -8,8 +8,8 @@ Related actions are associated with jobs.
 When called on a job, they will return an action to the client.
 """
 
-from openerp import _
-from openerp.addons.connector.connector import ConnectorEnvironment
+from odoo import _
+from odoo.addons.connector.connector import ConnectorEnvironment
 from .unit.binder import CarepointBinder
 
 

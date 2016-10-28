@@ -4,7 +4,7 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import carepoint_store
+from odoo.addons.connector_carepoint.models import carepoint_store
 
 from ..common import SetUpCarepointBase
 

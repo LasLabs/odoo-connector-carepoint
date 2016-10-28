@@ -2,14 +2,14 @@
 # Copyright 2015-2016 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from openerp.addons.connector.connector import Binder
+from odoo.addons.connector.connector import Binder
 from .unit.export_synchronizer import export_record
 # from .unit.delete_synchronizer import export_delete_record
 from .connector import get_environment
-from openerp.addons.connector.event import (on_record_write,
-                                            on_record_create,
-                                            # on_record_unlink
-                                            )
+from odoo.addons.connector.event import (on_record_write,
+                                         on_record_create,
+                                         # on_record_unlink
+                                         )
 
 
 import logging
@@ -54,7 +54,7 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
     record = session.env[model_name].browse(record_id)
     fields = vals.keys()
     for binding in record.carepoint_bind_ids:
-        export_record.delay(session, binding._model._name, binding.id,
+        export_record.delay(session, binding._name, binding.id,
                             fields=fields)
 
 

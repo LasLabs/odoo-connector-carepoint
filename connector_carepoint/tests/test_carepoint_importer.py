@@ -5,13 +5,13 @@
 import mock
 from contextlib import contextmanager
 
-from openerp import fields, _
+from odoo import fields, _
 
-from openerp.addons.connector_carepoint.unit import import_synchronizer
+from odoo.addons.connector_carepoint.unit import import_synchronizer
 
 from .common import SetUpCarepointBase
 
-model = 'openerp.addons.connector_carepoint.unit.import_synchronizer'
+model = 'odoo.addons.connector_carepoint.unit.import_synchronizer'
 
 
 @contextmanager

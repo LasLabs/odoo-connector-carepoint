@@ -14,15 +14,6 @@ from . import account_invoice_line
 from . import stock_picking
 from . import stock_warehouse
 
-# Medical Models
-from . import medical_patient
-from . import medical_physician
-from . import medical_prescription_order
-from . import medical_prescription_order_line
-from . import medical_pathology
-from . import medical_pathology_code_type
-from . import medical_patient_disease
-
 # Address / Relations
 from . import address
 from . import address_abstract
@@ -38,6 +29,15 @@ from . import phone_patient
 from . import phone_store
 from . import phone_organization
 from . import phone_physician
+
+# Medical Models
+from . import medical_patient
+from . import medical_physician
+from . import medical_prescription_order
+from . import medical_prescription_order_line
+from . import medical_pathology
+from . import medical_pathology_code_type
+from . import medical_patient_disease
 
 # CarePoint Mappings/Binds
 from . import carepoint_account

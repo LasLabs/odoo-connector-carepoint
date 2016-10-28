@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.import_synchronizer import DelayedBatchImporter
@@ -17,6 +17,21 @@ from .address_abstract import (CarepointAddressAbstractImportMapper,
                                )
 
 _logger = logging.getLogger(__name__)
+
+
+class CarepointAddressStore(models.Model):
+    """ Adds the ``One2many`` relation to the Carepoint bindings
+    (``carepoint_bind_ids``)
+    """
+    _name = 'carepoint.address.store'
+    _inherit = 'carepoint.address.abstract'
+    _description = 'Carepoint Address Store'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.carepoint.address.store',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointCarepointAddressStore(models.Model):
@@ -32,21 +47,6 @@ class CarepointCarepointAddressStore(models.Model):
         string='Company',
         required=True,
         ondelete='cascade'
-    )
-
-
-class CarepointAddressStore(models.Model):
-    """ Adds the ``One2many`` relation to the Carepoint bindings
-    (``carepoint_bind_ids``)
-    """
-    _name = 'carepoint.address.store'
-    _inherit = 'carepoint.address.abstract'
-    _description = 'Carepoint Address Store'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.carepoint.address.store',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

@@ -5,12 +5,12 @@
 import mock
 from contextlib import contextmanager
 
-from openerp.addons.connector_carepoint.models import fdb_unit
+from odoo.addons.connector_carepoint.models import fdb_unit
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.fdb_unit'
+model = 'odoo.addons.connector_carepoint.models.fdb_unit'
 
 
 class EndTestException(Exception):

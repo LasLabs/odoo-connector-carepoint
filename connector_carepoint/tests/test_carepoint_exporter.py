@@ -6,13 +6,13 @@ import mock
 import psycopg2
 from contextlib import contextmanager
 
-from openerp import _
+from odoo import _
 
-from openerp.addons.connector_carepoint.unit import export_synchronizer
+from odoo.addons.connector_carepoint.unit import export_synchronizer
 
 from .common import SetUpCarepointBase
 
-model = 'openerp.addons.connector_carepoint.unit.export_synchronizer'
+model = 'odoo.addons.connector_carepoint.unit.export_synchronizer'
 
 
 @contextmanager

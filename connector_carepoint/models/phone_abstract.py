@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api, _
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  ExportMapper,
-                                                  )
+from odoo import models, fields, api, _
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               ExportMapper,
+                                               )
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
@@ -71,7 +71,6 @@ class CarepointPhoneAbstract(models.AbstractModel):
         )
 
     @api.multi
-    @api.depends('partner_id')
     def _compute_partner_id(self):
         """ It sets the partner_id from the phone_id """
         for rec_id in self:

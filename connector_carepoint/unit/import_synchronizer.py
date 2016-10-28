@@ -13,10 +13,10 @@ are already bound, to update the last sync date.
 
 
 import logging
-from openerp import fields, _
-from openerp.addons.connector.queue.job import job
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.synchronizer import Importer
+from odoo import fields, _
+from odoo.addons.connector.queue.job import job
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.synchronizer import Importer
 from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
 
@@ -291,7 +291,7 @@ class AddCheckpoint(ConnectorUnit):
         binding = self.model.browse(odoo_binding_id)
         record = binding.odoo_id
         add_checkpoint(self.session,
-                       record._model._name,
+                       record._name,
                        record.id,
                        self.backend_record.id)
 

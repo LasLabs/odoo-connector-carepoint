@@ -5,7 +5,7 @@
 from collections import OrderedDict
 import re
 
-from openerp import models, fields, api
+from odoo import models, fields, api
 
 
 class FdbPemMogc(models.Model):

@@ -4,14 +4,14 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import (
+from odoo.addons.connector_carepoint.models import (
     stock_picking
 )
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.%s' % (
+model = 'odoo.addons.connector_carepoint.models.%s' % (
     'stock_picking'
 )
 

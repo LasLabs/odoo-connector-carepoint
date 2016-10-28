@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint import connector
+from odoo.addons.connector_carepoint import connector
 
 from .common import SetUpCarepointBase
 
 
-mk_file = 'openerp.addons.connector_carepoint.connector'
+mk_file = 'odoo.addons.connector_carepoint.connector'
 
 
 class EndTestException(Exception):

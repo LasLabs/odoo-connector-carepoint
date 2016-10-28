@@ -7,10 +7,10 @@ import re
 
 from os import path
 
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
@@ -41,6 +41,16 @@ except ImportError:
 _logger = logging.getLogger(__name__)
 
 
+class FdbUnit(models.Model):
+    _inherit = 'fdb.unit'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.fdb.unit',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
+
+
 class CarepointFdbUnit(models.Model):
     _name = 'carepoint.fdb.unit'
     _inherit = 'carepoint.binding'
@@ -53,16 +63,6 @@ class CarepointFdbUnit(models.Model):
         comodel_name='fdb.unit',
         required=True,
         ondelete='restrict'
-    )
-
-
-class FdbUnit(models.Model):
-    _inherit = 'fdb.unit'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.unit',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

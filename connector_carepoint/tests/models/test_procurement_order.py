@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import procurement_order
+from odoo.addons.connector_carepoint.models import procurement_order
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.procurement_order'
+model = 'odoo.addons.connector_carepoint.models.procurement_order'
 
 
 class EndTestException(Exception):

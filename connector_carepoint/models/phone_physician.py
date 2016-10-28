@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields, api
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.import_synchronizer import DelayedBatchImporter
@@ -19,22 +19,6 @@ from .phone_abstract import (CarepointPhoneAbstractImportMapper,
                              )
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointPhonePhysician(models.Model):
-    """ Binding Model for the Carepoint Phone Physician """
-    _name = 'carepoint.carepoint.phone.physician'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.phone.physician': 'odoo_id'}
-    _description = 'Carepoint Phone Physician Many2Many Rel'
-    _cp_lib = 'doctor_phone'
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.phone.physician',
-        string='Phone',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointPhonePhysician(models.Model):
@@ -55,6 +39,22 @@ class CarepointPhonePhysician(models.Model):
     def _default_res_model(self):
         """ It returns the res model. """
         return 'medical.physician'
+
+
+class CarepointCarepointPhonePhysician(models.Model):
+    """ Binding Model for the Carepoint Phone Physician """
+    _name = 'carepoint.carepoint.phone.physician'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.phone.physician': 'odoo_id'}
+    _description = 'Carepoint Phone Physician Many2Many Rel'
+    _cp_lib = 'doctor_phone'
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.phone.physician',
+        string='Phone',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

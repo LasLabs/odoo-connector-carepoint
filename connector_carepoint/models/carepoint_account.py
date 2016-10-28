@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  ExportMapper,
-                                                  )
+from odoo import models, fields, api
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
@@ -17,21 +17,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import CarepointExporter
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointAccount(models.Model):
-    _name = 'carepoint.carepoint.account'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.account': 'odoo_id'}
-    _description = 'Carepoint CarepointAccount'
-    _cp_lib = 'account'
-
-    odoo_id = fields.Many2one(
-        string='CarepointAccount',
-        comodel_name='carepoint.account',
-        required=True,
-        ondelete='restrict',
-    )
 
 
 class CarepointAccount(models.Model):
@@ -73,6 +58,21 @@ class CarepointAccount(models.Model):
             for child in children:
                 self._get_by_patient(child, create, recurse)
         return account
+
+
+class CarepointCarepointAccount(models.Model):
+    _name = 'carepoint.carepoint.account'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.account': 'odoo_id'}
+    _description = 'Carepoint CarepointAccount'
+    _cp_lib = 'account'
+
+    odoo_id = fields.Many2one(
+        string='CarepointAccount',
+        comodel_name='carepoint.account',
+        required=True,
+        ondelete='restrict',
+    )
 
 
 @carepoint

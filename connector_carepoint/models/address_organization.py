@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields, api
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.import_synchronizer import DelayedBatchImporter
@@ -19,22 +19,6 @@ from .address_abstract import (CarepointAddressAbstractImportMapper,
                                )
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointAddressOrganization(models.Model):
-    """ Binding Model for the Carepoint Address Organization """
-    _name = 'carepoint.carepoint.address.organization'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.address.organization': 'odoo_id'}
-    _description = 'Carepoint Address Organization Many2Many Rel'
-    _cp_lib = 'pharmacy_address'
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.address.organization',
-        string='Address',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointAddressOrganization(models.Model):
@@ -55,6 +39,22 @@ class CarepointAddressOrganization(models.Model):
     def _default_res_model(self):
         """ It returns the res model. """
         return 'carepoint.organization'
+
+
+class CarepointCarepointAddressOrganization(models.Model):
+    """ Binding Model for the Carepoint Address Organization """
+    _name = 'carepoint.carepoint.address.organization'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.address.organization': 'odoo_id'}
+    _description = 'Carepoint Address Organization Many2Many Rel'
+    _cp_lib = 'pharmacy_address'
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.address.organization',
+        string='Address',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

@@ -3,12 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  only_create,
-                                                  none,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               changed_by,
+                                               only_create,
+                                               none,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
@@ -28,6 +28,19 @@ from .medical_patient_disease import MedicalPatientDiseaseUnit
 _logger = logging.getLogger(__name__)
 
 
+class MedicalPatient(models.Model):
+    """ Adds the ``one2many`` relation to the Carepoint bindings
+    (``carepoint_bind_ids``)
+    """
+    _inherit = 'medical.patient'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.medical.patient',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
+
+
 class CarepointMedicalPatient(models.Model):
     """ Binding Model for the Carepoint Patient """
     _name = 'carepoint.medical.patient'
@@ -41,19 +54,6 @@ class CarepointMedicalPatient(models.Model):
         string='Patient',
         required=True,
         ondelete='cascade'
-    )
-
-
-class MedicalPatient(models.Model):
-    """ Adds the ``one2many`` relation to the Carepoint bindings
-    (``carepoint_bind_ids``)
-    """
-    _inherit = 'medical.patient'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.medical.patient',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

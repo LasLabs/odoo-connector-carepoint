@@ -4,14 +4,14 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import address_patient
+from odoo.addons.connector_carepoint.models import address_patient
 
 from ...unit.backend_adapter import CarepointCRUDAdapter
 
 from ..common import SetUpCarepointBase
 
 
-_file = 'openerp.addons.connector_carepoint.models.address_patient'
+_file = 'odoo.addons.connector_carepoint.models.address_patient'
 
 
 class EndTestException(Exception):

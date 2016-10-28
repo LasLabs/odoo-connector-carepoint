@@ -6,7 +6,7 @@
     'name': 'Website Medicament First Databank',
     'description': 'Uses FDB Monograph data to generate website product '
                    'descriptions.',
-    'version': '9.0.1.0.0',
+    'version': '10.0.1.0.0',
     'category': 'Connector',
     'author': "LasLabs",
     'license': 'AGPL-3',

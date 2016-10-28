@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields, api
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.import_synchronizer import DelayedBatchImporter
@@ -19,22 +19,6 @@ from .address_abstract import (CarepointAddressAbstractImportMapper,
                                )
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointAddressPatient(models.Model):
-    """ Binding Model for the Carepoint Address Patient """
-    _name = 'carepoint.carepoint.address.patient'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.address.patient': 'odoo_id'}
-    _description = 'Carepoint Address Patient Many2Many Rel'
-    _cp_lib = 'patient_address'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.address.patient',
-        string='Company',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointAddressPatient(models.Model):
@@ -55,6 +39,22 @@ class CarepointAddressPatient(models.Model):
     def _default_res_model(self):
         """ It returns the res model. """
         return 'medical.patient'
+
+
+class CarepointCarepointAddressPatient(models.Model):
+    """ Binding Model for the Carepoint Address Patient """
+    _name = 'carepoint.carepoint.address.patient'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.address.patient': 'odoo_id'}
+    _description = 'Carepoint Address Patient Many2Many Rel'
+    _cp_lib = 'patient_address'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.address.patient',
+        string='Company',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

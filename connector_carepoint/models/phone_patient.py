@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api, _
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields, api, _
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.import_synchronizer import DelayedBatchImporter
@@ -24,22 +24,6 @@ try:
     from carepoint.models.phone_mixin import EnumPhoneType
 except ImportError:
     _logger.warning('Cannot import EnumPhoneType from carepoint')
-
-
-class CarepointCarepointPhonePatient(models.Model):
-    """ Binding Model for the Carepoint Phone Patient """
-    _name = 'carepoint.carepoint.phone.patient'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.phone.patient': 'odoo_id'}
-    _description = 'Carepoint Phone Patient Many2Many Rel'
-    _cp_lib = 'patient_phone'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.phone.patient',
-        string='Company',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointPhonePatient(models.Model):
@@ -60,6 +44,22 @@ class CarepointPhonePatient(models.Model):
     def _default_res_model(self):
         """ It returns the res model. """
         return 'medical.patient'
+
+
+class CarepointCarepointPhonePatient(models.Model):
+    """ Binding Model for the Carepoint Phone Patient """
+    _name = 'carepoint.carepoint.phone.patient'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.phone.patient': 'odoo_id'}
+    _description = 'Carepoint Phone Patient Many2Many Rel'
+    _cp_lib = 'patient_phone'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.phone.patient',
+        string='Company',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

@@ -3,15 +3,15 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  none,
-                                                  m2o_to_backend,
-                                                  follow_m2o_relations,
-                                                  ExportMapper,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               none,
+                                               m2o_to_backend,
+                                               follow_m2o_relations,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
 from ..unit.mapper import PartnerImportMapper
@@ -29,6 +29,19 @@ from ..connector import add_checkpoint
 _logger = logging.getLogger(__name__)
 
 
+class MedicalPatientDisease(models.Model):
+    """ Adds the ``one2many`` relation to the Carepoint bindings
+    (``carepoint_bind_ids``)
+    """
+    _inherit = 'medical.patient.disease'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.medical.patient.disease',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
+
+
 class CarepointMedicalPatientDisease(models.Model):
     """ Binding Model for the Carepoint Store """
     _name = 'carepoint.medical.patient.disease'
@@ -42,19 +55,6 @@ class CarepointMedicalPatientDisease(models.Model):
         string='Company',
         required=True,
         ondelete='cascade'
-    )
-
-
-class MedicalPatientDisease(models.Model):
-    """ Adds the ``one2many`` relation to the Carepoint bindings
-    (``carepoint_bind_ids``)
-    """
-    _inherit = 'medical.patient.disease'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.medical.patient.disease',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

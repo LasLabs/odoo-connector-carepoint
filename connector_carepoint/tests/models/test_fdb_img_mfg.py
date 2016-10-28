@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import fdb_img_mfg
+from odoo.addons.connector_carepoint.models import fdb_img_mfg
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.fdb_img'
+model = 'odoo.addons.connector_carepoint.models.fdb_img'
 
 
 class EndTestException(Exception):

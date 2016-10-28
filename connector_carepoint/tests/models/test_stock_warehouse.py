@@ -4,7 +4,7 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import stock_warehouse
+from odoo.addons.connector_carepoint.models import stock_warehouse
 
 from ..common import SetUpCarepointBase
 

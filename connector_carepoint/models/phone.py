@@ -3,13 +3,13 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
+from odoo import models, fields, api
 
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  ExportMapper,
-                                                  )
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               changed_by,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
@@ -26,22 +26,6 @@ try:
     import phonenumbers
 except ImportError:
     _logger.warning('Cannot import phonenumbers')
-
-
-class CarepointCarepointPhone(models.Model):
-    """ Binding Model for the Carepoint Phone """
-    _name = 'carepoint.carepoint.phone'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.phone': 'odoo_id'}
-    _description = 'Carepoint Phone'
-    _cp_lib = 'phone'
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.phone',
-        string='Company',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointPhone(models.Model):
@@ -91,6 +75,22 @@ class CarepointPhone(models.Model):
             ``dict`` of values for create or write
         """
         return {attr: partner[attr] for attr in self.PARTNER_ATTRS}
+
+
+class CarepointCarepointPhone(models.Model):
+    """ Binding Model for the Carepoint Phone """
+    _name = 'carepoint.carepoint.phone'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.phone': 'odoo_id'}
+    _description = 'Carepoint Phone'
+    _cp_lib = 'phone'
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.phone',
+        string='Company',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

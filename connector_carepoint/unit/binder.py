@@ -3,9 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-import openerp
+import odoo
 
-from openerp.addons.connector.connector import Binder
+from odoo.addons.connector.connector import Binder
 
 from ..backend import carepoint
 
@@ -90,7 +90,7 @@ class CarepointModelBinder(CarepointBinder):
         ])
         if not bindings:
             return self.model.browse() if browse else None
-        assert len(bindings) == 1, openerp._(
+        assert len(bindings) == 1, odoo._(
             "Several records found: %s"
         ) % (bindings)
         if unwrap:
@@ -109,7 +109,7 @@ class CarepointModelBinder(CarepointBinder):
         :return: backend identifier of the record
         """
         record = self.model.browse()
-        if isinstance(record_id, openerp.models.BaseModel):
+        if isinstance(record_id, odoo.models.BaseModel):
             record_id.ensure_one()
             record = record_id
             record_id = record_id.id
@@ -142,8 +142,8 @@ class CarepointModelBinder(CarepointBinder):
             "got: %s, %s" % (external_id, binding_id)
         )
         # avoid to trigger the export when we modify the `carepoint_id`
-        now_fmt = openerp.fields.Datetime.now()
-        if not isinstance(binding_id, openerp.models.BaseModel):
+        now_fmt = odoo.fields.Datetime.now()
+        if not isinstance(binding_id, odoo.models.BaseModel):
             binding_id = self.model.browse(binding_id)
         binding_id.with_context(connector_no_export=True).write({
             'carepoint_id': str(external_id),
@@ -157,7 +157,7 @@ class CarepointModelBinder(CarepointBinder):
         :param browse: when True, returns a browse_record instance
                        rather than an ID
         """
-        if isinstance(binding_id, openerp.models.BaseModel):
+        if isinstance(binding_id, odoo.models.BaseModel):
             binding = binding_id
         else:
             binding = self.model.browse(binding_id)

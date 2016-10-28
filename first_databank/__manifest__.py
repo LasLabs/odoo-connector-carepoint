@@ -5,7 +5,7 @@
 {
     'name': 'First Databank',
     'description': 'Provides base models for storage of First Databank data',
-    'version': '9.0.1.0.0',
+    'version': '10.0.1.0.0',
     'category': 'Connector',
     'author': "LasLabs",
     'license': 'AGPL-3',

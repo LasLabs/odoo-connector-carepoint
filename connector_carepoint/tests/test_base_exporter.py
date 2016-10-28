@@ -4,16 +4,16 @@
 
 import mock
 
-from openerp import fields
+from odoo import fields
 
-from openerp.addons.connector.exception import IDMissingInBackend
+from odoo.addons.connector.exception import IDMissingInBackend
 
-from openerp.addons.connector_carepoint.unit import export_synchronizer
+from odoo.addons.connector_carepoint.unit import export_synchronizer
 
 from .common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.unit.export_synchronizer'
+model = 'odoo.addons.connector_carepoint.unit.export_synchronizer'
 
 
 class EndTestException(Exception):

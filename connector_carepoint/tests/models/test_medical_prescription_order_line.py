@@ -4,14 +4,14 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import (
+from odoo.addons.connector_carepoint.models import (
     medical_prescription_order_line
 )
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.%s' % (
+model = 'odoo.addons.connector_carepoint.models.%s' % (
     'medical_prescription_order_line'
 )
 

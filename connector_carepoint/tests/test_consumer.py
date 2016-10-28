@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint import consumer
+from odoo.addons.connector_carepoint import consumer
 
 from .common import SetUpCarepointBase
 
 
-mk_file = 'openerp.addons.connector_carepoint.consumer'
+mk_file = 'odoo.addons.connector_carepoint.consumer'
 
 
 class TestConsumer(SetUpCarepointBase):

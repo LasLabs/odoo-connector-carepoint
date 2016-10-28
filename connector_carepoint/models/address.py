@@ -3,14 +3,14 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
+from odoo import models, fields, api
 
-from openerp.addons.connector.connector import ConnectorUnit
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  changed_by,
-                                                  ExportMapper,
-                                                  none,
-                                                  )
+from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               changed_by,
+                                               ExportMapper,
+                                               none,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..unit.mapper import trim_and_titleize
@@ -22,22 +22,6 @@ from ..unit.export_synchronizer import CarepointExporter
 
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointAddress(models.Model):
-    """ Binding Model for the Carepoint Address """
-    _name = 'carepoint.carepoint.address'  # This is going to be confusing...
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.address': 'odoo_id'}
-    _description = 'Carepoint Address'
-    _cp_lib = 'address'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.address',
-        string='Company',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointAddress(models.Model):
@@ -108,6 +92,22 @@ class CarepointAddress(models.Model):
                 val = False
             vals[attr] = val
         return vals
+
+
+class CarepointCarepointAddress(models.Model):
+    """ Binding Model for the Carepoint Address """
+    _name = 'carepoint.carepoint.address'  # This is going to be confusing...
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.address': 'odoo_id'}
+    _description = 'Carepoint Address'
+    _cp_lib = 'address'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.address',
+        string='Company',
+        required=True,
+        ondelete='cascade'
+    )
 
 
 @carepoint

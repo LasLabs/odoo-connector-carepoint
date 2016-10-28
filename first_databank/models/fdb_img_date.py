@@ -4,7 +4,7 @@
 
 from datetime import datetime
 
-from openerp import models, fields, api
+from odoo import models, fields, api
 
 
 class FdbImgDate(models.Model):

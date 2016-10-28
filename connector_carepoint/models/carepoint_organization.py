@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  none,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               none,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PartnerImportMapper,
                            ExportMapper,
@@ -23,22 +23,6 @@ from .address_organization import CarepointAddressOrganizationUnit
 from .phone_organization import CarepointPhoneOrganizationUnit
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointOrganization(models.Model):
-    """ Binding Model for the Carepoint Organization """
-    _name = 'carepoint.org.bind'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.organization': 'odoo_id'}
-    _description = 'Carepoint Organization'
-    _cp_lib = 'pharmacy'
-
-    odoo_id = fields.Many2one(
-        comodel_name='carepoint.organization',
-        string='Organization',
-        required=True,
-        ondelete='cascade'
-    )
 
 
 class CarepointOrganization(models.Model):
@@ -59,6 +43,22 @@ class CarepointOrganization(models.Model):
         comodel_name='carepoint.org.bind',
         inverse_name='odoo_id',
         string='Carepoint Bindings',
+    )
+
+
+class CarepointCarepointOrganization(models.Model):
+    """ Binding Model for the Carepoint Organization """
+    _name = 'carepoint.org.bind'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.organization': 'odoo_id'}
+    _description = 'Carepoint Organization'
+    _cp_lib = 'pharmacy'
+
+    odoo_id = fields.Many2one(
+        comodel_name='carepoint.organization',
+        string='Organization',
+        required=True,
+        ondelete='cascade'
     )
 
 

@@ -4,12 +4,12 @@
 
 import mock
 
-from openerp.addons.connector_carepoint.models import account_invoice_line
+from odoo.addons.connector_carepoint.models import account_invoice_line
 
 from ..common import SetUpCarepointBase
 
 
-model = 'openerp.addons.connector_carepoint.models.account_invoice_line'
+model = 'odoo.addons.connector_carepoint.models.account_invoice_line'
 
 
 class EndTestException(Exception):

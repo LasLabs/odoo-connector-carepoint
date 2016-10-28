@@ -3,11 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
-from openerp.addons.connector.connector import ConnectorUnit
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
+from odoo.addons.connector.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
@@ -18,6 +18,19 @@ from .procurement_order import ProcurementOrderUnit
 
 
 _logger = logging.getLogger(__name__)
+
+
+class SaleOrderLine(models.Model):
+    """ Adds the ``one2many`` relation to the Carepoint bindings
+    (``carepoint_bind_ids``)
+    """
+    _inherit = 'sale.order.line'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.sale.order.line',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointSaleOrderLine(models.Model):
@@ -33,19 +46,6 @@ class CarepointSaleOrderLine(models.Model):
         string='Company',
         required=True,
         ondelete='cascade'
-    )
-
-
-class SaleOrderLine(models.Model):
-    """ Adds the ``one2many`` relation to the Carepoint bindings
-    (``carepoint_bind_ids``)
-    """
-    _inherit = 'sale.order.line'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.sale.order.line',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 

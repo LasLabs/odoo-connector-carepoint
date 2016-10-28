@@ -3,12 +3,12 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields, api
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  changed_by,
-                                                  ExportMapper,
-                                                  )
+from odoo import models, fields, api
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               changed_by,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper, trim
 from ..backend import carepoint
@@ -18,26 +18,6 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
 from ..unit.export_synchronizer import CarepointExporter
 
 _logger = logging.getLogger(__name__)
-
-
-class CarepointCarepointItem(models.Model):
-    _name = 'carepoint.carepoint.item'
-    _inherit = 'carepoint.binding'
-    _inherits = {'carepoint.item': 'odoo_id'}
-    _description = 'Carepoint Item'
-    _cp_lib = 'item'  # Name of model in Carepoint lib (snake_case)
-
-    odoo_id = fields.Many2one(
-        string='Item',
-        comodel_name='carepoint.item',
-        required=True,
-        ondelete='restrict',
-    )
-    store_id = fields.Many2one(
-        string='Store',
-        comodel_name='carepoint.carepoint.store',
-        readonly=True,
-    )
 
 
 class CarepointItem(models.Model):
@@ -74,6 +54,26 @@ class CarepointItem(models.Model):
         avail = context_product._product_available()[self.id]
         self.store_on_hand = avail['qty_available']
         self.store_on_order = avail['incoming_qty']
+
+
+class CarepointCarepointItem(models.Model):
+    _name = 'carepoint.carepoint.item'
+    _inherit = 'carepoint.binding'
+    _inherits = {'carepoint.item': 'odoo_id'}
+    _description = 'Carepoint Item'
+    _cp_lib = 'item'  # Name of model in Carepoint lib (snake_case)
+
+    odoo_id = fields.Many2one(
+        string='Item',
+        comodel_name='carepoint.item',
+        required=True,
+        ondelete='restrict',
+    )
+    store_id = fields.Many2one(
+        string='Store',
+        comodel_name='carepoint.carepoint.store',
+        readonly=True,
+    )
 
 
 @carepoint

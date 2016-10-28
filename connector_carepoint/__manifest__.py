@@ -5,7 +5,7 @@
 {
     'name': 'CarePoint Connector',
     'description': 'Two-Way Sync With CarePoint',
-    'version': '9.0.1.3.0',
+    'version': '10.0.1.0.0',
     'category': 'Connector',
     'author': "LasLabs",
     'license': 'AGPL-3',

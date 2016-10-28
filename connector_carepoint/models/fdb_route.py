@@ -3,10 +3,10 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from openerp import models, fields
-from openerp.addons.connector.unit.mapper import (mapping,
-                                                  only_create,
-                                                  )
+from odoo import models, fields
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
@@ -18,6 +18,16 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 
 _logger = logging.getLogger(__name__)
+
+
+class FdbRoute(models.Model):
+    _inherit = 'fdb.route'
+
+    carepoint_bind_ids = fields.One2many(
+        comodel_name='carepoint.fdb.route',
+        inverse_name='odoo_id',
+        string='Carepoint Bindings',
+    )
 
 
 class CarepointFdbRoute(models.Model):
@@ -32,16 +42,6 @@ class CarepointFdbRoute(models.Model):
         comodel_name='fdb.route',
         required=True,
         ondelete='restrict'
-    )
-
-
-class FdbRoute(models.Model):
-    _inherit = 'fdb.route'
-
-    carepoint_bind_ids = fields.One2many(
-        comodel_name='carepoint.fdb.route',
-        inverse_name='odoo_id',
-        string='Carepoint Bindings',
     )
 
 
