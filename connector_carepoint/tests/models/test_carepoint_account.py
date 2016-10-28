@@ -17,7 +17,7 @@ class AccountTestBase(SetUpCarepointBase):
 
     def setUp(self):
         super(AccountTestBase, self).setUp()
-        self.model = 'carepoint.address.abstract'
+        self.model = 'carepoint.account'
         self.mock_env = self.get_carepoint_helper(
             self.model
         )
@@ -70,6 +70,27 @@ class TestCarepointAccount(AccountTestBase):
             [('patient_id', '=', child.id)]
         )
         self.assertTrue(len(account))
+
+
+class TestAccountAdapter(AccountTestBase):
+
+    def setUp(self):
+        super(TestAccountAdapter, self).setUp()
+        self.Unit = carepoint_account.CarepointAccountAdapter
+
+    def _init_model(self):
+        self.unit = self.Unit(self.mock_env)
+        self.unit.carepoint_record = self.record
+        self.unit.connector_env.model._cp_lib = 'account'
+
+    def test_create_gets_sequence(self):
+        """ It should get the sequence for acct_id instead of PK """
+        with self.mock_api(True) as api:
+            self._init_model()
+            self.unit.create({})
+            api.get_next_sequence.assert_called_once_with(
+                'acct_id',
+            )
 
 
 class TestAccountImportMapper(AccountTestBase):

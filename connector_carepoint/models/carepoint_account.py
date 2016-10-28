@@ -79,6 +79,16 @@ class CarepointAccount(models.Model):
 class CarepointAccountAdapter(CarepointCRUDAdapter):
     _model_name = 'carepoint.carepoint.account'
 
+    def create(self, data):
+        """ Wrapper to create a record on the external system
+        Params:
+            data: ``dict`` of Data to create record with
+        Returns:
+            ``str`` of external carepoint_id
+        """
+        data['ID'] = self.carepoint.get_next_sequence('acct_id')
+        return super(CarepointAccountAdapter, self).create(data)
+
 
 @carepoint
 class CarepointAccountUnit(ConnectorUnit):
