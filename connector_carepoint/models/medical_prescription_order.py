@@ -9,6 +9,7 @@ from openerp.addons.connector.unit.mapper import (mapping,
                                                   ExportMapper,
                                                   none,
                                                   convert,
+                                                  backend_to_m2o,
                                                   )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -70,29 +71,22 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
 
     direct = [
         ('start_date', 'date_prescription'),
+        ('rx_id', 'carepoint_id'),
+        (backend_to_m2o('pat_id', binding='carepoint.medical.patient'),
+         'patient_id'),
+        (backend_to_m2o('md_id', binding='carepoint.medical.physician'),
+         'physician_id'),
     ]
 
     @mapping
-    def patient_id(self, record):
-        binder = self.binder_for('carepoint.medical.patient')
-        patient_id = binder.to_odoo(record['pat_id'])
-        return {'patient_id': patient_id}
-
-    @mapping
-    def physician_id(self, record):
-        binder = self.binder_for('carepoint.medical.physician')
-        physician_id = binder.to_odoo(record['md_id'])
-        return {'physician_id': physician_id}
+    def active(self, record):
+        return {'active': record['status_cn'] == 3}
 
     @mapping
     def partner_id(self, record):
         binder = self.binder_for('carepoint.carepoint.store')
         store = binder.to_odoo(record['store_id'], browse=True)
         return {'partner_id': store.pharmacy_id.id}
-
-    @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['rx_id']}
 
 
 @carepoint
@@ -116,6 +110,7 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
     direct = [
         (convert('date_prescription', fields.Datetime.from_string),
          'start_date'),
+        ('carepoint_id', 'pat_id'),
         (none('qty'), 'written_qty'),
         (none('frequency'), 'freq_of_admin'),
         (none('quantity'), 'units_per_dose'),
@@ -125,8 +120,9 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper):
     ]
 
     @mapping
-    def pat_id(self, record):
-        return {'pat_id': record.carepoint_id}
+    def status_cn(self, record):
+        if not record.active:
+            return {'status_cn': 3}
 
 
 @carepoint
