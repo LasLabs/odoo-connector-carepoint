@@ -177,6 +177,36 @@ class CarepointImporter(Importer):
         """ Hook called at the end of the import """
         return
 
+    def _enforce_user_exists(self):
+        """ It is called for every export, enforcing user exists in CarePoint
+
+        No user should be able to write or create data in Odoo without an
+        account. This is enforced here by importing the create and write
+        user.
+        """
+        if self.model._name == 'carepoint.res.users':
+            return
+        try:
+            if self.carepoint_record['add_user_id']:
+                import_record(
+                    self.session,
+                    'carepoint.res.users',
+                    self.backend_record.id,
+                    self.carepoint_record['add_user_id'],
+                )
+        except KeyError:
+            pass
+        try:
+            if self.carepoint_record['chg_user_id']:
+                import_record(
+                    self.session,
+                    'carepoint.res.users',
+                    self.backend_record.id,
+                    self.carepoint_record['chg_user_id'],
+                )
+        except KeyError:
+            pass
+
     def run(self, carepoint_id, force=False):
         """ Run the synchronization
         :param carepoint_id: identifier of the record on Carepoint
@@ -202,6 +232,9 @@ class CarepointImporter(Importer):
         if not force and self._is_current(binding):
             return _('Already Up To Date.')
         self._before_import()
+
+        # Enforce user existance on local
+        self._enforce_user_exists()
 
         # import the missing linked resources
         self._import_dependencies()

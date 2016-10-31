@@ -3,8 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import fields
-from odoo import models
+from odoo import api, fields, models
 from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                none,
@@ -33,6 +32,20 @@ class MedicalPrescriptionOrder(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+    carepoint_store_id = fields.Many2one(
+        string='Carepoint Store',
+        comodel_name='carepoint.store',
+        compute='_compute_carepoint_store_id',
+        store=True,
+    )
+
+    @api.multi
+    def _compute_carepoint_store_id(self):
+        for rec_id in self:
+            store = rec_id.carepoint_store_id.get_by_pharmacy(
+                rec_id.partner_id,
+            )
+            rec_id.carepoint_store_id = store.id
 
 
 class CarepointMedicalPrescriptionOrder(models.Model):

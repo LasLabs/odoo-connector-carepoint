@@ -201,6 +201,18 @@
                                         class="oe_highlight"
                                         string="Import in background"/>
                             </group>
+                            <group>
+                                <div>
+                                    <label string="Import phones since" class="oe_inline"/>
+                                    <field name="import_phones_from_date"
+                                           class="oe_inline"
+                                           nolabel="1"/>
+                                </div>
+                                <button name="import_phone"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background"/>
+                            </group>
                             
                             <!--<group>
                                 <label string="Import all customer groups" class="oe_inline"/>

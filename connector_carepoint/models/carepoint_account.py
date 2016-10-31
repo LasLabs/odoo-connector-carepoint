@@ -151,10 +151,6 @@ class CarepointAccountExportMapper(ExportMapper):
         return {'pat_id': patient_id}
 
     @mapping
-    def ID(self, binding):
-        return {'ID': binding.carepoint_id}
-
-    @mapping
     def static_defaults(self, binding):
         return {
             'acct_type_cn': 0,

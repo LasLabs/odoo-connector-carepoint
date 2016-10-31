@@ -3,9 +3,11 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
+from odoo import api, models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
+                                               ExportMapper,
                                                only_create,
+                                               m2o_to_backend,
                                                )
 from odoo.addons.connector.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
@@ -14,6 +16,8 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
+
 from .procurement_order import ProcurementOrderUnit
 
 
@@ -151,3 +155,32 @@ class SaleOrderLineImporter(CarepointImporter):
             self._import_dependency(
                 record['order_id'], 'carepoint.stock.picking'
             )
+
+
+@carepoint
+class SaleOrderLineExportMapper(ExportMapper):
+    _model_name = 'carepoint.sale.order.line'
+
+    direct = [
+        (m2o_to_backend('prescription_order_line_id',
+                        binding='carepoint.rx.ord.ln'),
+         'rx_id'),
+        (m2o_to_backend('order_id', binding='carepoint.sale.order'),
+         'order_id'),
+    ]
+
+
+@carepoint
+class SaleOrderLineExporter(CarepointExporter):
+    _model_name = ['carepoint.sale.order.line']
+    _base_mapper = SaleOrderLineExportMapper
+
+    def _export_dependencies(self):
+        self._export_dependency(
+            self.binding_record.order_id,
+            'carepoint.sale.order',
+        )
+        self._export_dependency(
+            self.binding_record.prescription_order_line_id,
+            'carepoint.rx.ord.ln',
+        )

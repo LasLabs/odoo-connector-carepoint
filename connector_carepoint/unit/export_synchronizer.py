@@ -286,8 +286,29 @@ class CarepointExporter(CarepointBaseExporter):
             exporter = self.unit_for(exporter_class, model=binding_model)
             exporter.run(binding.id)
 
+    def _enforce_user_exists(self):
+        """ It is called for every export, enforcing user exists in CarePoint
+
+        No user should be able to write or create data in CarePoint without
+        an account. This is enforced here by exporting the create and write
+        user.
+        """
+        _logger.debug('Enforce user %s, %s', self.binding_record.create_uid, self.binding_record.write_uid)
+        if self.binding_record._name == 'carepoint.res.users':
+            return
+        export_record(
+            self.session,
+            'carepoint.res.users',
+            self.binding_record.create_uid.id,
+        )
+        export_record(
+            self.session,
+            'carepoint.res.users',
+            self.binding_record.write_uid.id,
+        )
+
     def _export_dependencies(self):
-        """ Export the dependencies for the record"""
+        """ Export the dependencies for the record """
         return
 
     def _map_data(self):
@@ -343,6 +364,9 @@ class CarepointExporter(CarepointBaseExporter):
 
         if self._has_to_skip():
             return
+
+        # Enforce user existance on remote
+        self._enforce_user_exists()
 
         # export the missing linked resources
         self._export_dependencies()

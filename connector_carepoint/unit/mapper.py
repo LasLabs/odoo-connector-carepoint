@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo.addons.connector.unit.mapper import (mapping,
+                                               only_create,
                                                changed_by,
                                                ImportMapper,
                                                ExportMapper,
@@ -90,6 +91,11 @@ def add_to(field, number):
 
 class CarepointImportMapper(ImportMapper):
 
+    def _get_user(self, external_id, browse=False):
+        """ It returns the Odoo user for the Carepoint external ID """
+        binder = self.binder_for('carepoint.res.users')
+        return binder.to_odoo(external_id, browse)
+
     @mapping
     def backend_id(self, record):
         return {'backend_id': self.backend_record.id}
@@ -97,6 +103,36 @@ class CarepointImportMapper(ImportMapper):
     @mapping
     def company_id(self, record):
         return {'company_id': self.backend_record.company_id.id}
+
+    @mapping
+    @only_create
+    def create_uid(self, record):
+        try:
+            return {'create_uid': self._get_user(record['add_user_id'])}
+        except KeyError:
+            return
+
+    @mapping
+    def write_uid(self, record):
+        try:
+            return {'write_uid': self._get_user(record['chg_user_id'])}
+        except KeyError:
+            return
+
+    @mapping
+    @only_create
+    def create_date(self, record):
+        try:
+            return {'create_date': record['add_date']}
+        except KeyError:
+            return
+
+    @mapping
+    def create_date(self, record):
+        try:
+            return {'write_date': record['chg_date']}
+        except KeyError:
+            return
 
 
 class PartnerImportMapper(CarepointImportMapper):
@@ -170,3 +206,32 @@ class PersonExportMapper(ExportMapper):
         return {'lname': lname,
                 'fname': fname,
                 }
+
+
+class CommonDateExportMapperMixer(object):
+    """ It provides a mixer for add and change date / user mappers """
+
+    def _get_user(self, user):
+        """ It returns the Carepoint external ID for the Odoo user """
+        binder = self.binder_for('carepoint.res.users')
+        return binder.to_backend(user)
+
+    @mapping
+    @changed_by('create_uid')
+    def add_user_id(self, record):
+        return {'add_user_id': self._get_user(record.create_uid)}
+
+    @mapping
+    @changed_by('create_date')
+    def add_date(self, record):
+        return {'add_date': fields.Datetime.from_string(record.create_date)}
+
+    @mapping
+    @changed_by('write_uid')
+    def chg_user_id(self, record):
+        return {'chg_user_id': self._get_user(record.write_uid)}
+
+    @mapping
+    @changed_by('write_date')
+    def chg_date(self, record):
+        return {'chg_date': fields.Datetime.from_string(record.write_date)}

@@ -6,6 +6,8 @@ import logging
 from odoo import models, fields
 from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
+                                               ExportMapper,
+                                               m2o_to_backend,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
@@ -13,6 +15,7 @@ from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
 
 
 _logger = logging.getLogger(__name__)
@@ -119,3 +122,34 @@ class SaleOrderLineNonRxImporter(CarepointImporter):
         record = self.carepoint_record
         self._import_dependency(record['order_id'],
                                 'carepoint.sale.order')
+        self._import_dependency(record['rx_id'],
+                                'carepoint.rx.ord.ln')
+
+
+@carepoint
+class SaleOrderLineNonRxExportMapper(ExportMapper):
+    _model_name = 'carepoint.sale.order.line.non.rx'
+
+    direct = [
+        (m2o_to_backend('prescription_order_line_id',
+                        binding='carepoint.rx.ord.ln'),
+         'rx_id'),
+        (m2o_to_backend('order_id', binding='carepoint.sale.order'),
+         'order_id'),
+    ]
+
+
+@carepoint
+class SaleOrderLineNonRxExporter(CarepointExporter):
+    _model_name = ['carepoint.sale.order.line.non.rx']
+    _base_mapper = SaleOrderLineNonRxExportMapper
+
+    def _export_dependencies(self):
+        self._export_dependency(
+            self.binding_record.order_id,
+            'carepoint.sale.order',
+        )
+        self._export_dependency(
+            self.binding_record.prescription_order_line_id,
+            'carepoint.rx.ord.ln',
+        )

@@ -62,7 +62,7 @@
         <field name="args">()</field>
     </record>
     
-    <record id="ir_cron_connector_carepoint_address" model="ir.cron">
+    <record id="ir_cron_connector_carepoint_phone" model="ir.cron">
         <field name="name">Fetch Updated CarePoint Phones</field>
         <field name="interval_number">10</field>
         <field name="interval_type">minutes</field>
