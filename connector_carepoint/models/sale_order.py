@@ -3,15 +3,19 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
-from odoo.addons.connector.unit.mapper import mapping
+from odoo import models, fields, api
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               m2o_to_backend,
+                                               only_create,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import CarepointImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-
+from ..unit.export_synchronizer import CarepointExporter
 
 _logger = logging.getLogger(__name__)
 
@@ -44,6 +48,20 @@ class CarepointSaleOrder(models.Model):
         required=True,
         ondelete='cascade'
     )
+    carepoint_store_id = fields.Many2one(
+        string='Carepoint Store',
+        comodel_name='carepoint.store',
+        compute='_compute_carepoint_store_id',
+        store=True,
+    )
+
+    @api.multi
+    def _compute_carepoint_store_id(self):
+        for rec_id in self:
+            store = rec_id.carepoint_store_id.get_by_pharmacy(
+                rec_id.partner_id,
+            )
+            rec_id.carepoint_store_id = store.id
 
 
 @carepoint
@@ -107,8 +125,8 @@ class SaleOrderImportMapper(CarepointImportMapper):
     @mapping
     def pharmacy_id(self, record):
         binder = self.binder_for('carepoint.carepoint.store')
-        store_id = binder.to_odoo(record['store_id'])
-        return {'pharmacy_id': store_id}
+        store_id = binder.to_odoo(record['store_id'], browse=True)
+        return {'pharmacy_id': store_id.pharmacy_id.id}
 
     @mapping
     # @only_create
@@ -151,3 +169,25 @@ class SaleOrderImporter(CarepointImporter):
         # proc_unit._import_procurements_for_sale(
         #     self.carepoint_id,
         # )
+
+
+@carepoint
+class SaleOrderExportMapper(ExportMapper):
+    _model_name = 'carepoint.sale.order'
+
+    direct = [
+        ('date_order', 'submit_date'),
+        (m2o_to_backend('carepoint_store_id',
+                        binding='carepoint.carepoint.store'),
+         'store_id'),
+    ]
+
+    @only_create
+    def invoice_nbr(self, record):
+        if not self.record.name:
+            return
+        return {
+            'invoice_nbr': self.record.name.replace(
+                self.backend_record.sale_prefix, '',
+            )
+        }

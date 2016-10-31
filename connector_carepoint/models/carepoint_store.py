@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
+from odoo import api, models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
@@ -39,6 +39,18 @@ class CarepointStore(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+
+    _sql_constraints = [
+        ('pharmacy_unique', 'UNIQUE(pharmacy_id)',
+         'This pharmacy already has an associated Carepoint Store'),
+    ]
+
+    @api.model_cr
+    def get_by_pharmacy(self, pharmacy):
+        """ It returns the store for the provided pharmacy """
+        return self.search([
+            ('pharmacy_id', '=', pharmacy.id),
+        ])
 
 
 class CarepointCarepointStore(models.Model):

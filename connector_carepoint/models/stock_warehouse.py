@@ -90,7 +90,7 @@ class StockWarehouseImportMapper(CarepointImportMapper):
     @only_create
     def route_ids(self, record):
         """ It returns the RX & OTC route ids """
-        module = 'medical_prescription_sale_stock'
+        module = 'sale_stock_medical_prescription'
         rx_route_id = self.env.ref(
             '%s.route_warehouse0_prescription' % module
         )

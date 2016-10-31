@@ -147,7 +147,7 @@ class TestFdbNdcImportMapper(FdbNdcTestBase):
 
     def test_get_categ_id_prescription(self):
         """ It should return Rx category for prescription item """
-        expect = 'medical_prescription_sale.product_category_rx'
+        expect = 'sale_medical_prescription.product_category_rx'
         self.assertEqual(
             self.env.ref(expect),
             self.unit._get_categ_id(True, self.record),
@@ -155,7 +155,7 @@ class TestFdbNdcImportMapper(FdbNdcTestBase):
 
     def test_get_categ_id_otc(self):
         """ It should return Otc category for non-prescription item """
-        expect = 'medical_prescription_sale.product_category_otc'
+        expect = 'sale_medical_prescription.product_category_otc'
         self.assertEqual(
             self.env.ref(expect),
             self.unit._get_categ_id(False, self.record),
