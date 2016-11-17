@@ -98,7 +98,7 @@ class CarepointOrganizationImportMapper(PartnerImportMapper):
     @only_create
     def odoo_id(self, record):
         """ Will bind the organization on a existing organization
-        with the same name & dob """
+        with the same name & birthdate_date """
         name = self._get_name(record)
         organization_id = self.env['carepoint.organization'].search(
             [('name', 'ilike', name)],

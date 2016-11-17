@@ -78,8 +78,8 @@ class MedicalPatientImportMapper(PersonImportMapper):
     direct = [
         (trim('ssn'), 'ref'),
         (trim('email'), 'email'),
-        (none('birth_date'), 'dob'),
-        (none('death_date'), 'dod'),
+        (none('birth_date'), 'birthdate_date'),
+        (none('death_date'), 'date_death'),
         ('pat_status_cn', 'active'),
     ]
 
@@ -102,10 +102,10 @@ class MedicalPatientImportMapper(PersonImportMapper):
     @only_create
     def odoo_id(self, record):
         """ Will bind the patient on a existing patient
-        with the same name & dob """
+        with the same name & birthdate_date """
         name = self._get_name(record)
         patient_id = self.env['medical.patient'].search(
-            [('name', 'ilike', name), ('dob', '=', record.get('birth_date'))],
+            [('name', 'ilike', name), ('birthdate_date', '=', record.get('birth_date'))],
             limit=1,
         )
         if patient_id:
@@ -140,8 +140,8 @@ class MedicalPatientExportMapper(PersonExportMapper):
     direct = [
         (none('ref'), 'ssn'),
         (none('email'), 'email'),
-        (none('dob'), 'birth_date'),
-        (none('dod'), 'death_date'),
+        (none('birthdate_date'), 'birth_date'),
+        (none('date_death'), 'death_date'),
         ('active', 'pat_status_cn')
     ]
 

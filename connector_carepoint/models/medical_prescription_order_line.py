@@ -115,7 +115,7 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
 
     direct = [
         ('start_date', 'date_start_treatment'),
-        ('expire_date', 'date_stop_treatment'),
+        ('date_expire', 'date_stop_treatment'),
         ('written_qty', 'qty'),
         ('freq_of_admin', 'frequency'),
         ('units_entered', 'quantity'),
@@ -243,9 +243,9 @@ class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
         (convert('date_start_treatment', fields.Datetime.from_string),
          'start_date'),
         (convert('date_stop_treatment', fields.Datetime.from_string),
-         'expire_date'),
+         'date_expire'),
         (convert('date_stop_treatment', fields.Datetime.from_string),
-         'expire_date'),
+         'date_expire'),
         ('qty', 'written_qty'),
         ('frequency', 'freq_of_admin'),
         ('quantity', 'units_entered'),
