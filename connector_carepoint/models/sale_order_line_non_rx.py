@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -10,7 +10,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                m2o_to_backend,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -70,7 +74,8 @@ class SaleOrderLineNonRxUnit(ConnectorUnit):
 
 
 @carepoint
-class SaleOrderLineNonRxBatchImporter(DelayedBatchImporter):
+class SaleOrderLineNonRxBatchImporter(DelayedBatchImporter,
+                                      CommonDateImporterMixer):
     """ Import the Carepoint Order Lines.
     For every order in the list, a delayed job is created.
     """
@@ -78,7 +83,8 @@ class SaleOrderLineNonRxBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderLineNonRxImportMapper(CarepointImportMapper):
+class SaleOrderLineNonRxImportMapper(CarepointImportMapper,
+                                     CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order.line.non.rx'
 
     direct = []
@@ -113,7 +119,8 @@ class SaleOrderLineNonRxImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class SaleOrderLineNonRxImporter(CarepointImporter):
+class SaleOrderLineNonRxImporter(CarepointImporter,
+                                 CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order.line.non.rx']
     _base_mapper = SaleOrderLineNonRxImportMapper
 
@@ -127,7 +134,8 @@ class SaleOrderLineNonRxImporter(CarepointImporter):
 
 
 @carepoint
-class SaleOrderLineNonRxExportMapper(ExportMapper):
+class SaleOrderLineNonRxExportMapper(ExportMapper,
+                                     CommonDateExportMapperMixer):
     _model_name = 'carepoint.sale.order.line.non.rx'
 
     direct = [

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -11,7 +11,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from odoo.addons.connector.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -51,6 +55,12 @@ class CarepointSaleOrderLine(models.Model):
         required=True,
         ondelete='cascade'
     )
+    rx_disp_external = fields.Char()
+
+    _sql_constraints = [
+        ('rx_disp_external_unique', 'UNIQUE(rx_disp_external)',
+         'Carepoint Rx Dispense can only be assigned to one sale order line'),
+    ]
 
 
 @carepoint
@@ -77,7 +87,8 @@ class SaleOrderLineUnit(ConnectorUnit):
 
 
 @carepoint
-class SaleOrderLineBatchImporter(DelayedBatchImporter):
+class SaleOrderLineBatchImporter(DelayedBatchImporter,
+                                 CommonDateImporterMixer):
     """ Import the Carepoint Order Lines.
     For every order in the list, a delayed job is created.
     """
@@ -85,10 +96,13 @@ class SaleOrderLineBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderLineImportMapper(CarepointImportMapper):
+class SaleOrderLineImportMapper(CarepointImportMapper,
+                                CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order.line'
 
-    direct = []
+    direct = [
+        ('rxdisp_id', 'rx_disp_external'),
+    ]
 
     @mapping
     @only_create
@@ -124,7 +138,8 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class SaleOrderLineImporter(CarepointImporter):
+class SaleOrderLineImporter(CarepointImporter,
+                            CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order.line']
 
     _base_mapper = SaleOrderLineImportMapper
@@ -158,7 +173,8 @@ class SaleOrderLineImporter(CarepointImporter):
 
 
 @carepoint
-class SaleOrderLineExportMapper(ExportMapper):
+class SaleOrderLineExportMapper(ExportMapper,
+                                CommonDateExportMapperMixer):
     _model_name = 'carepoint.sale.order.line'
 
     direct = [

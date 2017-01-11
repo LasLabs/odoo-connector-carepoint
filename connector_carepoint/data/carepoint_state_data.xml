@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        
+
+    <record model="carepoint.state" id="state_0">
+            <field name="name">New</field>
+            <field name="code">0</field>
+            <field name="order_state">draft</field>
+            <field name="invoice_state">draft</field>
+            <field name="prescription_state">draft</field>
+        </record>
+
         <record model="carepoint.state" id="state_10">
             <field name="name">Entered</field>
             <field name="code">10</field>

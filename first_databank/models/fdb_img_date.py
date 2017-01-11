@@ -10,7 +10,10 @@ from odoo import models, fields, api
 class FdbImgDate(models.Model):
     _name = 'fdb.img.date'
     _description = 'Fdb Img Date'
-    _inherits = {'fdb.img': 'image_id'}
+    _inherits = {
+        'fdb.img': 'image_id',
+        # 'base_multi_image.image': 'multi_image_id',
+    }
 
     start_date = fields.Datetime(
         required=True,
@@ -28,8 +31,12 @@ class FdbImgDate(models.Model):
     relation_id = fields.Many2one(
         string='Relation',
         comodel_name='fdb.img.id',
-        inverse_name='relation_id',
     )
+    # multi_image_id = fields.Many2one(
+    #     string='Attachment',
+    #     comodel_name='base_multi_image.image',
+    #     compute='_compute_multi_image_id',
+    # )
 
     @api.multi
     def _compute_active(self):
@@ -40,3 +47,15 @@ class FdbImgDate(models.Model):
             stop_date = fields.Datetime.from_string(rec_id.stop_date)
             if stop_date < datetime.now():
                 rec_id.active = False
+    #
+    # @api.multi
+    # def _compute_multi_image_id(self):
+    #     Attachment = self.env['ir.attachment']
+    #     for record in self:
+    #         if not record.image_id.attachment_id:
+    #             record.image_id.attachment_id = Attachment.create({
+    #                 'name': record.name,
+    #                 'datas_fname': '%s.%s' % (record.filename, record.extension),
+    #                 'description': record.comments,
+    #                 'res_model': record.
+    #             })

@@ -20,6 +20,11 @@ class FdbNdc(models.Model):
         string='Label Manufacturer',
         comodel_name='fdb.lbl.rid',
     )
+    image_ids = fields.One2many(
+        string='Images',
+        comodel_name='fdb.img.id',
+        inverse_name='ndc_id',
+    )
     lblrid = fields.Char()
     gcn_seqno = fields.Char()
     ps = fields.Char()

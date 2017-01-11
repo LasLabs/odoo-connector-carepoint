@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -11,7 +11,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                backend_to_m2o,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -71,7 +75,8 @@ class MedicalPrescriptionOrderAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
+class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter,
+                                            CommonDateImporterMixer):
     """ Import the Carepoint Prescriptions.
     For every prescription in the list, a delayed job is created.
     """
@@ -79,7 +84,8 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
+class MedicalPrescriptionOrderImportMapper(CarepointImportMapper,
+                                           CommonDateImportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [
@@ -103,7 +109,8 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class MedicalPrescriptionOrderImporter(CarepointImporter):
+class MedicalPrescriptionOrderImporter(CarepointImporter,
+                                       CommonDateImporterMixer):
     _model_name = ['carepoint.medical.prescription.order']
     _base_mapper = MedicalPrescriptionOrderImportMapper
 
@@ -117,7 +124,8 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderExportMapper(ExportMapper):
+class MedicalPrescriptionOrderExportMapper(ExportMapper,
+                                           CommonDateExportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [

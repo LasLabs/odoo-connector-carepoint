@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -89,6 +89,27 @@ class CarepointAccountAdapter(CarepointCRUDAdapter):
         data['ID'] = self.carepoint.get_next_sequence('acct_id')
         return super(CarepointAccountAdapter, self).create(data)
 
+    def read(self, _id, attributes=None, return_all=False):
+        """ Gets record by id and returns the object
+        :param _id: Id of record to get from Db. Can be comma sep str
+            for multiple indexes
+        :type _id: mixed
+        :param attributes: Attributes to rcv from db. None for *
+        :type attributes: list or None
+        :rtype: :class:`sqlalchemy.engine.ResultProxy`
+        """
+        if ',' in str(_id):
+            return super(CarepointAccountAdapter, self).read(
+                _id, attributes, return_all,
+            )
+        model_obj = self._get_cp_model()
+        domain = {'ID': _id}
+        res = self.carepoint.search(model_obj, domain, attributes)
+        try:
+            return res if return_all else res[0]
+        except IndexError:
+            return None
+
 
 @carepoint
 class CarepointAccountUnit(ConnectorUnit):
@@ -99,6 +120,7 @@ class CarepointAccountUnit(ConnectorUnit):
         importer = self.unit_for(CarepointAccountImporter)
         accounts = adapter.search(pat_id=patient_id)
         for account in accounts:
+            _logger.debug('ACCOUNT %s', account)
             importer.run(account)
 
 

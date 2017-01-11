@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -11,6 +11,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
+                           CommonDateImporterMixer,
                            trim,
                            )
 from ..backend import carepoint
@@ -62,7 +63,8 @@ class MedicalPhysicianAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class MedicalPhysicianBatchImporter(DelayedBatchImporter):
+class MedicalPhysicianBatchImporter(DelayedBatchImporter,
+                                    CommonDateImporterMixer):
     """ Import the Carepoint Physicians.
     For every physician in the list, a delayed job is created.
     """
@@ -103,7 +105,8 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
 
 
 @carepoint
-class MedicalPhysicianImporter(CarepointImporter):
+class MedicalPhysicianImporter(CarepointImporter,
+                               CommonDateImporterMixer):
     _model_name = ['carepoint.medical.physician']
     _base_mapper = MedicalPhysicianImportMapper
 

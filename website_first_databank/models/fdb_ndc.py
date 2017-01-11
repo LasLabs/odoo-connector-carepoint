@@ -15,18 +15,18 @@ class WebsiteFdbNdcImporter(FdbNdcImporter):
         super(FdbNdcImporter, self)._after_import(binding)
         if binding.backend_id.manage_product_description:
             wizard_obj = self.env['website.fdb.medicament.description']
-            fdb_gcn_id = self.env['fdb.gcn'].search([
+            fdb_gcn = self.env['fdb.gcn'].search([
                 ('gcn_id', '=', binding.medicament_id.gcn_id.id),
             ],
                 limit=1,
             )
-            if not fdb_gcn_id.monograph_ids:
+            if not fdb_gcn.monograph_ids:
                 return
             wizard_id = wizard_obj.create({
-                'medicament_id': binding.medicament_id.id,
+                'medicament_ids': [(6, 0, binding.medicament_id.ids)],
                 'template_id':
                     binding.backend_id.website_product_template_id.id,
-                'monograph_id': fdb_gcn_id.monograph_ids[0].id,
+                'monograph_id': fdb_gcn.monograph_ids[0].id,
             })
             wizard_id._render_save()
             wizard_id.sync_description()

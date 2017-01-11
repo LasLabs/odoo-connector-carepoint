@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -10,7 +10,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, CommonDateExportMapperMixer
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -109,7 +113,8 @@ class SaleOrderAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class SaleOrderBatchImporter(DelayedBatchImporter):
+class SaleOrderBatchImporter(DelayedBatchImporter,
+                             CommonDateImporterMixer):
     """ Import the Carepoint Patients.
     For every order in the list, a delayed job is created.
     """
@@ -125,7 +130,8 @@ class SaleOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderImportMapper(CarepointImportMapper):
+class SaleOrderImportMapper(CarepointImportMapper,
+                            CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order'
 
     direct = [
@@ -179,7 +185,8 @@ class SaleOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class SaleOrderImporter(CarepointImporter):
+class SaleOrderImporter(CarepointImporter,
+                        CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order']
     _base_mapper = SaleOrderImportMapper
 
@@ -209,7 +216,8 @@ class SaleOrderImporter(CarepointImporter):
 
 
 @carepoint
-class SaleOrderExportMapper(ExportMapper, CommonDateExportMapperMixer):
+class SaleOrderExportMapper(ExportMapper,
+                            CommonDateExportMapperMixer):
     _model_name = 'carepoint.sale.order'
 
     direct = [

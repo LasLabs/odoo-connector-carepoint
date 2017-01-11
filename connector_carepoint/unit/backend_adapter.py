@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+
+import logging
 
 from odoo.addons.connector.unit.backend_adapter import CRUDAdapter
 
 try:
     from sqlalchemy.exc import InvalidRequestError
+    from sqlalchemy.exc import TimeoutError
 except ImportError:
     pass
+
+_logger = logging.getLogger(__name__)
 
 try:
     from carepoint import Carepoint
 except ImportError:
-    pass
+    _logger.info('Cannot import ``carepoint`` Python library.')
 
 
 class CarepointCRUDAdapter(CRUDAdapter):
@@ -20,6 +25,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
 
     RECONNECT_EXCEPTIONS = [
         InvalidRequestError,
+        TimeoutError,
     ]
 
     def __init__(self, connector_env):
@@ -45,7 +51,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         parts = snake_case.split('_')
         return "".join(x.title() for x in parts)
 
-    def __get_cp_model(self, retry=True):
+    def _get_cp_model(self, retry=True):
         """ Get the correct model object by name from Carepoint lib
         :rtype: :class:`sqlalchemy.schema.Table`
         """
@@ -56,20 +62,23 @@ class CarepointCRUDAdapter(CRUDAdapter):
         except tuple(self.RECONNECT_EXCEPTIONS):
             if retry:
                 self.carepoint._init_env(True)
-                return self.__get_cp_model(False)
+                return self._get_cp_model(False)
             raise
 
     def search(self, **filters):
         """ Search table by filters and return record ids
         :param filters: Filters to apply to search
-        :param pk_index: (int) Index of primary key to use (in order of
-            property definition on associated model Class)
-        :rtype: list
+        :rtype: list of PKs. Multi PKs are joined with ","
         """
-        model_obj = self.__get_cp_model()
-        pk = self.carepoint.get_pks(model_obj)[0]
-        res = self.carepoint.search(model_obj, filters, [pk])
-        return [getattr(row, pk) for row in res]
+        model_obj = self._get_cp_model()
+        pks = self.carepoint.get_pks(model_obj)
+        res = self.carepoint.search(model_obj, filters, pks)
+        return_vals = []
+        for row in res:
+            return_vals.append(
+                ','.join('%s' % getattr(row, pk) for pk in pks)
+            )
+        return return_vals
 
     def read(self, _id, attributes=None, return_all=False):
         """ Gets record by id and returns the object
@@ -83,7 +92,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         @TODO: Fix the conjoined index lookups, this is pretty flaky
         """
         # @TODO: Fix lookup by ident
-        model_obj = self.__get_cp_model()
+        model_obj = self._get_cp_model()
         pks = self.carepoint.get_pks(model_obj)
         domain = {}
         try:
@@ -92,7 +101,10 @@ class CarepointCRUDAdapter(CRUDAdapter):
         except AttributeError:
             domain[pks[0]] = _id
         res = self.carepoint.search(model_obj, domain, attributes)
-        return res if return_all else res[0]
+        try:
+            return res if return_all else res[0]
+        except IndexError:
+            return None
 
     def read_image(self, path):
         """ Returns an image resource from CarePoint
@@ -124,7 +136,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :param filters: Filters to apply to search
         :rtype: :class:`sqlalchemy.engine.ResultProxy`
         """
-        model_obj = self.__get_cp_model()
+        model_obj = self._get_cp_model()
         return self.carepoint.search(model_obj, filters, attributes)
 
     def create(self, data):
@@ -134,7 +146,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         Returns:
             ``str`` of external carepoint_id
         """
-        model_obj = self.__get_cp_model()
+        model_obj = self._get_cp_model()
         pks = self.carepoint.get_pks(model_obj)
         out_pks = []
         for pk in pks:
@@ -163,5 +175,5 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :type _id: int
         :rtype: bool
         """
-        model_obj = self.__get_cp_model()
+        model_obj = self._get_cp_model()
         return self.carepoint.delete(model_obj, _id)

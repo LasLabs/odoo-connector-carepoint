@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -10,7 +10,10 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                changed_by,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PersonExportMapper, PersonImportMapper
+from ..unit.mapper import (CommonDateImporterMixer,
+                           PersonExportMapper,
+                           PersonImportMapper,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -56,7 +59,8 @@ class ResUsersAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class ResUsersBatchImporter(DelayedBatchImporter):
+class ResUsersBatchImporter(DelayedBatchImporter,
+                            CommonDateImporterMixer):
     """ Import the Carepoint Users.
     For every user in the list, a delayed job is created.
     """
@@ -94,7 +98,8 @@ class ResUsersImportMapper(PersonImportMapper):
 
 
 @carepoint
-class ResUsersImporter(CarepointImporter):
+class ResUsersImporter(CarepointImporter,
+                       CommonDateImporterMixer):
     _model_name = ['carepoint.res.users']
     _base_mapper = ResUsersImportMapper
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+
+from odoo import fields
 
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
@@ -135,7 +137,89 @@ class CarepointImportMapper(ImportMapper):
             return
 
 
-class PartnerImportMapper(CarepointImportMapper):
+class CommonDateImportMapperMixer(object):
+    """ It provides a mixer for add and change date / user import mappers.
+
+    Note that the use of ``direct`` is not an option, because child classes
+    will overwrite it. Otherwise this would have been much more simple.
+    """
+
+    def _get_user(self, user):
+        """ It returns the Carepoint external ID for the Odoo user """
+        binder = self.binder_for('carepoint.res.users')
+        return binder.to_backend(user)
+
+    @mapping
+    def create_uid(self, record):
+        binder = self.binder_for('carepoint.res.users')
+        user = binder.to_odoo(record['add_user_id'])
+        return {'create_uid': user}
+
+    @mapping
+    def create_date(self, record):
+        return {'create_date': record['add_date']}
+
+    @mapping
+    def write_uid(self, record):
+        binder = self.binder_for('carepoint.res.users')
+        user = binder.to_odoo(record['chg_user_id'])
+        return {'write_uid': user}
+
+    @mapping
+    def write_date(self, record):
+        return {'write_date': record['chg_date']}
+
+    def _import_dependencies(self):
+        """ Import the add and chg users. """
+        record = self.carepoint_record
+        self._import_dependency(record['add_user_id'],
+                                'carepoint.res.users')
+        self._import_dependency(record['chg_user_id'],
+                                'carepoint.res.users')
+
+
+class CommonDateImporterMixer(object):
+    """ It provides a mixer for add and change date / user importers. """
+
+    def _import_user_dependencies(self):
+        """ Import the add and chg users. """
+        record = self.carepoint_record
+        self._import_dependency(record['add_user_id'],
+                                'carepoint.res.users')
+        self._import_dependency(record['chg_user_id'],
+                                'carepoint.res.users')
+
+
+class CommonDateExportMapperMixer(object):
+    """ It provides a mixer for add and change date / user export mappers. """
+
+    def _get_user(self, user):
+        """ It returns the Carepoint external ID for the Odoo user """
+        binder = self.binder_for('carepoint.res.users')
+        return binder.to_backend(user)
+
+    @mapping
+    @changed_by('create_uid')
+    def add_user_id(self, record):
+        return {'add_user_id': self._get_user(record.create_uid)}
+
+    @mapping
+    @changed_by('create_date')
+    def add_date(self, record):
+        return {'add_date': fields.Datetime.from_string(record.create_date)}
+
+    @mapping
+    @changed_by('write_uid')
+    def chg_user_id(self, record):
+        return {'chg_user_id': self._get_user(record.write_uid)}
+
+    @mapping
+    @changed_by('write_date')
+    def chg_date(self, record):
+        return {'chg_date': fields.Datetime.from_string(record.write_date)}
+
+
+class PartnerImportMapper(CarepointImportMapper, CommonDateImportMapperMixer):
 
     @mapping
     def tz(self, record):
@@ -190,7 +274,7 @@ class PersonImportMapper(PartnerImportMapper):
         return {'name': self._get_name(record)}
 
 
-class PersonExportMapper(ExportMapper):
+class PersonExportMapper(ExportMapper, CommonDateExportMapperMixer):
 
     @mapping
     @changed_by('name')
@@ -206,32 +290,3 @@ class PersonExportMapper(ExportMapper):
         return {'lname': lname,
                 'fname': fname,
                 }
-
-
-class CommonDateExportMapperMixer(object):
-    """ It provides a mixer for add and change date / user mappers """
-
-    def _get_user(self, user):
-        """ It returns the Carepoint external ID for the Odoo user """
-        binder = self.binder_for('carepoint.res.users')
-        return binder.to_backend(user)
-
-    @mapping
-    @changed_by('create_uid')
-    def add_user_id(self, record):
-        return {'add_user_id': self._get_user(record.create_uid)}
-
-    @mapping
-    @changed_by('create_date')
-    def add_date(self, record):
-        return {'add_date': fields.Datetime.from_string(record.create_date)}
-
-    @mapping
-    @changed_by('write_uid')
-    def chg_user_id(self, record):
-        return {'chg_user_id': self._get_user(record.write_uid)}
-
-    @mapping
-    @changed_by('write_date')
-    def chg_date(self, record):
-        return {'chg_date': fields.Datetime.from_string(record.write_date)}

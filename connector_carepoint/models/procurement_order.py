@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -12,7 +12,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -107,7 +111,8 @@ class ProcurementOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class ProcurementOrderImportMapper(CarepointImportMapper):
+class ProcurementOrderImportMapper(CarepointImportMapper,
+                                   CommonDateImportMapperMixer):
     _model_name = 'carepoint.procurement.order'
 
     direct = [
@@ -129,20 +134,21 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
 
         binder = self.binder_for('carepoint.rx.ord.ln')
         rx_id = binder.to_odoo(record['rx_id'], browse=True)
-        binder = self.binder_for('carepoint.sale.order')
-        sale_id = binder.to_odoo(record['order_id'], browse=True)
         binder = self.binder_for('carepoint.fdb.ndc')
         ndc_id = binder.to_odoo(record['disp_ndc'].strip(), browse=True)
-        line_id = sale_id.order_line.filtered(
-            lambda r: r.prescription_order_line_id.id == rx_id.id
-        )
-        line_id = line_id[0].with_context(connector_no_export=True)
+        line_id = self.env['carepoint.sale.order.line'].search([
+            ('rx_disp_external', '=', record['rxdisp_id']),
+        ])
+        line_id = line_id.odoo_id
+        sale_id = line_id.order_id
+        _logger.debug('Got %s from %s, %s, %s', line_id, sale_id, sale_id.order_line, record.__dict__)
+        line_id = line_id.with_context(connector_no_export=True)
 
         # Set the sale line to what was dispensed
         # This is a hack circumventing lack of qty in CP until now
         line_id.write({
             'product_id': ndc_id.medicament_id.product_id.id,
-            'product_uom_qty': record['dispense_qty'],
+            'product_uom_qty': float(record['dispense_qty']),
         })
 
         procurement_group_id = self.env['procurement.group'].search([
@@ -171,7 +177,8 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class ProcurementOrderImporter(CarepointImporter):
+class ProcurementOrderImporter(CarepointImporter,
+                               CommonDateImporterMixer):
     _model_name = ['carepoint.procurement.order']
 
     _base_mapper = ProcurementOrderImportMapper
@@ -214,7 +221,8 @@ class ProcurementOrderImporter(CarepointImporter):
 
 
 @carepoint
-class ProcurementOrderLineExportMapper(ExportMapper):
+class ProcurementOrderLineExportMapper(ExportMapper,
+                                       CommonDateExportMapperMixer):
     _model_name = 'carepoint.procurement.order'
 
     direct = [
