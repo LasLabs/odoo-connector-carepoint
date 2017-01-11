@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -182,12 +182,15 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         return unit_num, uom_str
 
-    def _get_uom_id(self, uom_str):
-        return self.env['product.uom'].search([
+    def _get_uom_id(self, uom_str='UNIT'):
+        result = self.env['product.uom'].search([
             ('name', '=', str(uom_str).strip().upper()),
         ],
             limit=1,
         )
+        if not result:
+            return self._get_uom_id()
+        return result
 
     def _get_categ_id(self, is_prescription, record):
         """ It returns the product category based on input
@@ -222,7 +225,10 @@ class FdbNdcImportMapper(CarepointImportMapper):
         dea_code = record['dea'] or '0'
 
         if cs_ext_id:
-            strength_str = cs_ext_id.dn_str.lower().strip()
+            try:
+                strength_str = cs_ext_id.dn_str.lower().strip()
+            except AttributeError:
+                _logger.debug('%s is not a str', cs_ext_id.dn_str)
             route_id = cs_ext_id.route_id.route_id
             form_id = cs_ext_id.form_id.form_id
             gpi = gpi or cs_ext_id.gpi
@@ -240,7 +246,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         strength_num, strength_str = self._get_uom_parts(strength_str)
         strength_uom_id = self._get_uom_id(strength_str)
-        sale_uom_id = self._get_uom_id(record['hcfa_unit'] or 'UNIT')
+        sale_uom_id = self._get_uom_id(
+            record['hcfa_unit'] and record['hcfa_unit'].strip()
+        )
         categ_id = self._get_categ_id(is_prescription, record)
 
         return {
@@ -308,13 +316,18 @@ class FdbNdcImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.ndc']
     _base_mapper = FdbNdcImportMapper
 
+    def _get_carepoint_data(self):
+        """ Return the raw Carepoint data for ``self.carepoint_id`` """
+        self.carepoint_id = '%011d' % int(self.carepoint_id)
+        return super(FdbNdcImporter, self)._get_carepoint_data()
+
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
         try:
             self._import_dependency(record['ndc'],
                                     'carepoint.fdb.ndc.cs.ext')
-        except IndexError:  # pragma: no cover
+        except (AssertionError, IndexError):
             # Won't exist in cs_ext if user_product_yn == 0
             pass
         self._import_dependency(record['gcn_seqno'],

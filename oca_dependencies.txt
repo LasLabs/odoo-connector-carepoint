@@ -1,2 +1,3 @@
-connector https://github.com/guewen/connector.git migration-connector-10.0
-vertical-medical https://github.com/laslabs/vertical-medical.git release/10.0
+connector https://github.com/laslabs/connector.git migration-connector-10.0
+vertical-medical https://github.com/laslabs/vertical-medical.git hotfix/10.0/LABS-362-carepoint_connector
+product-attribute

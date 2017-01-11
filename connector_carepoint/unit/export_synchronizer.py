@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -164,7 +164,7 @@ class CarepointExporter(CarepointBaseExporter):
 
     def _has_to_skip(self):
         """ Return True if the export can be skipped """
-        return False
+        return not self.binding_record.can_export
 
     @contextmanager
     def _retry_unique_violation(self):

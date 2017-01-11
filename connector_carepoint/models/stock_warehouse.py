@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -72,6 +72,18 @@ class StockWarehouseImportMapper(CarepointImportMapper):
     @only_create
     def code(self, record):
         return {'code': record['name'].strip()}
+
+    @mapping
+    @only_create
+    def odoo_id(self, record):
+        code = self.code(record)['code']
+        company_id = self.company_id(record)['company_id']
+        existing = self.env['stock.warehouse'].search([
+            ('code', '=', code),
+            ('company_id', '=', company_id),
+        ])
+        if existing:
+            return {'odoo_id': existing[0].id}
 
     @mapping
     def is_pharmacy(self, record):

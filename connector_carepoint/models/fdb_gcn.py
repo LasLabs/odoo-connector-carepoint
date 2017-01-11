@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -80,5 +80,9 @@ class FdbGcnImporter(CarepointImporter):
                                 'carepoint.fdb.gcn.seq')
 
     def _after_import(self, binding):
-        self._import_dependency(self.carepoint_record['gcn_seqno'],
-                                'carepoint.fdb.pem.mogc')
+        try:
+            self._import_dependency(self.carepoint_record['gcn_seqno'],
+                                    'carepoint.fdb.pem.mogc')
+        except AssertionError:
+            # Does not exist in some instances.
+            pass

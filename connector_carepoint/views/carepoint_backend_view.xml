@@ -14,18 +14,28 @@
             <form string="CarePoint Backend">
                 <header>
                   <button name="import_fdb"
-                    type="object"
-                    class="oe_highlight"
-                    string="Import FDB Core"/>
+                          type="object"
+                          class="oe_highlight"
+                          string="Import FDB Core"
+                          />
                 </header>
                 <sheet>
                     <label for="name" class="oe_edit_only"/>
                     <h1>
                         <field name="name" class="oe_inline" />
                     </h1>
-                    <group>
-                        <field name="active" />
-                    </group>
+                    <div class="oe_button_box" name="buttons">
+                        <button name="toggle_active"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-archive"
+                                >
+                            <field name="active"
+                                   widget="boolean_button"
+                                   options='{"terminology": "archive"}'
+                                   />
+                        </button>
+                    </div>
                     <group name="carepoint" string="CarePoint Configuration">
                         <notebook>
                             <page string="DB" name="db">
@@ -49,6 +59,7 @@
                                 <group>
                                     <field name="company_id" />
                                     <field name="is_default" />
+                                    <field name="can_export" />
                                 </group>
                                 <group>
                                     <field name="default_category_id" />
@@ -209,6 +220,18 @@
                                            nolabel="1"/>
                                 </div>
                                 <button name="import_phone"
+                                        type="object"
+                                        class="oe_highlight"
+                                        string="Import in background"/>
+                            </group>
+                            <group>
+                                <div>
+                                    <label string="Import FDB NDCs" class="oe_inline"/>
+                                    <field name="import_fdb_ndc_control_code"
+                                           class="oe_inline"
+                                           nolabel="1"/>
+                                </div>
+                                <button name="import_fdb_ndc_by_control_code"
                                         type="object"
                                         class="oe_highlight"
                                         string="Import in background"/>

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -28,6 +28,11 @@ class CarepointItem(models.Model):
         string='Medicament',
         comodel_name='medical.medicament',
         ondelete='cascade',
+        required=True,
+    )
+    ndc_id = fields.Many2one(
+        string='NDC',
+        comodel_name='fdb.ndc',
         required=True,
     )
     warehouse_id = fields.Many2one(
@@ -126,14 +131,24 @@ class CarepointItemImportMapper(CarepointImportMapper):
 
     @mapping
     @only_create
+    def ndc_id(self, record):
+        self._get_ndc(record)
+        return {'ndc_id': ndc_id.id}
+
+    @mapping
+    @only_create
     def odoo_id(self, record):
         """ It binds on a medicament of an existing NDC """
-        ndc_id = self.env['fdb.ndc'].search(
+        ndc = self._get_ndc(record)
+        if ndc:
+            return {'odoo_id': ndc.medicament_id.id}
+
+    def _get_ndc(self, record):
+        """ It returns the FDB NDC for the record. """
+        return self.env['fdb.ndc'].search(
             [('name', '=', record['NDC'].strip())],
             limit=1,
         )
-        if len(ndc_id):
-            return {'odoo_id': ndc_id[0].medicament_id.id}
 
 
 @carepoint

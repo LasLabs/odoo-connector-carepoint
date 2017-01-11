@@ -2,4 +2,4 @@ pint>=0.7.2
 SQLAlchemy>=1.1.1
 pysmb>=1.1.18
 phonenumbers>=7.7.2
-carepoint>=0.1.7
+carepoint>=0.1.8b

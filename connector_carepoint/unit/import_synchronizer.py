@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
@@ -148,7 +148,11 @@ class CarepointImporter(Importer):
         """ Create the Odoo record """
         # special check on data before import
         self._validate_data(data)
-        model = self.model.with_context(connector_no_export=True)
+        model = self.model.with_context(
+            connector_no_export=True,
+            id_no_validate=True,
+            rx_no_validate=True,
+        )
         _logger.debug('Creating with %s', data)
         binding = model.create(data)
         _logger.debug(
@@ -165,7 +169,12 @@ class CarepointImporter(Importer):
         """ Update an Odoo record """
         # special check on data before import
         self._validate_data(data)
-        binding.with_context(connector_no_export=True).write(data)
+        model = binding.with_context(
+            connector_no_export=True,
+            id_no_validate=True,
+            rx_no_validate=True,
+        )
+        model.write(data)
         _logger.debug(
             '%d updated from carepoint %s',
             binding,
@@ -235,6 +244,12 @@ class CarepointImporter(Importer):
 
         # Enforce user existance on local
         self._enforce_user_exists()
+
+        # import user dependencies if the model has them
+        try:
+            self._import_user_dependencies()
+        except AttributeError:
+            pass
 
         # import the missing linked resources
         self._import_dependencies()

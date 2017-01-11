@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -109,7 +109,11 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def form_id(self, record):
-        form_str = record['dn_form'].strip()
+        try:
+            form_str = record['dn_form'].strip()
+        except AttributeError as e:
+            _logger.debug(e)
+            return
         form_id = self.env['fdb.form'].search(['|',
                                                ('code', '=', form_str),
                                                ('name', '=', form_str.title()),
@@ -121,8 +125,12 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def route_id(self, record):
+        if not record['dn_route']:
+            record['dn_route'] = 'AP'
         route_id = self.env['fdb.route'].search([
+            '|',
             ('name', '=', record['dn_route'].strip().title()),
+            ('code', '=', record['dn_route'].strip()),
         ],
             limit=1,
         )
@@ -137,3 +145,8 @@ class FdbNdcCsExtImportMapper(CarepointImportMapper):
 class FdbNdcCsExtImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.ndc.cs.ext']
     _base_mapper = FdbNdcCsExtImportMapper
+
+    def _get_carepoint_data(self):
+        """ Return the raw Carepoint data for ``self.carepoint_id`` """
+        self.carepoint_id = '%011d' % int(self.carepoint_id)
+        return super(FdbNdcCsExtImporter, self)._get_carepoint_data()

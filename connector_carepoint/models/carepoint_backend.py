@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+
 from datetime import datetime, timedelta
+import dateutil.rrule as rrule
+
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.addons.connector.session import ConnectorSession
 from odoo.addons.base.res.res_partner import _tz_get
+
 from ..unit.import_synchronizer import (import_batch,
                                         import_record,
                                         DirectBatchImporter,
@@ -62,6 +66,19 @@ class CarepointBackend(models.Model):
         required=True,
         default=30,
         help='This is passed to SQLAlchemy `create_engine`',
+    )
+    date_data_start = fields.Datetime(
+        required=True,
+        default='1970-01-01',
+        help='Date of oldest data in database. This will be used for initial '
+             'imports, and can be left at default unless trying to exclude '
+             'older data for some reason.',
+    )
+    import_inverse = fields.Boolean(
+        default=True,
+        help='Check this to start importing with more recent data. This '
+             'allows for the back-fill of large data sets, while allowing '
+             'for newer records to be used.',
     )
     server = fields.Char(
         required=True,
@@ -173,6 +190,10 @@ class CarepointBackend(models.Model):
         comodel_name='account.payment.term',
         required=True,
     )
+    can_export = fields.Boolean(
+        default=True,
+        help='Uncheck this to disable data exporting for this backend.',
+    )
     import_items_from_date = fields.Datetime()
     import_patients_from_date = fields.Datetime()
     import_physicians_from_date = fields.Datetime()
@@ -182,6 +203,16 @@ class CarepointBackend(models.Model):
     import_phones_from_date = fields.Datetime()
     import_pickings_from_date = fields.Datetime()
     import_invoices_from_date = fields.Datetime()
+    import_fdb_ndc_control_code = fields.Selection([
+        ('0', 'Not Controlled'),
+        ('1', 'C1'),
+        ('2', 'C2'),
+        ('3', 'C3'),
+        ('4', 'C4'),
+        ('5', 'C5'),
+    ],
+        help='Federal drug scheduling code for medicament.',
+    )
     company_id = fields.Many2one(
         string='Company',
         comodel_name='res.company',
@@ -262,19 +293,31 @@ class CarepointBackend(models.Model):
     @api.multi
     def _import_from_date(self, model, from_date_field,
                           chg_date_field='chg_date'):
-        session = self.__get_model_session()
+
         import_start_time = datetime.now()
+
         for backend in self:
+
             backend.check_carepoint_structure()
-            filters = {chg_date_field: {'<=': import_start_time}}
             from_date = getattr(backend, from_date_field)
-            if from_date:
-                filters[chg_date_field]['>='] = fields.Datetime.from_string(
-                    from_date
-                )
-            else:
-                from_date = None
-            import_batch.delay(session, model, backend.id, filters=filters)
+
+            if not from_date:
+                from_date = backend.date_data_start
+
+            from_date = fields.Datetime.from_string(from_date)
+            to_date = import_start_time
+            iter_dates = self.__iter_rrule(from_date, to_date)
+
+            if backend.import_inverse:
+                iter_dates = reversed(list(iter_dates))
+
+            for dt in iter_dates:
+                if from_date != dt:
+                    backend.__import_from_date(
+                        model, from_date, dt, chg_date_field,
+                    )
+                from_date = dt
+
         # Records from Carepoint are imported based on their `add_date`
         # date.  This date is set on Carepoint at the beginning of a
         # transaction, so if the import is run between the beginning and
@@ -287,6 +330,48 @@ class CarepointBackend(models.Model):
         next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
         next_time = fields.Datetime.to_string(next_time)
         self.write({from_date_field: next_time})
+
+    @api.multi
+    def __import_from_date(self, model, start, end, chg_date_field):
+        session = self.__get_model_session()
+        if start > end:
+            old_start = start
+            start = end
+            end = old_start
+        for backend in self:
+            backend.check_carepoint_structure()
+            filters = {
+                chg_date_field: {
+                    '<=': start,
+                    '>=': end,
+                },
+            }
+            import_batch.delay(session, model, backend.id, filters=filters)
+
+    @api.model_cr_context
+    def __iter_rrule(self, start, end, inc=True, freq=rrule.MONTHLY):
+        if inc:
+            yield start
+        rule = rrule.rrule(freq, byminute=0, bysecond=0, dtstart=start)
+        for dt in rule.between(start, end, inc=False):
+            yield dt
+        if inc:
+            yield end
+
+    @api.multi
+    def import_fdb_ndc_by_control_code(self):
+        """ It triggers an import of FDB NDCs by DEA code. """
+        session = self.__get_model_session()
+        for backend in self:
+            backend.check_carepoint_structure()
+            import_batch.delay(
+                session,
+                'carepoint.fdb.ndc',
+                backend.id,
+                filters={
+                    'dea': int(backend.import_fdb_ndc_control_code),
+                },
+            )
 
     @api.model
     def resync_all(self, binding_model):
