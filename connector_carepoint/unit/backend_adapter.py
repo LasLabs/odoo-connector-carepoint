@@ -6,6 +6,7 @@ from openerp.addons.connector.unit.backend_adapter import CRUDAdapter
 
 try:
     from sqlalchemy.exc import InvalidRequestError
+    from sqlalchemy.exc import TimeoutError
 except ImportError:
     pass
 
@@ -20,6 +21,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
 
     RECONNECT_EXCEPTIONS = [
         InvalidRequestError,
+        TimeoutError,
     ]
 
     def __init__(self, connector_env):
