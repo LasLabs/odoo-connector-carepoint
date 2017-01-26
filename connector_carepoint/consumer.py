@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo.addons.connector.connector import Binder
@@ -43,6 +43,10 @@ def delay_export(session, model_name, record_id, vals):
                               'medical.physician',
                               'carepoint.address.physician',
                               'carepoint.phone.physician',
+                              'sale.order',
+                              'sale.order.line',
+                              'procurement.order',
+                              'res.users',
                               ])
 def delay_export_all_bindings(session, model_name, record_id, vals):
     """ Delay a job which export all the bindings of a record.
@@ -71,6 +75,9 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
                                'medical.physician',
                                'carepoint.address.physician',
                                'carepoint.phone.physician',
+                               'sale.order',
+                               'sale.order.line',
+                               'procurement.order',
                                ])
 def delay_create(session, model_name, record_id, vals):
     """ Create a new binding record, then trigger delayed export

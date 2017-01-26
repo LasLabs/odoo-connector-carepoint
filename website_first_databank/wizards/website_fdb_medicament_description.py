@@ -18,6 +18,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         readonly=True,
     )
     gcn_id = fields.Many2one(
+        string='GCN',
         comodel_name='medical.medicament.gcn',
         compute='_compute_gcn_id',
         readonly=True,
@@ -44,22 +45,23 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         if self.env.context.get('active_id'):
             res.append(self.env.context['active_id'])
         if self.env.context.get('active_ids'):
-            res.extend(self.env.context['active_id'])
+            res.extend(self.env.context['active_ids'])
         return [6, 0, res]
 
     @api.multi
+    @api.depends('medicament_ids.gcn_id')
     def _compute_gcn_id(self):
-        for rec_id in self:
-            if rec_id.medicament_ids:
-                rec_id.gcn_id = rec_id.medicament_ids[0].gcn_id
+        for record in self:
+            if record.medicament_ids:
+                record.gcn_id = record.medicament_ids[0].gcn_id
 
     @api.model
     def _default_monograph_id(self):
-        medicament_id = self.env['medical.medicament'].browse(
-            self._default_medicament_id()
+        medicament_ids = self.env['medical.medicament'].browse(
+            self._default_medicament_ids()[2]
         )
         fdb_gcn_id = self.env['fdb.gcn'].search([
-            ('gcn_id', '=', medicament_id.gcn_id.id),
+            ('gcn_id', '=', medicament_ids[0].gcn_id.id),
         ],
             limit=1,
         )
@@ -70,7 +72,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     @api.model
     def _default_template_id(self):
         template_id = self.env.ref(
-            'website_first_databank.website_medicament_description'
+            'website_first_databank.website_medicament_description',
         )
         if template_id:
             return template_id.id
@@ -83,18 +85,19 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     @api.multi
     def sync_description(self):
         """ Sync the product website description from FDB """
-        for rec_id in self:
-            html = rec_id.monograph_html
-            for medicament_id in rec_id.medicament_ids:
+        for record in self:
+            html = record.monograph_html
+            for medicament_id in record.medicament_ids:
                 medicament_id.product_id.website_description = html
 
     @api.multi
     def _render_save(self):
-        for rec_id in self:
-            rec_id.monograph_html = rec_id._render()
+        for record in self:
+            record.monograph_html = record._render()
 
     @api.multi
     def _render(self):
+        """ Override this in order to customize the template. """
         return self.template_id.render(
             self._get_template_values(),
             engine='ir.qweb',

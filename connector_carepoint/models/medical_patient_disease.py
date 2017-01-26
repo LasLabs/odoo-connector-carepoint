@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -85,7 +85,7 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.medical.patient.disease'
 
     direct = [
-        ('onset_date', 'diagnosed_date'),
+        ('onset_date', 'date_diagnosed'),
         ('resolution_date', 'healed_date'),
     ]
 
@@ -149,7 +149,7 @@ class MedicalPatientDiseaseExportMapper(ExportMapper):
     _model_name = 'carepoint.medical.patient.disease'
 
     direct = [
-        (none('diagnosed_date'), 'onset_date'),
+        (none('date_diagnosed'), 'onset_date'),
         (none('healed_date'), 'resolution_date'),
         (m2o_to_backend('patient_id'), 'pat_id'),
         (m2o_to_backend('physician_id'), 'caring_md_id'),

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import mock
@@ -42,7 +42,7 @@ class TestMedicalPatientImportMapper(MedicalPatientTestBase):
         return self.env['medical.patient'].create({
             'name': '%s %s' % (self.record['fname'],
                                self.record['lname']),
-            'dob': self.record['birth_date'],
+            'birthdate_date': self.record['birth_date'],
         })
 
     def test_safety_caps_yn(self):

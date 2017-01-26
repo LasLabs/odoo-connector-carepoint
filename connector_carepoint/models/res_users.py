@@ -1,23 +1,29 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
+                                               none,
+                                               changed_by,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import PersonImportMapper
+from ..unit.mapper import (CommonDateImporterMixer,
+                           PersonExportMapper,
+                           PersonImportMapper,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
 
 _logger = logging.getLogger(__name__)
 
 
-class MedicalUser(models.Model):
+class ResUsers(models.Model):
     """ Adds the ``one2many`` relation to the Carepoint bindings
     (``carepoint_bind_ids``)
     """
@@ -40,20 +46,21 @@ class CarepointResUsers(models.Model):
 
     odoo_id = fields.Many2one(
         comodel_name='res.users',
-        string='Company',
+        string='User',
         required=True,
         ondelete='cascade'
     )
 
 
 @carepoint
-class MedicalUserAdapter(CarepointCRUDAdapter):
+class ResUsersAdapter(CarepointCRUDAdapter):
     """ Backend Adapter for the Carepoint User """
     _model_name = 'carepoint.res.users'
 
 
 @carepoint
-class MedicalUserBatchImporter(DelayedBatchImporter):
+class ResUsersBatchImporter(DelayedBatchImporter,
+                            CommonDateImporterMixer):
     """ Import the Carepoint Users.
     For every user in the list, a delayed job is created.
     """
@@ -61,30 +68,28 @@ class MedicalUserBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalUserImportMapper(PersonImportMapper):
+class ResUsersImportMapper(PersonImportMapper):
     _model_name = 'carepoint.res.users'
 
     direct = [
         ('login_name', 'login'),
         ('email', 'email'),
         ('job_title_lu', 'function'),
+        ('user_id', 'carepoint_id'),
     ]
 
     @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['user_id']}
-
-    @mapping
+    @only_create
     def employee(self, record):
         return {'employee': True}
 
-    @only_create
     @mapping
+    @only_create
     def odoo_id(self, record):
-        """ Will bind the user on a existing user
-        with the same name & email """
+        """ Will bind the user on a existing user with the same name """
+        name = '%s %s' % (record['fname'], record['lname'])
         user_id = self.env['res.users'].search([
-            ('login', 'ilike', record.get('login_name')),
+            ('name', '=ilike', name),
         ],
             limit=1,
         )
@@ -93,6 +98,31 @@ class MedicalUserImportMapper(PersonImportMapper):
 
 
 @carepoint
-class MedicalUserImporter(CarepointImporter):
+class ResUsersImporter(CarepointImporter,
+                       CommonDateImporterMixer):
     _model_name = ['carepoint.res.users']
-    _base_mapper = MedicalUserImportMapper
+    _base_mapper = ResUsersImportMapper
+
+
+@carepoint
+class ResUsersExportMapper(PersonExportMapper):
+    _model_name = 'carepoint.res.users'
+
+    direct = [
+        (none('email'), 'email'),
+        (none('function'), 'job_title_lu'),
+        ('login', 'login_name'),
+    ]
+
+    @mapping
+    def static_defaults(self, record):
+        """ It provides all static default mappings """
+        return {
+            'user_type_cd': 'U',
+        }
+
+
+@carepoint
+class ResUsersExporter(CarepointExporter):
+    _model_name = ['carepoint.res.users']
+    _base_mapper = ResUsersExportMapper

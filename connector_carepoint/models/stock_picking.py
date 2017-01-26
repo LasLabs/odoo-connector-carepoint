@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -9,7 +9,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -67,7 +71,8 @@ class StockPickingUnit(ConnectorUnit):
 
 
 @carepoint
-class StockPickingBatchImporter(DelayedBatchImporter):
+class StockPickingBatchImporter(DelayedBatchImporter,
+                                CommonDateImporterMixer):
     """ Import the Carepoint Patients.
     For every patient in the list, a delayed job is created.
     """
@@ -75,7 +80,8 @@ class StockPickingBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class StockPickingImportMapper(CarepointImportMapper):
+class StockPickingImportMapper(CarepointImportMapper,
+                               CommonDateImportMapperMixer):
     _model_name = 'carepoint.stock.picking'
 
     direct = [
@@ -96,7 +102,8 @@ class StockPickingImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class StockPickingImporter(CarepointImporter):
+class StockPickingImporter(CarepointImporter,
+                           CommonDateImporterMixer):
     _model_name = ['carepoint.stock.picking']
 
     _base_mapper = StockPickingImportMapper

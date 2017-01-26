@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
+from odoo import api, models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
+                                               ExportMapper,
                                                only_create,
+                                               m2o_to_backend,
                                                )
 from odoo.addons.connector.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
+
 from .procurement_order import ProcurementOrderUnit
 
 
@@ -47,6 +55,12 @@ class CarepointSaleOrderLine(models.Model):
         required=True,
         ondelete='cascade'
     )
+    rx_disp_external = fields.Char()
+
+    _sql_constraints = [
+        ('rx_disp_external_unique', 'UNIQUE(rx_disp_external)',
+         'Carepoint Rx Dispense can only be assigned to one sale order line'),
+    ]
 
 
 @carepoint
@@ -73,7 +87,8 @@ class SaleOrderLineUnit(ConnectorUnit):
 
 
 @carepoint
-class SaleOrderLineBatchImporter(DelayedBatchImporter):
+class SaleOrderLineBatchImporter(DelayedBatchImporter,
+                                 CommonDateImporterMixer):
     """ Import the Carepoint Order Lines.
     For every order in the list, a delayed job is created.
     """
@@ -81,10 +96,13 @@ class SaleOrderLineBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderLineImportMapper(CarepointImportMapper):
+class SaleOrderLineImportMapper(CarepointImportMapper,
+                                CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order.line'
 
-    direct = []
+    direct = [
+        ('rxdisp_id', 'rx_disp_external'),
+    ]
 
     @mapping
     @only_create
@@ -120,7 +138,8 @@ class SaleOrderLineImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class SaleOrderLineImporter(CarepointImporter):
+class SaleOrderLineImporter(CarepointImporter,
+                            CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order.line']
 
     _base_mapper = SaleOrderLineImportMapper
@@ -151,3 +170,33 @@ class SaleOrderLineImporter(CarepointImporter):
             self._import_dependency(
                 record['order_id'], 'carepoint.stock.picking'
             )
+
+
+@carepoint
+class SaleOrderLineExportMapper(ExportMapper,
+                                CommonDateExportMapperMixer):
+    _model_name = 'carepoint.sale.order.line'
+
+    direct = [
+        (m2o_to_backend('prescription_order_line_id',
+                        binding='carepoint.rx.ord.ln'),
+         'rx_id'),
+        (m2o_to_backend('order_id', binding='carepoint.sale.order'),
+         'order_id'),
+    ]
+
+
+@carepoint
+class SaleOrderLineExporter(CarepointExporter):
+    _model_name = ['carepoint.sale.order.line']
+    _base_mapper = SaleOrderLineExportMapper
+
+    def _export_dependencies(self):
+        self._export_dependency(
+            self.binding_record.order_id,
+            'carepoint.sale.order',
+        )
+        self._export_dependency(
+            self.binding_record.prescription_order_line_id,
+            'carepoint.rx.ord.ln',
+        )

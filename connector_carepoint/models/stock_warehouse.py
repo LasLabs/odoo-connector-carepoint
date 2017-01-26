@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -90,7 +90,7 @@ class StockWarehouseImportMapper(CarepointImportMapper):
     @only_create
     def route_ids(self, record):
         """ It returns the RX & OTC route ids """
-        module = 'medical_prescription_sale_stock'
+        module = 'sale_stock_medical_prescription'
         rx_route_id = self.env.ref(
             '%s.route_warehouse0_prescription' % module
         )

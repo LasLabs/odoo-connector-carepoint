@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
-from odoo.addons.connector.unit.mapper import mapping
+from odoo import models, fields, api
+from odoo.addons.connector.unit.mapper import (mapping,
+                                               m2o_to_backend,
+                                               only_create,
+                                               ExportMapper,
+                                               )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
-
+from ..unit.export_synchronizer import CarepointExporter
 
 _logger = logging.getLogger(__name__)
 
@@ -44,6 +52,58 @@ class CarepointSaleOrder(models.Model):
         required=True,
         ondelete='cascade'
     )
+    prescription_order_line_id = fields.Many2one(
+        string='Prescription Line',
+        comodel_name='medical.prescription.order.line',
+        compute='_compute_prescription_order_line_id',
+        store=True,
+    )
+    pharmacy_id = fields.Many2one(
+        string='Pharmacy',
+        comodel_name='medical.pharmacy',
+        related='prescription_order_line_id.prescription_order_id.partner_id',
+    )
+    carepoint_store_id = fields.Many2one(
+        string='Carepoint Store',
+        comodel_name='carepoint.store',
+        compute='_compute_carepoint_store_id',
+        store=True,
+    )
+    carepoint_account_id = fields.Many2one(
+        string='Carepoint Account',
+        comodel_name='carepoint.account',
+        compute='_compute_carepoint_account_id',
+        store=True,
+    )
+
+    @api.multi
+    @api.depends('order_line.prescription_order_line_id')
+    def _compute_prescription_order_line_id(self):
+        for record in self:
+            try:
+                sale_line = record.order_line[0]
+            except IndexError:
+                continue
+            rx_line = sale_line.prescription_order_line_id
+            record.prescription_order_line_id = rx_line.id
+
+    @api.multi
+    @api.depends('partner_id')
+    def _compute_carepoint_store_id(self):
+        for record in self:
+            store = self.env['carepoint.store'].get_by_pharmacy(
+                record.pharmacy_id,
+            )
+            record.carepoint_store_id = store.id
+
+    @api.multi
+    @api.depends('prescription_order_line_id.patient_id')
+    def _compute_carepoint_account_id(self):
+        for record in self:
+            account = self.env['carepoint.account']._get_by_patient(
+                record.prescription_order_line_id.patient_id
+            )
+            record.carepoint_account_id = account.id
 
 
 @carepoint
@@ -53,7 +113,8 @@ class SaleOrderAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class SaleOrderBatchImporter(DelayedBatchImporter):
+class SaleOrderBatchImporter(DelayedBatchImporter,
+                             CommonDateImporterMixer):
     """ Import the Carepoint Patients.
     For every order in the list, a delayed job is created.
     """
@@ -69,12 +130,12 @@ class SaleOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class SaleOrderImportMapper(CarepointImportMapper):
+class SaleOrderImportMapper(CarepointImportMapper,
+                            CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order'
 
     direct = [
         ('comments', 'note'),
-        ('order_state_cn', 'carepoint_order_state_cn'),
     ]
 
     @mapping
@@ -107,8 +168,8 @@ class SaleOrderImportMapper(CarepointImportMapper):
     @mapping
     def pharmacy_id(self, record):
         binder = self.binder_for('carepoint.carepoint.store')
-        store_id = binder.to_odoo(record['store_id'])
-        return {'pharmacy_id': store_id}
+        store_id = binder.to_odoo(record['store_id'], browse=True)
+        return {'pharmacy_id': store_id.pharmacy_id.id}
 
     @mapping
     # @only_create
@@ -124,7 +185,8 @@ class SaleOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class SaleOrderImporter(CarepointImporter):
+class SaleOrderImporter(CarepointImporter,
+                        CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order']
     _base_mapper = SaleOrderImportMapper
 
@@ -151,3 +213,60 @@ class SaleOrderImporter(CarepointImporter):
         # proc_unit._import_procurements_for_sale(
         #     self.carepoint_id,
         # )
+
+
+@carepoint
+class SaleOrderExportMapper(ExportMapper,
+                            CommonDateExportMapperMixer):
+    _model_name = 'carepoint.sale.order'
+
+    direct = [
+        ('date_order', 'submit_date'),
+        (m2o_to_backend('carepoint_store_id',
+                        binding='carepoint.carepoint.store'),
+         'store_id'),
+    ]
+
+    @mapping
+    @only_create
+    def invoice_nbr(self, record):
+        if not record.name:
+            return
+        return {
+            'invoice_nbr': record.name.replace(
+                self.backend_record.sale_prefix, '',
+            )
+        }
+
+    @mapping
+    @only_create
+    def acct_id(self, record):
+        binder = self.binder_for('carepoint.carepoint.account')
+        conjoined = binder.to_backend(record.carepoint_account_id)
+        _, acct_id = conjoined.split(',')
+        return {'acct_id': acct_id}
+
+    @mapping
+    @only_create
+    def static_defaults(self, record):
+        return {'order_state_cn': 10,
+                'order_status_cn': 1001,
+                'hold_yn': 0,
+                'priority_cn': 0,
+                }
+
+
+@carepoint
+class SaleOrderExporter(CarepointExporter):
+    _model_name = ['carepoint.sale.order']
+    _base_mapper = SaleOrderExportMapper
+
+    def _export_dependencies(self):
+        self._export_dependency(
+            self.binding_record.carepoint_account_id,
+            'carepoint.carepoint.account',
+        )
+        self._export_dependency(
+            self.binding_record.user_id,
+            'carepoint.res.users',
+        )

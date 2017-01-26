@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -21,7 +21,10 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         )
 
 try:
-    from pint import LazyRegistry
+    from pint import (DimensionalityError,
+                      LazyRegistry,
+                      UndefinedUnitError,
+                      )
     from pint.util import infer_base_unit
     ureg = LazyRegistry()
     ureg.load_definitions(
@@ -96,6 +99,8 @@ class FdbUnitImportMapper(CarepointImportMapper):
     def _uom_category_id(self, unit_root_str):
         """ Find or create a UOM category """
         categ_obj = self.env['product.uom.categ']
+        if unit_root_str == 'day':
+            return self.env.ref('product_uom.product_uom_category_time')
         categ_id = categ_obj.search([
             ('name', '=', unit_root_str),
         ],
@@ -113,11 +118,18 @@ class FdbUnitImportMapper(CarepointImportMapper):
 
         str60 = self._parse_str60(record['str60'])
 
-        unit_base = ureg(str60)
-        unit_base_str = str(unit_base.u)
-        unit_root = infer_base_unit(unit_base)
-        unit_root_str = str(unit_root)
-        unit_converted = unit_base.to(unit_root)
+        try:
+            unit_base = ureg(str60)
+            unit_base_str = str(unit_base.u)
+            unit_root = infer_base_unit(unit_base)
+            unit_root_str = str(unit_root)
+            unit_converted = unit_base.to(unit_root)
+        except (DimensionalityError, UndefinedUnitError):
+            _logger.info(
+                'Could not parse unit "%s". Inferring as base unit.',
+            )
+            unit_base = unit_base_str = record['str']
+            unit_root = unit_root_str = unit_base
 
         categ_id = self._uom_category_id(unit_root_str)
 
@@ -135,10 +147,10 @@ class FdbUnitImportMapper(CarepointImportMapper):
 
         if unit_base == unit_root:
             vals['uom_type'] = 'reference'
-        elif unit_converted.m < 0:
+        elif unit_converted.m < 1:
             factor = float(unit_base.m) / float(unit_converted.m)
             if unit_base.m != 1:
-                factor *= unit_base.m
+                factor /= unit_base.m
             vals.update({
                 'uom_type': 'smaller',
                 'factor': factor,
@@ -149,7 +161,7 @@ class FdbUnitImportMapper(CarepointImportMapper):
                 factor *= unit_base.m
             vals.update({
                 'uom_type': 'bigger',
-                'factor': factor,
+                'factor_inv': factor,
             })
         return vals
 

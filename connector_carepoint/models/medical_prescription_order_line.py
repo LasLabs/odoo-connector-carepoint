@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+import re
+
 from odoo import fields
 from odoo import models
 from odoo.addons.connector.unit.mapper import (mapping,
@@ -12,7 +14,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                convert,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, add_to
+from ..unit.mapper import (CarepointImportMapper,
+                           add_to,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -102,7 +109,8 @@ class MedicalPrescriptionOrderLineAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter):
+class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter,
+                                                CommonDateImporterMixer):
     """ Import the Carepoint Prescriptions.
     For every prescription in the list, a delayed job is created.
     """
@@ -110,15 +118,17 @@ class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
+class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
+                                               CommonDateImportMapperMixer):
     _model_name = 'carepoint.rx.ord.ln'
 
     direct = [
-        ('start_date', 'date_start_treatment'),
-        ('expire_date', 'date_stop_treatment'),
+        (convert('start_date', fields.Datetime.to_string),
+         'date_start_treatment'),
+        (convert('expire_date', fields.Datetime.to_string),
+         'date_stop_treatment'),
         ('written_qty', 'qty'),
         ('freq_of_admin', 'frequency'),
-        ('units_entered', 'quantity'),
         (add_to('refills_left', -1), 'refill_qty_remain'),
         ('refills_orig', 'refill_qty_original')
     ]
@@ -150,6 +160,12 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
                 }
 
     @mapping
+    def quantity(self, record):
+        return {
+            'quantity': re.sub(r'[^0-9]', '', record['units_entered']),
+        }
+
+    @mapping
     def is_substitutable(self, record):
         return {'is_substitutable': not bool(record['daw_yn'])}
 
@@ -163,15 +179,15 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
     @only_create
     def ndc_id(self, record):
         binder = self.binder_for('carepoint.fdb.ndc')
-        ndc_id = binder.to_odoo(record['ndc'].strip())
-        return {'ndc_id': ndc_id}
+        fdb_ndc = binder.to_odoo(record['ndc'].strip(), browse=True)
+        return {'ndc_id': fdb_ndc.ndc_id.id}
 
     @mapping
     @only_create
     def gcn_id(self, record):
         binder = self.binder_for('carepoint.fdb.gcn')
-        gcn_id = binder.to_odoo(record['gcn_seqno'])
-        return {'gcn_id': gcn_id}
+        fdb_gcn = binder.to_odoo(record['gcn_seqno'], browse=True)
+        return {'gcn_id': fdb_gcn.gcn_id.id}
 
     @mapping
     @only_create
@@ -221,7 +237,8 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class MedicalPrescriptionOrderLineImporter(CarepointImporter):
+class MedicalPrescriptionOrderLineImporter(CarepointImporter,
+                                           CommonDateImporterMixer):
     _model_name = ['carepoint.rx.ord.ln']
 
     _base_mapper = MedicalPrescriptionOrderLineImportMapper
@@ -236,14 +253,13 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
+class MedicalPrescriptionOrderLineExportMapper(ExportMapper,
+                                               CommonDateExportMapperMixer):
     _model_name = 'carepoint.rx.ord.ln'
 
     direct = [
         (convert('date_start_treatment', fields.Datetime.from_string),
          'start_date'),
-        (convert('date_stop_treatment', fields.Datetime.from_string),
-         'expire_date'),
         (convert('date_stop_treatment', fields.Datetime.from_string),
          'expire_date'),
         ('qty', 'written_qty'),
@@ -285,6 +301,11 @@ class MedicalPrescriptionOrderLineExportMapper(ExportMapper):
     @mapping
     @changed_by('ndc_id')
     def ndc(self, record):
+        if not record.ndc_id:
+            ndcs = self.env['carepoint.item'].search(
+                [('medicament_id', '=', record.medicament_id.id)],
+            )
+            record.ndc_id = ndcs.ordered(lambda r: r.store_on_hand)[0]
         return {'ndc': record.ndc_id.name}
 
     @mapping

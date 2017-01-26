@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import fields
-from odoo import models
+from odoo import api, fields, models
 from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                none,
@@ -12,7 +11,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                backend_to_m2o,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -33,6 +36,20 @@ class MedicalPrescriptionOrder(models.Model):
         inverse_name='odoo_id',
         string='Carepoint Bindings',
     )
+    carepoint_store_id = fields.Many2one(
+        string='Carepoint Store',
+        comodel_name='carepoint.store',
+        compute='_compute_carepoint_store_id',
+        store=True,
+    )
+
+    @api.multi
+    def _compute_carepoint_store_id(self):
+        for rec_id in self:
+            store = rec_id.carepoint_store_id.get_by_pharmacy(
+                rec_id.partner_id,
+            )
+            rec_id.carepoint_store_id = store.id
 
 
 class CarepointMedicalPrescriptionOrder(models.Model):
@@ -58,7 +75,8 @@ class MedicalPrescriptionOrderAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
+class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter,
+                                            CommonDateImporterMixer):
     """ Import the Carepoint Prescriptions.
     For every prescription in the list, a delayed job is created.
     """
@@ -66,7 +84,8 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
+class MedicalPrescriptionOrderImportMapper(CarepointImportMapper,
+                                           CommonDateImportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [
@@ -90,7 +109,8 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class MedicalPrescriptionOrderImporter(CarepointImporter):
+class MedicalPrescriptionOrderImporter(CarepointImporter,
+                                       CommonDateImporterMixer):
     _model_name = ['carepoint.medical.prescription.order']
     _base_mapper = MedicalPrescriptionOrderImportMapper
 
@@ -104,7 +124,8 @@ class MedicalPrescriptionOrderImporter(CarepointImporter):
 
 
 @carepoint
-class MedicalPrescriptionOrderExportMapper(ExportMapper):
+class MedicalPrescriptionOrderExportMapper(ExportMapper,
+                                           CommonDateExportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
 
     direct = [

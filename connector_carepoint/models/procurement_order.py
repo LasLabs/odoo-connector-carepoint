@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
+from odoo import api, models, fields
 from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
+                                               m2o_to_backend,
+                                               follow_m2o_relations,
+                                               ExportMapper,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import (CarepointImportMapper,
+                           CommonDateExportMapperMixer,
+                           CommonDateImporterMixer,
+                           CommonDateImportMapperMixer,
+                           )
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
+from ..unit.export_synchronizer import CarepointExporter
 
 
 _logger = logging.getLogger(__name__)
@@ -46,6 +54,29 @@ class CarepointProcurementOrder(models.Model):
         required=True,
         ondelete='cascade',
     )
+    prescription_order_line_id = fields.Many2one(
+        string='Prescription Line',
+        comodel_name='medical.prescription.order.line',
+        related='sale_line_id.prescription_order_line_id',
+    )
+    carepoint_store_id = fields.Many2one(
+        string='Carepoint Store',
+        comodel_name='carepoint.store',
+        compute='_compute_carepoint_store_id',
+        store=True,
+    )
+
+    @api.multi
+    @api.depends(
+        'prescription_order_line_id.prescription_order_id.partner_id',
+    )
+    def _compute_carepoint_store_id(self):
+        for rec_id in self:
+            rx_order = rec_id.prescription_order_line_id.prescription_order_id
+            store = self.env['carepoint.store'].get_by_pharmacy(
+                rx_order.partner_id,
+            )
+            rec_id.carepoint_store_id = store.id
 
 
 @carepoint
@@ -80,7 +111,8 @@ class ProcurementOrderBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class ProcurementOrderImportMapper(CarepointImportMapper):
+class ProcurementOrderImportMapper(CarepointImportMapper,
+                                   CommonDateImportMapperMixer):
     _model_name = 'carepoint.procurement.order'
 
     direct = [
@@ -102,20 +134,21 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
 
         binder = self.binder_for('carepoint.rx.ord.ln')
         rx_id = binder.to_odoo(record['rx_id'], browse=True)
-        binder = self.binder_for('carepoint.sale.order')
-        sale_id = binder.to_odoo(record['order_id'], browse=True)
         binder = self.binder_for('carepoint.fdb.ndc')
         ndc_id = binder.to_odoo(record['disp_ndc'].strip(), browse=True)
-        line_id = sale_id.order_line.filtered(
-            lambda r: r.prescription_order_line_id.id == rx_id.id
-        )
-        line_id = line_id[0].with_context(connector_no_export=True)
+        line_id = self.env['carepoint.sale.order.line'].search([
+            ('rx_disp_external', '=', record['rxdisp_id']),
+        ])
+        line_id = line_id.odoo_id
+        sale_id = line_id.order_id
+        _logger.debug('Got %s from %s, %s, %s', line_id, sale_id, sale_id.order_line, record.__dict__)
+        line_id = line_id.with_context(connector_no_export=True)
 
         # Set the sale line to what was dispensed
         # This is a hack circumventing lack of qty in CP until now
         line_id.write({
             'product_id': ndc_id.medicament_id.product_id.id,
-            'product_uom_qty': record['dispense_qty'],
+            'product_uom_qty': float(record['dispense_qty']),
         })
 
         procurement_group_id = self.env['procurement.group'].search([
@@ -144,7 +177,8 @@ class ProcurementOrderImportMapper(CarepointImportMapper):
 
 
 @carepoint
-class ProcurementOrderImporter(CarepointImporter):
+class ProcurementOrderImporter(CarepointImporter,
+                               CommonDateImporterMixer):
     _model_name = ['carepoint.procurement.order']
 
     _base_mapper = ProcurementOrderImportMapper
@@ -184,3 +218,56 @@ class ProcurementOrderImporter(CarepointImporter):
         # invoice_unit._import_invoice_lines_for_procurement(
         #     record['rxdisp_id'], binding.id,
         # )
+
+
+@carepoint
+class ProcurementOrderLineExportMapper(ExportMapper,
+                                       CommonDateExportMapperMixer):
+    _model_name = 'carepoint.procurement.order'
+
+    direct = [
+        (m2o_to_backend('prescription_order_line_id',
+                       binding='carepoint.rx.ord.ln'),
+         'rx_id'),
+        (m2o_to_backend('carepoint_store_id',
+                        binding='carepoint.carepoint.store'),
+         'store_id'),
+        (follow_m2o_relations('ndc_id.name'), 'disp_ndc'),
+        (follow_m2o_relations('ndc_id.medicament_id.display_name'),
+         'disp_drug_name'),
+        (follow_m2o_relations('ndc_id.manufacturer_id.name'), 'mfg'),
+        (follow_m2o_relations('prescription_order_line_id.'
+                              'medication_dosage_id.name'),
+         'sig_text'),
+        (follow_m2o_relations('prescription_order_line_id.quantity'),
+         'units_per_dose'),
+        (follow_m2o_relations('prescription_order_line_id.frequency'),
+         'freq_of_admin'),
+        (follow_m2o_relations('ndc_id.medicament_id.gpi'), 'gpi_disp'),
+        ('product_qty', 'pkg_size'),
+        ('date_planned', 'dispense_date'),
+        ('product_qty', 'dispense_qty'),
+    ]
+
+    @mapping
+    def static_defaults(self, record):
+        return {'status_cn': 0,
+                'label_3pty_yn': 4,
+                'reject_3pty_yn': 0,
+                }
+
+
+@carepoint
+class ProcurementOrderLineExporter(CarepointExporter):
+    _model_name = ['carepoint.procurement.order']
+    _base_mapper = ProcurementOrderLineExportMapper
+
+    def _export_dependencies(self):
+        self._export_dependency(
+            self.binding_record.sale_line_id.prescription_order_line_id,
+            'carepoint.rx.ord.ln',
+        )
+        self._export_dependency(
+            self.binding_record.sale_line_id,
+            'carepoint.sale.order.line',
+        )

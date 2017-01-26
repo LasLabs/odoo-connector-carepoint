@@ -77,6 +77,7 @@ Known Issues / Roadmap
 * Carepoint organizations import as pharmacies, but might be other entities
 * Prescription lines are in a bad namespace due to `OCA/connector#20
   <https://github.com/OCA/connector/issues/209>`_
+* Import/export of OTC sales are not currently supported
 
 
 Bug Tracker

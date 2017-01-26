@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -120,7 +120,7 @@ class CarepointBackend(models.Model):
              'without a category will be linked to it.',
         required=True,
         default=lambda s: s.env.ref(
-            'medical_prescription_sale.product_category_rx'),
+            'sale_medical_prescription.product_category_rx'),
     )
     default_account_payable_id = fields.Many2one(
         string='Default Account Payable',

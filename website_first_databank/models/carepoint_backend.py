@@ -16,4 +16,8 @@ class CarepointBackend(models.Model):
     website_product_template_id = fields.Many2one(
         string='Website Product Template',
         comodel_name='ir.ui.view',
+        required=True,
+        default=lambda s: s.env.ref(
+            'website_first_databank.website_medicament_description',
+        ),
     )

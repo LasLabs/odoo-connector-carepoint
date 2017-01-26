@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -196,11 +196,11 @@ class FdbNdcImportMapper(CarepointImportMapper):
         """
         if is_prescription:
             return self.env.ref(
-                'medical_prescription_sale.product_category_rx'
+                'sale_medical_prescription.product_category_rx'
             )
         else:
             return self.env.ref(
-                'medical_prescription_sale.product_category_otc'
+                'sale_medical_prescription.product_category_otc'
             )
 
     def _get_medicament_vals(self, record):
@@ -222,7 +222,10 @@ class FdbNdcImportMapper(CarepointImportMapper):
         dea_code = record['dea'] or '0'
 
         if cs_ext_id:
-            strength_str = cs_ext_id.dn_str.lower().strip()
+            try:
+                strength_str = cs_ext_id.dn_str.lower().strip()
+            except AttributeError:
+                _logger.debug('%s is not a str', cs_ext_id.dn_str)
             route_id = cs_ext_id.route_id.route_id
             form_id = cs_ext_id.form_id.form_id
             gpi = gpi or cs_ext_id.gpi
@@ -240,7 +243,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         strength_num, strength_str = self._get_uom_parts(strength_str)
         strength_uom_id = self._get_uom_id(strength_str)
-        sale_uom_id = self._get_uom_id(record['hcfa_unit'] or 'UNIT')
+        sale_uom_id = self._get_uom_id(record['hcfa_unit'].strip() or 'UNIT')
         categ_id = self._get_categ_id(is_prescription, record)
 
         return {

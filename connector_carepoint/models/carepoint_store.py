@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
-from odoo import models, fields
+from odoo import api, models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..backend import carepoint
-from ..unit.mapper import PartnerImportMapper, trim
+from ..unit.mapper import (PartnerImportMapper,
+                           trim,
+                           CommonDateImporterMixer,
+                           )
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -40,6 +43,18 @@ class CarepointStore(models.Model):
         string='Carepoint Bindings',
     )
 
+    _sql_constraints = [
+        ('pharmacy_unique', 'UNIQUE(pharmacy_id)',
+         'This pharmacy already has an associated Carepoint Store'),
+    ]
+
+    @api.model_cr
+    def get_by_pharmacy(self, pharmacy):
+        """ It returns the store for the provided pharmacy """
+        return self.search([
+            ('pharmacy_id', '=', pharmacy.id),
+        ])
+
 
 class CarepointCarepointStore(models.Model):
     """ Binding Model for the Carepoint Store """
@@ -68,7 +83,8 @@ class CarepointStoreAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class CarepointStoreBatchImporter(DelayedBatchImporter):
+class CarepointStoreBatchImporter(DelayedBatchImporter,
+                                  CommonDateImporterMixer):
     """ Import the Carepoint Stores.
     For every company in the list, a delayed job is created.
     """
@@ -123,7 +139,8 @@ class CarepointStoreImportMapper(PartnerImportMapper):
 
 
 @carepoint
-class CarepointStoreImporter(CarepointImporter):
+class CarepointStoreImporter(CarepointImporter,
+                             CommonDateImporterMixer):
     _model_name = ['carepoint.carepoint.store']
     _base_mapper = CarepointStoreImportMapper
 

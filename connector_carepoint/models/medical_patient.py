@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015-2016 LasLabs Inc.
+# Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -12,6 +12,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
+                           CommonDateImporterMixer,
                            trim,
                            )
 from ..backend import carepoint
@@ -64,7 +65,8 @@ class MedicalPatientAdapter(CarepointCRUDAdapter):
 
 
 @carepoint
-class MedicalPatientBatchImporter(DelayedBatchImporter):
+class MedicalPatientBatchImporter(DelayedBatchImporter,
+                                  CommonDateImporterMixer):
     """ Import the Carepoint Patients.
     For every patient in the list, a delayed job is created.
     """
@@ -76,10 +78,10 @@ class MedicalPatientImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.patient'
 
     direct = [
-        (trim('ssn'), 'ref'),
+        (trim('ssn'), 'social_security'),
         (trim('email'), 'email'),
-        (none('birth_date'), 'dob'),
-        (none('death_date'), 'dod'),
+        (none('birth_date'), 'birthdate_date'),
+        (none('death_date'), 'date_death'),
         ('pat_status_cn', 'active'),
     ]
 
@@ -90,9 +92,11 @@ class MedicalPatientImportMapper(PersonImportMapper):
     @mapping
     def gender(self, record):
         gender = record.get('gender_cd')
-        if not gender:
-            return {'gender': None}
-        return {'gender': gender.lower()}
+        gender_map = {
+            'M': 'male',
+            'F': 'female',
+        }
+        return {'gender': gender_map.get(gender)}
 
     @mapping
     def carepoint_id(self, record):
@@ -102,10 +106,12 @@ class MedicalPatientImportMapper(PersonImportMapper):
     @only_create
     def odoo_id(self, record):
         """ Will bind the patient on a existing patient
-        with the same name & dob """
+        with the same name & birthdate_date """
         name = self._get_name(record)
         patient_id = self.env['medical.patient'].search(
-            [('name', 'ilike', name), ('dob', '=', record.get('birth_date'))],
+            [('name', 'ilike', name),
+             ('birthdate_date', '=', record.get('birth_date')),
+             ],
             limit=1,
         )
         if patient_id:
@@ -113,7 +119,8 @@ class MedicalPatientImportMapper(PersonImportMapper):
 
 
 @carepoint
-class MedicalPatientImporter(CarepointImporter):
+class MedicalPatientImporter(CarepointImporter,
+                             CommonDateImporterMixer):
     _model_name = ['carepoint.medical.patient']
     _base_mapper = MedicalPatientImportMapper
 
@@ -138,10 +145,10 @@ class MedicalPatientExportMapper(PersonExportMapper):
     _model_name = 'carepoint.medical.patient'
 
     direct = [
-        (none('ref'), 'ssn'),
+        (none('social_security'), 'ssn'),
         (none('email'), 'email'),
-        (none('dob'), 'birth_date'),
-        (none('dod'), 'death_date'),
+        (none('birthdate_date'), 'birth_date'),
+        (none('date_death'), 'death_date'),
         ('active', 'pat_status_cn')
     ]
 
@@ -149,7 +156,7 @@ class MedicalPatientExportMapper(PersonExportMapper):
     @changed_by('gender')
     def gender_cd(self, record):
         if record.gender:
-            return {'gender_cd': record.gender.upper()}
+            return {'gender_cd': record.gender[0].upper()}
 
     @mapping
     def static_defaults(self, record):
