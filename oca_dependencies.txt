@@ -1,2 +1,2 @@
-connector https://github.com/guewen/connector.git migration-connector-10.0
+connector https://github.com/LasLabs/connector.git migration-connector-10.0
 vertical-medical https://github.com/laslabs/vertical-medical.git release/10.0

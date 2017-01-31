@@ -78,8 +78,8 @@ class MedicalPatientImportMapper(PersonImportMapper):
     direct = [
         (trim('ssn'), 'ref'),
         (trim('email'), 'email'),
-        (none('birth_date'), 'dob'),
-        (none('death_date'), 'dod'),
+        (none('birth_date'), 'birthdate_date'),
+        (none('death_date'), 'date_death'),
         ('pat_status_cn', 'active'),
     ]
 
@@ -104,10 +104,10 @@ class MedicalPatientImportMapper(PersonImportMapper):
         """ Will bind the patient on a existing patient
         with the same name & dob """
         name = self._get_name(record)
-        patient_id = self.env['medical.patient'].search(
-            [('name', 'ilike', name), ('dob', '=', record.get('birth_date'))],
-            limit=1,
-        )
+        patient_id = self.env['medical.patient'].search([
+            ('name', 'ilike', name),
+            ('birthdate_date', '=', record.get('birth_date')),
+        ], limit=1)
         if patient_id:
             return {'odoo_id': patient_id.id}
 

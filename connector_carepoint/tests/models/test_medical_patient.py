@@ -42,7 +42,7 @@ class TestMedicalPatientImportMapper(MedicalPatientTestBase):
         return self.env['medical.patient'].create({
             'name': '%s %s' % (self.record['fname'],
                                self.record['lname']),
-            'dob': self.record['birth_date'],
+            'birthdate_date': self.record['birth_date'],
         })
 
     def test_safety_caps_yn(self):

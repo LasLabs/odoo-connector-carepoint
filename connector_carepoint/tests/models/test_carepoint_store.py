@@ -22,7 +22,7 @@ class CarepointStoreTestBase(SetUpCarepointBase):
             self.model
         )
         self.record = {
-            'name': 'Test Pharmacy',
+            'name': 'Test Pharmacy Name',
             'store_id': 123,
         }
 
@@ -48,12 +48,12 @@ class TestCarepointStoreImportMapper(CarepointStoreTestBase):
         expect = self.env['medical.pharmacy'].create({
             'name': self.record['name'],
         })
-        res = self.unit.odoo_id(self.record)
-        expect = {'odoo_id': expect.id}
-        self.assertDictEqual(expect, res)
+        rec = self.unit.odoo_id(self.record)
+        store = self.env['carepoint.store'].browse(rec['odoo_id'])
+        self.assertEqual(expect.id, store.pharmacy_id.id)
 
     def test_parent_id(self):
-        """ It should return id of backend_record companie's partner """
+        """ It should return id of backend_record company's partner """
         res = self.unit.parent_id(self.record)
         expect = {
             'parent_id':
