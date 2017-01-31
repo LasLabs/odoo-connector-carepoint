@@ -95,7 +95,7 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
             return
         pathology_id = self.env['medical.pathology'].search([
             ('code', '=', record['icd9'].strip()),
-            ('code_type_id.name', '=ilike', 'ICD9%'),
+            ('code_type_id.name', '=ilike', 'ICD-9%'),
         ],
             limit=1,
         )

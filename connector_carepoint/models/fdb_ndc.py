@@ -196,11 +196,11 @@ class FdbNdcImportMapper(CarepointImportMapper):
         """
         if is_prescription:
             return self.env.ref(
-                'medical_prescription_sale.product_category_rx'
+                'sale_medical_prescription.product_category_rx'
             )
         else:
             return self.env.ref(
-                'medical_prescription_sale.product_category_otc'
+                'sale_medical_prescription.product_category_otc'
             )
 
     def _get_medicament_vals(self, record):
