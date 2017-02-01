@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import mock
+import pytz
 from datetime import timedelta, datetime
 
 from .common import SetUpCarepointBase
@@ -82,11 +83,12 @@ class TestCarepointBackend(SetUpCarepointBase):
     def test_import_from_date_calls_import(self, session, batch, dt_mk):
         """ It should call delayed batch import for model """
         expect = 'model', 'import_patients_from_date', 'chg'
-        dt_mk.now.return_value = datetime.now()
-        expect_date = dt_mk.now() - timedelta(days=5)
+        dt_mk.utcnow.return_value = datetime.utcnow()
+        expect_date = dt_mk.utcnow() - timedelta(days=5)
         self.backend.import_patients_from_date = expect_date
         expect_date = self.backend.import_patients_from_date
         self.backend._import_from_date(*expect)
+        utc_now = pytz.timezone('UTC').localize(dt_mk.utcnow())
         batch.delay.assert_called_once_with(
             session(), expect[0], self.backend.id,
             filters={
@@ -94,7 +96,7 @@ class TestCarepointBackend(SetUpCarepointBase):
                     '>=': fields.Datetime.from_string(
                         expect_date,
                     ),
-                    '<=': dt_mk.now(),
+                    '<=': utc_now,
                 },
             }
         )
@@ -104,13 +106,17 @@ class TestCarepointBackend(SetUpCarepointBase):
     @mock.patch('%s.ConnectorSession' % model)
     def test_import_from_date_writes_new_date(self, session, batch, dt_mk):
         """ It should call delayed batch import for model """
-        dt_mk.now.return_value = datetime.now()
-        expect_date = dt_mk.now() - timedelta(days=5)
+        dt_mk.utcnow.return_value = datetime.utcnow()
+        expect_date = dt_mk.utcnow() - timedelta(days=5)
         self.backend.import_patients_from_date = expect_date
         self.backend._import_from_date(
             'model', 'import_patients_from_date', 'chg'
         )
-        expect = dt_mk.now() - timedelta(seconds=IMPORT_DELTA_BUFFER)
+        utc_now = pytz.timezone('UTC').localize(dt_mk.utcnow())
+        local_now = utc_now.astimezone(
+            pytz.timezone(self.backend.default_tz)
+        )
+        expect = local_now - timedelta(seconds=IMPORT_DELTA_BUFFER)
         self.assertEqual(
             fields.Datetime.to_string(expect),
             self.backend.import_patients_from_date,

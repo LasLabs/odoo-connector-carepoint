@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+import pytz
 from datetime import datetime, timedelta
 from openerp import models, fields, api, _
 from openerp.exceptions import ValidationError
@@ -98,6 +99,12 @@ class CarepointBackend(models.Model):
         inverse_name='backend_id',
         string='Store',
         readonly=True,
+    )
+    server_tz = fields.Selection(
+        _tz_get,
+        'Server Time Zone',
+        default=lambda s: s.env.user.tz,
+        required=True,
     )
     default_lang_id = fields.Many2one(
         comodel_name='res.lang',
@@ -263,8 +270,10 @@ class CarepointBackend(models.Model):
     def _import_from_date(self, model, from_date_field,
                           chg_date_field='chg_date'):
         session = self.__get_model_session()
-        import_start_time = datetime.now()
+        utc_now = pytz.timezone('UTC').localize(datetime.utcnow())
         for backend in self:
+            local_tz = pytz.timezone(backend.server_tz)
+            import_start_time = utc_now.astimezone(local_tz)
             backend.check_carepoint_structure()
             filters = {chg_date_field: {'<=': import_start_time}}
             from_date = getattr(backend, from_date_field)
@@ -275,18 +284,19 @@ class CarepointBackend(models.Model):
             else:
                 from_date = None
             import_batch.delay(session, model, backend.id, filters=filters)
-        # Records from Carepoint are imported based on their `add_date`
-        # date.  This date is set on Carepoint at the beginning of a
-        # transaction, so if the import is run between the beginning and
-        # the end of a transaction, the import of a record may be
-        # missed.  That's why we add a small buffer back in time where
-        # the eventually missed records will be retrieved.  This also
-        # means that we'll have jobs that import twice the same records,
-        # but this is not a big deal because they will be skipped when
-        # the last `sync_date` is the same.
-        next_time = import_start_time - timedelta(seconds=IMPORT_DELTA_BUFFER)
-        next_time = fields.Datetime.to_string(next_time)
-        self.write({from_date_field: next_time})
+            # Records from Carepoint are imported based on their `add_date`
+            # date.  This date is set on Carepoint at the beginning of a
+            # transaction, so if the import is run between the beginning and
+            # the end of a transaction, the import of a record may be
+            # missed.  That's why we add a small buffer back in time where
+            # the eventually missed records will be retrieved.  This also
+            # means that we'll have jobs that import twice the same records,
+            # but this is not a big deal because they will be skipped when
+            # the last `sync_date` is the same.
+            next_time = (import_start_time -
+                         timedelta(seconds=IMPORT_DELTA_BUFFER))
+            next_time = fields.Datetime.to_string(next_time)
+            backend.write({from_date_field: next_time})
 
     @api.model
     def resync_all(self, binding_model):
