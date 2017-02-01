@@ -49,6 +49,7 @@
                                 <group>
                                     <field name="company_id" />
                                     <field name="is_default" />
+                                    <field name="server_tz" />
                                 </group>
                                 <group>
                                     <field name="default_category_id" />
@@ -56,7 +57,7 @@
                                     <field name="rx_prefix" />
                                 </group>
                             </group>
-                            <group string="Localization" name="preferences">
+                            <group string="Partner Localization" name="preferences">
                                 <field name="default_lang_id"/>
                                 <field name="default_tz" />
                             </group>
@@ -201,7 +202,7 @@
                                         class="oe_highlight"
                                         string="Import in background"/>
                             </group>
-                            
+
                             <!--<group>
                                 <label string="Import all customer groups" class="oe_inline"/>
                                 <div>
