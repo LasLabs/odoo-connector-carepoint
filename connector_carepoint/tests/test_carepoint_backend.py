@@ -88,7 +88,9 @@ class TestCarepointBackend(SetUpCarepointBase):
         self.backend.import_patients_from_date = expect_date
         expect_date = self.backend.import_patients_from_date
         self.backend._import_from_date(*expect)
-        utc_now = pytz.timezone('UTC').localize(dt_mk.utcnow())
+        utc_now = pytz.timezone('UTC').localize(dt_mk.utcnow()).astimezone(
+            pytz.timezone(self.backend.server_tz)
+        )
         batch.delay.assert_called_once_with(
             session(), expect[0], self.backend.id,
             filters={
@@ -96,7 +98,7 @@ class TestCarepointBackend(SetUpCarepointBase):
                     '>=': fields.Datetime.from_string(
                         expect_date,
                     ),
-                    '<=': utc_now,
+                    '<=': utc_now.replace(tzinfo=None),
                 },
             }
         )
