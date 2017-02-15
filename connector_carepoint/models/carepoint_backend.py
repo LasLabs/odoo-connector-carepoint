@@ -273,7 +273,9 @@ class CarepointBackend(models.Model):
         utc_now = pytz.timezone('UTC').localize(datetime.utcnow())
         for backend in self:
             local_tz = pytz.timezone(backend.server_tz)
-            import_start_time = utc_now.astimezone(local_tz)
+            import_start_time = utc_now.astimezone(local_tz).replace(
+                tzinfo=None
+            )
             backend.check_carepoint_structure()
             filters = {chg_date_field: {'<=': import_start_time}}
             from_date = getattr(backend, from_date_field)
