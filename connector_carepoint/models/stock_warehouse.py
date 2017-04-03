@@ -76,10 +76,10 @@ class StockWarehouseImportMapper(CarepointImportMapper):
     @mapping
     @only_create
     def odoo_id(self, record):
-        code = self.code(record)['code']
+        name = record['name'].strip()
         company_id = self.company_id(record)['company_id']
         existing = self.env['stock.warehouse'].search([
-            ('code', '=', code),
+            ('name', '=', name),
             ('company_id', '=', company_id),
         ])
         if existing:

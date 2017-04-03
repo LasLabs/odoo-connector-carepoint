@@ -292,7 +292,9 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def _import_from_date(self, model, from_date_field,
-                          chg_date_field='chg_date'):
+                          chg_date_field='chg_date',
+                          add_date_field='add_date',
+                          ):
 
         import_start_time = datetime.now()
 
@@ -313,6 +315,9 @@ class CarepointBackend(models.Model):
 
             for dt in iter_dates:
                 if from_date != dt:
+                    backend.__import_from_date(
+                        model, from_date, dt, add_date_field,
+                    )
                     backend.__import_from_date(
                         model, from_date, dt, chg_date_field,
                     )
@@ -342,8 +347,8 @@ class CarepointBackend(models.Model):
             backend.check_carepoint_structure()
             filters = {
                 chg_date_field: {
-                    '<=': start,
-                    '>=': end,
+                    '>=': start,
+                    '<=': end,
                 },
             }
             import_batch.delay(session, model, backend.id, filters=filters)
