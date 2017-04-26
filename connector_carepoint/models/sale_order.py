@@ -20,6 +20,7 @@ from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
 from ..unit.export_synchronizer import CarepointExporter
+from .carepoint_account import CarepointAccountUnit
 
 _logger = logging.getLogger(__name__)
 
@@ -156,7 +157,11 @@ class SaleOrderImportMapper(CarepointImportMapper,
     def partner_data(self, record):
         binder = self.binder_for('carepoint.carepoint.account')
         if record['acct_id']:
-            acct_id = binder.to_odoo(record['acct_id'], browse=True)
+            account_unit = self.unit_for(
+                CarepointAccountUnit, 'carepoint.carepoint.account',
+            )
+            accounts = account_unit._get_accounts(record['acct_id'])
+            acct_id = binder.to_odoo(accounts[0], browse=True)
             patient_id = acct_id.patient_id
         else:
             patient_id = self.env.ref('connector_carepoint.patient_null')
@@ -193,8 +198,10 @@ class SaleOrderImporter(CarepointImporter,
     def _import_dependencies(self):
         """ Import depends for record """
         record = self.carepoint_record
-        self._import_dependency(record['acct_id'],
-                                'carepoint.carepoint.account')
+        account_unit = self.unit_for(
+            CarepointAccountUnit, 'carepoint.carepoint.account',
+        )
+        account_unit._import_account(record['acct_id'])
 
     def _after_import(self, binding):
         """ Import the sale lines & procurements """

@@ -123,6 +123,15 @@ class CarepointAccountUnit(ConnectorUnit):
             _logger.debug('ACCOUNT %s', account)
             importer.run(account)
 
+    def _import_account(self, account_id):
+        importer = self.unit_for(CarepointAccountImporter)
+        for account in self._get_accounts(account_id):
+            _logger.debug('ACCOUNT %s', account)
+            importer.run(account)
+
+    def _get_accounts(self, account_id):
+        adapter = self.unit_for(CarepointAccountAdapter)
+        return adapter.search(ID=account_id)
 
 @carepoint
 class CarepointAccountBatchImporter(DelayedBatchImporter):
