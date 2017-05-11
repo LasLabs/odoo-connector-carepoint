@@ -65,27 +65,26 @@ class FdbFormImportMapper(CarepointImportMapper):
     direct = [
         (trim('gcdf'), 'gcdf'),
         (trim('dose'), 'code'),
+        (trim('dose'), 'carepoint_id'),
         (trim_and_titleize('gcdf_desc'), 'name'),
         ('update_yn', 'update_yn'),
     ]
 
     @mapping
     @only_create
-    def form_id(self, record):
+    def odoo_id(self, record):
         """ Will bind the form on a existing form with same name """
-        form_id = self.env['medical.drug.form'].search([
-            '|',
+        form = self.env['medical.drug.form'].search([
             ('code', '=', record['dose'].strip()),
-            ('name', '=', record['gcdf_desc'].strip().title()),
-        ],
-            limit=1,
-        )
-        if form_id:
-            return {'form_id': form_id.id}
-
-    @mapping
-    def carepoint_id(self, record):
-        return {'carepoint_id': record['dose'].strip()}
+        ])
+        if not form:
+            return
+        carepoint_form = self.env['fdb.form'].search([
+            ('form_id', '=', form.id),
+        ])
+        if carepoint_form:
+            return {'odoo_id': carepoint_form[0].id}
+        return {'form_id': form.id}
 
 
 @carepoint

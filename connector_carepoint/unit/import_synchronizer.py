@@ -348,7 +348,7 @@ class AddCheckpoint(ConnectorUnit):
 def import_batch(session, model_name, backend_id, filters=None):
     """ Prepare a batch import of records from Carepoint """
     env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(BatchImporter)
+    importer = env.get_connector_unit(DelayedBatchImporter)
     importer.run(filters=filters)
 
 

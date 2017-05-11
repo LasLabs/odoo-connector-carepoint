@@ -167,9 +167,12 @@ class SaleOrderLineImporter(CarepointImporter,
             order_id
         )
         if len(binding.order_id.order_line) == line_cnt:
-            self._import_dependency(
-                record['order_id'], 'carepoint.stock.picking'
-            )
+            try:
+                self._import_dependency(
+                    record['order_id'], 'carepoint.stock.picking'
+                )
+            except IndexError:
+                _logger.debug('No pickings exist for order %s', order_id)
 
 
 @carepoint

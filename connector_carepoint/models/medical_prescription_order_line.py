@@ -15,7 +15,6 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
-                           add_to,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
@@ -61,6 +60,7 @@ class CarepointMedicalPrescriptionOrderLine(models.Model):
         required=True,
         ondelete='cascade'
     )
+    out_of_refills = fields.Boolean()
 
 
 @carepoint
@@ -129,7 +129,6 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
          'date_stop_treatment'),
         ('written_qty', 'qty'),
         ('freq_of_admin', 'frequency'),
-        (add_to('refills_left', -1), 'refill_qty_remain'),
         ('refills_orig', 'refill_qty_original')
     ]
 
@@ -164,6 +163,16 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
         return {
             'quantity': re.sub(r'[^0-9]', '', record['units_entered']),
         }
+
+    @mapping
+    def refill_qty_remain(self, record):
+        refills = record['refills_left']
+        vals = {}
+        if refills:
+            refills -= 1
+        else:
+            vals['out_of_refills'] = True
+        vals['refill_qty_remain'] = refills
 
     @mapping
     def is_substitutable(self, record):
@@ -266,8 +275,13 @@ class MedicalPrescriptionOrderLineExportMapper(ExportMapper,
         ('frequency', 'freq_of_admin'),
         ('quantity', 'units_entered'),
         ('refill_qty_original', 'refills_orig'),
-        (add_to('refill_qty_remain', 1), 'refills_left'),
     ]
+
+    @mapping
+    def refills_left(self, record):
+        if record.out_of_refills:
+            return {'refills_left': 0}
+        return {'refills_left': record.refill_qty_remain + 1}
 
     @mapping
     @changed_by('patient_id')

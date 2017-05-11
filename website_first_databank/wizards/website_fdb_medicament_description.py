@@ -41,12 +41,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         model = 'medical.medicament'
         if self.env.context.get('active_model') != model:
             return
-        res = []
-        if self.env.context.get('active_id'):
-            res.append(self.env.context['active_id'])
-        if self.env.context.get('active_ids'):
-            res.extend(self.env.context['active_ids'])
-        return [6, 0, res]
+        return [(6, 0, self.env.context.get('active_ids', []))]
 
     @api.multi
     @api.depends('medicament_ids.gcn_id')
@@ -58,7 +53,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     @api.model
     def _default_monograph_id(self):
         medicament_ids = self.env['medical.medicament'].browse(
-            self._default_medicament_ids()[2]
+            self._default_medicament_ids()[0][2]
         )
         fdb_gcn_id = self.env['fdb.gcn'].search([
             ('gcn_id', '=', medicament_ids[0].gcn_id.id),
@@ -98,8 +93,11 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
     @api.multi
     def _render(self):
         """ Override this in order to customize the template. """
+        template_vals = self._get_template_values()
+        if not template_vals:
+            return
         return self.template_id.render(
-            self._get_template_values(),
+            template_vals,
             engine='ir.qweb',
         )
 
@@ -109,6 +107,8 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         Use this method to add additional attributes via child classes
         """
         self.ensure_one()
+        if not all((self.medicament_ids, self.monograph_id)):
+            return
         return {
             'medicament': self.medicament_ids[0],
             'monograph': self.monograph_id,

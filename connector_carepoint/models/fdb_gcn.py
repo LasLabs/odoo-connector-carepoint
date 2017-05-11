@@ -64,6 +64,21 @@ class FdbGcnImportMapper(CarepointImportMapper):
     ]
 
     @mapping
+    def gcn_id(self, record):
+        gcn = self.env['medical.medicament.gcn'].search([
+            ('name', '=', record['gcn_seqno']),
+        ])
+        if gcn:
+            return {'gcn_id': gcn.id}
+
+    @mapping
+    def gcn_seq_id(self, record):
+        gcn_seq = self.env['fdb.gcn.seq'].search([
+            ('gcn_seqno', '=', record['gcn_seqno']),
+        ])
+        return {'gcn_seq_id': gcn_seq.id}
+
+    @mapping
     def carepoint_id(self, record):
         return {'carepoint_id': record['gcn_seqno']}
 

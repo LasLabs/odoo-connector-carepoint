@@ -214,8 +214,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
         fdb_gcn_id = binder.to_odoo(record['gcn_seqno'], browse=True)
         binder = self.binder_for('carepoint.fdb.ndc.cs.ext')
         cs_ext_id = binder.to_odoo(record['ndc'].strip(), browse=True)
-        binder = self.binder_for('carepoint.fdb.gcn.seq')
-        fdb_gcn_seq_id = binder.to_odoo(record['gcn_seqno'], browse=True)
+        fdb_gcn_seq_id = fdb_gcn_id.gcn_seq_id
 
         strength_str = ''
         route_id = 0
