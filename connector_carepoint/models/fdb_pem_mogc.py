@@ -100,5 +100,5 @@ class FdbPemMogcImporter(CarepointImporter):
                 'carepoint.fdb.pem.moe',
                 self.backend_record.id,
                 '{0},{1}'.format(rec_id['pemono'], rec_id['pemono_sn']),
-                force=False,
+                force=True,
             )

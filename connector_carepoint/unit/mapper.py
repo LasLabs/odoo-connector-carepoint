@@ -138,7 +138,7 @@ class CarepointImportMapper(ImportMapper):
 
 
 class CommonDateImportMapperMixer(object):
-    """ It provides a mixer for add and change date / user import mappers.
+    """ Provides a mixer for add and change date / user import mappers.
 
     Note that the use of ``direct`` is not an option, because child classes
     will overwrite it. Otherwise this would have been much more simple.
@@ -156,6 +156,7 @@ class CommonDateImportMapperMixer(object):
         return {'create_uid': user}
 
     @mapping
+    @only_create
     def create_date(self, record):
         return {'create_date': record['add_date']}
 
@@ -179,7 +180,7 @@ class CommonDateImportMapperMixer(object):
 
 
 class CommonDateImporterMixer(object):
-    """ It provides a mixer for add and change date / user importers. """
+    """ Provides a mixer for add and change date / user importers. """
 
     def _import_user_dependencies(self):
         """ Import the add and chg users. """

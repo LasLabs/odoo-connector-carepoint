@@ -231,7 +231,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
             route_id = cs_ext_id.route_id.route_id
             form_id = cs_ext_id.form_id.form_id
             gpi = gpi or cs_ext_id.gpi
-            is_prescription = cs_ext_id.rx_only_yn
+            is_prescription = True
+            # Below should work, but isn't.
+            # is_prescription = cs_ext_id.rx_only_yn
 
         if not strength_str:
             strength_str = fdb_gcn_seq_id.str.lower().strip()
