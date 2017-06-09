@@ -220,7 +220,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
         route_id = 0
         form_id = 0
         gpi = record['gpi']
-        is_prescription = False
+        is_prescription = True
+        # This is forced to True for the time being. All assumed RX
+        # is_prescription = False
         dea_code = record['dea'] or '0'
 
         if cs_ext_id:
@@ -231,7 +233,6 @@ class FdbNdcImportMapper(CarepointImportMapper):
             route_id = cs_ext_id.route_id.route_id
             form_id = cs_ext_id.form_id.form_id
             gpi = gpi or cs_ext_id.gpi
-            is_prescription = True
             # Below should work, but isn't.
             # is_prescription = cs_ext_id.rx_only_yn
 

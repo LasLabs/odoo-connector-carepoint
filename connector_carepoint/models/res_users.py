@@ -72,11 +72,15 @@ class ResUsersImportMapper(PersonImportMapper):
     _model_name = 'carepoint.res.users'
 
     direct = [
-        ('login_name', 'login'),
         ('email', 'email'),
         ('job_title_lu', 'function'),
         ('user_id', 'carepoint_id'),
     ]
+
+    @mapping
+    @only_create
+    def login(self, record):
+        return {'login': record['login_name'].strip()}
 
     @mapping
     @only_create
