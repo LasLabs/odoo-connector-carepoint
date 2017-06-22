@@ -165,6 +165,13 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
         }
 
     @mapping
+    def refill_qty_original(self, record):
+        refills = 0 if record['refills_orig'] < 0 else record['refills_orig']
+        return {
+            'refill_qty_original': refills,
+        }
+
+    @mapping
     def refill_qty_remain(self, record):
         refills = record['refills_left']
         vals = {}
