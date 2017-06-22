@@ -55,7 +55,10 @@ class CarepointImporter(Importer):
     def _is_current(self, binding):
         """Return True if the import should be skipped because
         it is already up-to-date in Odoo"""
-        assert self.carepoint_record
+        if not self.carepoint_record:
+            raise AssertionError(_(
+                'No carepoint record to import.',
+            ))
         if not self.carepoint_record.get('chg_date'):
             return  # no update date on Carepoint, always import it.
         if not binding:
