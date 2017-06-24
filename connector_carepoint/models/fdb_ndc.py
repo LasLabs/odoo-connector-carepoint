@@ -270,7 +270,7 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 self.backend_record.default_product_income_account_id.id,
             'property_account_expense_id':
                 self.backend_record.default_product_expense_account_id.id,
-            'website_published': True,
+            'website_published': False,
         }
 
     @mapping
