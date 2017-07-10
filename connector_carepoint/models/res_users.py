@@ -80,7 +80,7 @@ class ResUsersImportMapper(PersonImportMapper):
     @mapping
     @only_create
     def login(self, record):
-        return {'login': record['login_name'].strip()}
+        return {'login': record['login_name'].strip().lower()}
 
     @mapping
     @only_create
