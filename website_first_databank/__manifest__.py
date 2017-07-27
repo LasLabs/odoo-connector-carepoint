@@ -14,11 +14,14 @@
     'depends': [
         'connector_carepoint',
         'website_sale',
+        'website_portal_medical_patient_species',
     ],
     'data': [
         'views/carepoint_backend_view.xml',
         'wizards/website_fdb_medicament_description_view.xml',
         'data/website_medicament_description_template.xml',
+        'security/ir.model.access.csv',
+        'security/medical_patient_security.xml',
     ],
     'installable': True,
     'application': False,
