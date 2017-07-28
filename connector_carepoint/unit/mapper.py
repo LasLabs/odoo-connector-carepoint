@@ -91,7 +91,7 @@ def add_to(field, number):
     return modifier
 
 
-class CarepointImportMapper(ImportMapper):
+class BaseImportMapper(ImportMapper):
 
     def _get_user(self, external_id, browse=False):
         """ It returns the Odoo user for the Carepoint external ID """
@@ -101,10 +101,6 @@ class CarepointImportMapper(ImportMapper):
     @mapping
     def backend_id(self, record):
         return {'backend_id': self.backend_record.id}
-
-    @mapping
-    def company_id(self, record):
-        return {'company_id': self.backend_record.company_id.id}
 
     @mapping
     @only_create
@@ -135,6 +131,14 @@ class CarepointImportMapper(ImportMapper):
             return {'write_date': record['chg_date']}
         except KeyError:
             return
+
+
+class CarepointImportMapper(BaseImportMapper):
+
+    @mapping
+    def company_id(self, record):
+        return {'company_id': self.backend_record.company_id.id}
+
 
 
 class CommonDateImportMapperMixer(object):

@@ -9,7 +9,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -143,7 +143,7 @@ class CarepointAccountBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class CarepointAccountImportMapper(CarepointImportMapper):
+class CarepointAccountImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.account'
     direct = []
 
