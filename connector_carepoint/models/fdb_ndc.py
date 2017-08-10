@@ -270,7 +270,6 @@ class FdbNdcImportMapper(CarepointImportMapper):
                 self.backend_record.default_product_income_account_id.id,
             'property_account_expense_id':
                 self.backend_record.default_product_expense_account_id.id,
-            'website_published': False,
         }
 
     @mapping
@@ -290,6 +289,9 @@ class FdbNdcImportMapper(CarepointImportMapper):
 
         if not len(medicament_id):
             try:
+                medicament_vals.update({
+                    'website_published': False,
+                })
                 medicament_id = medicament_obj.create(medicament_vals)
             except IntegrityError, e:
                 raise ValidationError(_(
