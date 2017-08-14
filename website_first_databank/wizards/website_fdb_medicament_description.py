@@ -27,7 +27,7 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         string='Monograph',
         comodel_name='fdb.pem.mogc',
         default=lambda s: s._default_monograph_id(),
-        domain="[('gcn_id', '=', gcn_id)]",
+        domain="[('gcn_ids', '=', gcn_id)]",
     )
     template_id = fields.Many2one(
         string='Template',
@@ -55,22 +55,19 @@ class WebsiteFdbMedicamentDescription(models.TransientModel):
         medicament_ids = self.env['medical.medicament'].browse(
             self._default_medicament_ids()[0][2]
         )
-        fdb_gcn_id = self.env['fdb.gcn'].search([
+        fdb_gcn = self.env['fdb.gcn'].search([
             ('gcn_id', '=', medicament_ids[0].gcn_id.id),
         ],
             limit=1,
         )
-        if not fdb_gcn_id.monograph_ids:
-            return
-        return fdb_gcn_id.monograph_ids[0].id
+        return fdb_gcn.monograph_ids and fdb_gcn.monograph_ids[0].id
 
     @api.model
     def _default_template_id(self):
-        template_id = self.env.ref(
+        template = self.env.ref(
             'website_first_databank.website_medicament_description',
         )
-        if template_id:
-            return template_id.id
+        return template and template.id
 
     @api.multi
     @api.onchange('template_id')

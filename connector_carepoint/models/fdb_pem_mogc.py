@@ -66,10 +66,10 @@ class FdbPemMogcImportMapper(CarepointImportMapper):
     ]
 
     @mapping
-    def gcn_id(self, record):
+    def gcn_ids(self, record):
         binder = self.binder_for('carepoint.fdb.gcn')
         gcn_id = binder.to_odoo(record['gcn_seqno'])
-        return {'gcn_id': gcn_id}
+        return {'gcn_ids': [(4, gcn_id)]}
 
     @mapping
     def carepoint_id(self, record):

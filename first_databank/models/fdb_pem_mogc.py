@@ -12,8 +12,8 @@ class FdbPemMogc(models.Model):
     _name = 'fdb.pem.mogc'
     _description = 'Fdb Pem Mogc'
 
-    gcn_id = fields.Many2one(
-        string='GCN',
+    gcn_ids = fields.Many2many(
+        string='GCNs',
         comodel_name='fdb.gcn',
         ondelete='cascade',
         required=True,
