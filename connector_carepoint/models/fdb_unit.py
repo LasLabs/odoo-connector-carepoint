@@ -12,7 +12,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import (CarepointImportMapper,
+from ..unit.mapper import (BaseImportMapper,
                            trim,
                            )
 from ..backend import carepoint
@@ -84,7 +84,7 @@ class FdbUnitBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbUnitImportMapper(CarepointImportMapper):
+class FdbUnitImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.unit'
     direct = [
         (trim('str30'), 'str30'),

@@ -7,7 +7,7 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper, trim
+from ..unit.mapper import BaseImportMapper, trim
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -56,7 +56,7 @@ class FdbPemMoeBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbPemMoeImportMapper(CarepointImportMapper):
+class FdbPemMoeImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.pem.moe'
 
     direct = [

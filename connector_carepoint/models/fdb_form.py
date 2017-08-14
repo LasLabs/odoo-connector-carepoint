@@ -8,7 +8,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import (CarepointImportMapper,
+from ..unit.mapper import (BaseImportMapper,
                            trim,
                            trim_and_titleize,
                            )
@@ -60,7 +60,7 @@ class FdbFormBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbFormImportMapper(CarepointImportMapper):
+class FdbFormImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.form'
     direct = [
         (trim('gcdf'), 'gcdf'),

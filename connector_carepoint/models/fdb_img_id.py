@@ -9,7 +9,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -76,7 +76,7 @@ class FdbImgIdBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbImgIdImportMapper(CarepointImportMapper):
+class FdbImgIdImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.img.id'
 
     direct = [

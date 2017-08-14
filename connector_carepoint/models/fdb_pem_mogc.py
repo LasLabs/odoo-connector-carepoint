@@ -6,7 +6,7 @@ import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import mapping
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -57,7 +57,7 @@ class FdbPemMogcBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbPemMogcImportMapper(CarepointImportMapper):
+class FdbPemMogcImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.pem.mogc'
 
     direct = [

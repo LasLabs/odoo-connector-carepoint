@@ -8,7 +8,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import (CarepointImportMapper,
+from ..unit.mapper import (BaseImportMapper,
                            trim,
                            trim_and_titleize,
                            )
@@ -60,7 +60,7 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbRouteImportMapper(CarepointImportMapper):
+class FdbRouteImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
         (trim_and_titleize('rt'), 'rt'),

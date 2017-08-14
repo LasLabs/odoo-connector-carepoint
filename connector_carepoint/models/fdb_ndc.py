@@ -8,7 +8,7 @@ from odoo import models, fields, _
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..unit.mapper import trim
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -64,7 +64,7 @@ class FdbNdcBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbNdcImportMapper(CarepointImportMapper):
+class FdbNdcImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.ndc'
 
     DEFAULT_UNIT = 'unit'

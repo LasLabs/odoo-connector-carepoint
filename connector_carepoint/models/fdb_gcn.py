@@ -7,7 +7,7 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -56,7 +56,7 @@ class FdbGcnBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbGcnImportMapper(CarepointImportMapper):
+class FdbGcnImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.gcn'
     direct = [
         ('gcn_seqno', 'name'),

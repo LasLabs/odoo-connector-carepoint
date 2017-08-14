@@ -8,7 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -69,7 +69,7 @@ class FdbImgDateBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class FdbImgDateImportMapper(CarepointImportMapper):
+class FdbImgDateImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.img.date'
     direct = [
         ('IMGSTRTDT', 'start_date'),
