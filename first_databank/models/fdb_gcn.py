@@ -2,7 +2,7 @@
 # © 2015 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import models, fields
+from odoo import api, fields, models
 
 
 class FdbGcn(models.Model):
@@ -24,9 +24,17 @@ class FdbGcn(models.Model):
         ondelete='cascade',
         required=True,
     )
-    monograph_ids = fields.One2many(
+    monograph_ids = fields.Many2many(
         string='Monographs',
         comodel_name='fdb.pem.mogc',
-        inverse_name='gcn_id',
+        compute='_compute_monograph_ids',
     )
     update_yn = fields.Boolean()
+
+    @api.multi
+    def _compute_monograph_ids(self):
+        for record in self:
+            monographs = self.env['fdb.pem.mogc'].search([
+                ('gcn_ids', '=', record.gcn_id.id),
+            ])
+            record.monograph_ids = [(6, 0, monographs.ids)]
