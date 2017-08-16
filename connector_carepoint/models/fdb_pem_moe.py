@@ -75,7 +75,7 @@ class FdbPemMoeImportMapper(BaseImportMapper):
         ],
             limit=1,
         )
-        return {'mogc_id': mogc_id.id}
+        return {'mogc_ids': [(4, mogc_id.id)]}
 
     @mapping
     def carepoint_id(self, record):

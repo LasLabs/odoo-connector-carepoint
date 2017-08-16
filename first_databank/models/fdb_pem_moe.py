@@ -32,7 +32,7 @@ class FdbPemMoe(models.Model):
     _description = 'Fdb Pem Moe'
     _order = 'mogc_id ASC, pemono_sn ASC'
 
-    mogc_id = fields.Many2one(
+    mogc_ids = fields.Many2many(
         comodel_name='fdb.pem.mogc',
         required=True,
         index=True,

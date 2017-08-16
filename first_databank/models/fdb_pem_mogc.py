@@ -23,15 +23,23 @@ class FdbPemMogc(models.Model):
         index=True,
         required=True,
     )
-    moe_ids = fields.One2many(
+    moe_ids = fields.Many2many(
         string='Monograph Data',
         comodel_name='fdb.pem.moe',
-        inverse_name='mogc_id',
+        compute='_compute_moe_ids',
     )
     monograph = fields.Text(
         compute='_compute_monograph',
     )
     update_yn = fields.Boolean()
+
+    @api.multi
+    def _compute_moe_ids(self):
+        for record in self:
+            moes = self.env['fdb.pem.moe'].search([
+                ('mogc_ids', '=', record.id),
+            ])
+            record.moe_ids = [(6, 0, moes.ids)]
 
     @api.multi
     @api.depends('moe_ids')
