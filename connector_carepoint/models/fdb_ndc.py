@@ -185,6 +185,7 @@ class FdbNdcImportMapper(BaseImportMapper):
     def _get_uom_id(self, uom_str='UNIT'):
         result = self.env['product.uom'].search([
             ('name', '=', str(uom_str).strip().upper()),
+            ('category_id', '!=', self.env.ref('product.uom_categ_wtime').id),
         ],
             limit=1,
         )
