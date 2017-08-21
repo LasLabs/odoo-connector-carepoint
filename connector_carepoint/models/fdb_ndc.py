@@ -304,6 +304,8 @@ class FdbNdcImportMapper(BaseImportMapper):
                 ) % (medicament_vals, e))
 
         else:
+            # Should not update the UoM of existing medicaments
+            del medicament_vals['uom_id']
             medicament_id[0].write(medicament_vals)
 
         return {'medicament_id': medicament_id[0].id}
