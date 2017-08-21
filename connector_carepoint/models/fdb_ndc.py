@@ -247,6 +247,9 @@ class FdbNdcImportMapper(BaseImportMapper):
             # Just in case there is None or False
             gpi = 0
 
+        if not form_id:
+
+
         strength_num, strength_str = self._get_uom_parts(strength_str)
         strength_uom_id = self._get_uom_id(strength_str)
         sale_uom_id = self._get_uom_id(

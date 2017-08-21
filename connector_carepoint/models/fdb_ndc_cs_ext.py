@@ -107,7 +107,6 @@ class FdbNdcCsExtImportMapper(BaseImportMapper):
     ]
 
     @mapping
-    @only_create
     def form_id(self, record):
         try:
             form_str = record['dn_form'].strip()
@@ -123,7 +122,6 @@ class FdbNdcCsExtImportMapper(BaseImportMapper):
         return {'form_id': form_id.id}
 
     @mapping
-    @only_create
     def route_id(self, record):
         if not record['dn_route']:
             record['dn_route'] = 'AP'
