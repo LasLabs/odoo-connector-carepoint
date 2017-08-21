@@ -8,7 +8,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                ExportMapper,
                                                )
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
 from ..unit.export_synchronizer import CarepointExporter
@@ -140,7 +140,7 @@ class CarepointPhoneAbstract(models.AbstractModel):
 
 
 @carepoint
-class CarepointPhoneAbstractImportMapper(CarepointImportMapper):
+class CarepointPhoneAbstractImportMapper(BaseImportMapper):
 
     # It provides a mapping for Carepoint Phone Types to Odoo
     #   @TODO: Figure out a way to support all the types & prioritize
@@ -148,6 +148,7 @@ class CarepointPhoneAbstractImportMapper(CarepointImportMapper):
         'business': 'phone',
         'mobile': 'mobile',
         'home': 'phone',
+        'home_2': 'phone',
         'business_fax': 'fax',
         'home_fax': 'fax',
     }

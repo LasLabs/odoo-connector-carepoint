@@ -11,7 +11,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -120,7 +120,7 @@ class CarepointPhoneBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class CarepointPhoneImportMapper(CarepointImportMapper):
+class CarepointPhoneImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.phone'
 
     @mapping
