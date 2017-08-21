@@ -90,10 +90,13 @@ class ResUsersImportMapper(PersonImportMapper):
     @mapping
     @only_create
     def odoo_id(self, record):
-        """ Will bind the user on a existing user with the same name """
+        """Will bind the user on a existing user with the same name/login."""
         name = '%s %s' % (record['fname'], record['lname'])
         user_id = self.env['res.users'].search([
+            '|', '&',
             ('name', '=ilike', name),
+            ('login', '=', record['login_name'].strip().lower()),
+            ('share', '=', False),
         ],
             limit=1,
         )
