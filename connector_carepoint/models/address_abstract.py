@@ -8,7 +8,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                ExportMapper,
                                                )
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
 from ..unit.export_synchronizer import CarepointExporter
@@ -143,7 +143,7 @@ class CarepointAddressAbstract(models.AbstractModel):
 
 
 @carepoint
-class CarepointAddressAbstractImportMapper(CarepointImportMapper):
+class CarepointAddressAbstractImportMapper(BaseImportMapper):
 
     @staticmethod
     def _has_empty_address(partner):

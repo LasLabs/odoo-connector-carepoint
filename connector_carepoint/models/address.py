@@ -12,7 +12,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                none,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import CarepointImportMapper
+from ..unit.mapper import BaseImportMapper
 from ..unit.mapper import trim_and_titleize
 from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
@@ -137,7 +137,7 @@ class CarepointAddressBatchImporter(DelayedBatchImporter):
 
 
 @carepoint
-class CarepointAddressImportMapper(CarepointImportMapper):
+class CarepointAddressImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.address'
 
     direct = [
