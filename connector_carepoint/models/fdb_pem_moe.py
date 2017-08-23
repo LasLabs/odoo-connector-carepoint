@@ -70,12 +70,10 @@ class FdbPemMoeImportMapper(BaseImportMapper):
 
     @mapping
     def mogc_id(self, record):
-        mogc_id = self.env['fdb.pem.mogc'].search([
+        mogc_ids = self.env['carepoint.fdb.pem.mogc'].search([
             ('pemono', '=', record['pemono']),
-        ],
-            limit=1,
-        )
-        return {'mogc_ids': [(4, mogc_id.id)]}
+        ])
+        return {'mogc_ids': [(6, 0, mogc_ids.ids)]}
 
     @mapping
     def carepoint_id(self, record):

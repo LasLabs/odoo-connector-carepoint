@@ -30,7 +30,7 @@ TYPES = [
 class FdbPemMoe(models.Model):
     _name = 'fdb.pem.moe'
     _description = 'Fdb Pem Moe'
-    _order = 'mogc_id ASC, pemono_sn ASC'
+    _order = 'mogc_ids ASC, pemono_sn ASC'
 
     mogc_ids = fields.Many2many(
         comodel_name='fdb.pem.mogc',
