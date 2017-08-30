@@ -51,7 +51,7 @@ class TestProcurementOrderUnit(ProcurementOrderTestBase):
             with self.assertRaises(EndTestException):
                 self.unit._get_order_lines(True)
             mk.assert_called_once_with(
-                procurement_order.CarepointCRUDAdapter
+                procurement_order.CarepointAdapter
             )
 
     def test_get_order_lines_search(self):

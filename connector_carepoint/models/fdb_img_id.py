@@ -8,9 +8,8 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -46,12 +45,10 @@ class CarepointFdbImgId(models.Model):
     )
 
 
-@carepoint
-class FdbImgIdAdapter(CarepointCRUDAdapter):
+class FdbImgIdAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.img.id'
 
 
-@carepoint
 class FdbImgIdUnit(ConnectorUnit):
     _model_name = 'carepoint.fdb.img.id'
 
@@ -66,7 +63,6 @@ class FdbImgIdUnit(ConnectorUnit):
             importer.run(record)
 
 
-@carepoint
 class FdbImgIdBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbImgIds.
     For every product category in the list, a delayed job is created.
@@ -75,7 +71,6 @@ class FdbImgIdBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.img.id']
 
 
-@carepoint
 class FdbImgIdImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.img.id'
 
@@ -102,7 +97,6 @@ class FdbImgIdImportMapper(BaseImportMapper):
         return {'carepoint_id': record['IMGUNIQID']}
 
 
-@carepoint
 class FdbImgIdImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img.id']
     _base_mapper = FdbImgIdImportMapper

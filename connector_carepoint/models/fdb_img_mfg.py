@@ -7,9 +7,8 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import PartnerImportMapper, trim
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -42,12 +41,10 @@ class CarepointFdbImgMfg(models.Model):
     )
 
 
-@carepoint
-class FdbImgMfgAdapter(CarepointCRUDAdapter):
+class FdbImgMfgAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.img.mfg'
 
 
-@carepoint
 class FdbImgMfgBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbImgMfgs.
     For every product category in the list, a delayed job is created.
@@ -56,7 +53,6 @@ class FdbImgMfgBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.img.mfg']
 
 
-@carepoint
 class FdbImgMfgImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.fdb.img.mfg'
     direct = [
@@ -79,7 +75,6 @@ class FdbImgMfgImportMapper(PartnerImportMapper):
         return {'carepoint_id': record['IMGMFGID']}
 
 
-@carepoint
 class FdbImgMfgImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img.mfg']
     _base_mapper = FdbImgMfgImportMapper

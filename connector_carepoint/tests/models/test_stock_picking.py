@@ -94,7 +94,7 @@ class TestStockPickingUnit(StockPickingTestBase):
             with self.assertRaises(EndTestException):
                 self.unit._import_pickings_for_sale(True)
             mk.assert_called_once_with(
-                stock_picking.CarepointCRUDAdapter
+                stock_picking.CarepointAdapter
             )
 
     def test_import_pickings_for_sale_unit_for_importer(self):

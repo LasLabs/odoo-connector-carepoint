@@ -3,7 +3,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo.addons.connector.connector import Binder
-from .unit.export_synchronizer import export_record
 # from .unit.delete_synchronizer import export_delete_record
 from .connector import get_environment
 from odoo.addons.connector.event import (on_record_write,
@@ -20,15 +19,16 @@ _logger = logging.getLogger(__name__)
 #                                'carepoint.carepoint.address',
 #                                'carepoint.carepoint.address.patient',
 #                                ])
-def delay_export(session, model_name, record_id, vals):
+def delay_export(model_name, record_id, vals, priority=10):
     """ Delay a job which export a binding record.
     (A binding record being a ``carepoint.res.partner``,
     ``carepoint.product.product``, ...)
     """
-    if session.context.get('connector_no_export'):
+    record = self.env[model_name].browse(record_id)
+    if record.context.get('connector_no_export'):
         return
     fields = vals.keys()
-    export_record.delay(session, model_name, record_id, fields=fields)
+    record.delay(priority).export_record(fields)
 
 
 @on_record_write(model_names=['medical.prescription.order.line',
@@ -48,7 +48,7 @@ def delay_export(session, model_name, record_id, vals):
                               'procurement.order',
                               'res.users',
                               ])
-def delay_export_all_bindings(session, model_name, record_id, vals):
+def delay_export_all_bindings(model_name, record_id, vals, priority=10):
     """ Delay a job which export all the bindings of a record.
     In this case, it is called on records of normal models and will delay
     the export for all the bindings.
@@ -58,8 +58,7 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
     record = session.env[model_name].browse(record_id)
     fields = vals.keys()
     for binding in record.carepoint_bind_ids:
-        export_record.delay(session, binding._name, binding.id,
-                            fields=fields)
+        binding.delay(priority).export_record(fields)
 
 
 @on_record_create(model_names=['medical.prescription.order.line',
@@ -79,7 +78,7 @@ def delay_export_all_bindings(session, model_name, record_id, vals):
                                'sale.order.line',
                                'procurement.order',
                                ])
-def delay_create(session, model_name, record_id, vals):
+def delay_create(model_name, record_id, vals):
     """ Create a new binding record, then trigger delayed export
     In this case, it is called on records of normal models to create
     binding record, and trigger external system export
@@ -91,7 +90,7 @@ def delay_create(session, model_name, record_id, vals):
     env = get_environment(session, bind_model_name)
     binder = env.get_connector_unit(Binder)
     bind_record = binder.create_bind(record)
-    delay_export(session, bind_model_name, bind_record.id, vals)
+    delay_export(bind_model_name, bind_record.id, vals)
 
 
 # @on_record_unlink(model_names=['carepoint.medical.patient',

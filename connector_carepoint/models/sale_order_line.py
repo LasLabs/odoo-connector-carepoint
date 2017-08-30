@@ -10,13 +10,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                m2o_to_backend,
                                                )
 from odoo.addons.connector.connector import ConnectorUnit
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -63,18 +62,16 @@ class CarepointSaleOrderLine(models.Model):
     ]
 
 
-@carepoint
-class SaleOrderLineAdapter(CarepointCRUDAdapter):
+class SaleOrderLineAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Order Line """
     _model_name = 'carepoint.sale.order.line'
 
 
-@carepoint
 class SaleOrderLineUnit(ConnectorUnit):
     _model_name = 'carepoint.sale.order.line'
 
     def _get_order_lines(self, sale_order_id):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         return adapter.search(order_id=sale_order_id)
 
     def _import_sale_order_lines(self, sale_order_id):
@@ -86,7 +83,6 @@ class SaleOrderLineUnit(ConnectorUnit):
         return len(self._get_order_lines(sale_order_id))
 
 
-@carepoint
 class SaleOrderLineBatchImporter(DelayedBatchImporter,
                                  CommonDateImporterMixer):
     """ Import the Carepoint Order Lines.
@@ -95,7 +91,6 @@ class SaleOrderLineBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.sale.order.line']
 
 
-@carepoint
 class SaleOrderLineImportMapper(CarepointImportMapper,
                                 CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order.line'
@@ -137,7 +132,6 @@ class SaleOrderLineImportMapper(CarepointImportMapper,
         return {'carepoint_id': record['line_id']}
 
 
-@carepoint
 class SaleOrderLineImporter(CarepointImporter,
                             CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order.line']
@@ -175,7 +169,6 @@ class SaleOrderLineImporter(CarepointImporter,
                 _logger.debug('No pickings exist for order %s', order_id)
 
 
-@carepoint
 class SaleOrderLineExportMapper(ExportMapper,
                                 CommonDateExportMapperMixer):
     _model_name = 'carepoint.sale.order.line'
@@ -189,7 +182,6 @@ class SaleOrderLineExportMapper(ExportMapper,
     ]
 
 
-@carepoint
 class SaleOrderLineExporter(CarepointExporter):
     _model_name = ['carepoint.sale.order.line']
     _base_mapper = SaleOrderLineExportMapper

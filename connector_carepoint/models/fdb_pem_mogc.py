@@ -5,12 +5,10 @@
 import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import mapping
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
-                                        import_record,
                                         )
 from .fdb_pem_moe import FdbPemMoeAdapter
 
@@ -42,12 +40,10 @@ class CarepointFdbPemMogc(models.Model):
     )
 
 
-@carepoint
-class FdbPemMogcAdapter(CarepointCRUDAdapter):
+class FdbPemMogcAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.pem.mogc'
 
 
-@carepoint
 class FdbPemMogcBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbPemMogcs.
     For every product category in the list, a delayed job is created.
@@ -56,7 +52,6 @@ class FdbPemMogcBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.pem.mogc']
 
 
-@carepoint
 class FdbPemMogcImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.pem.mogc'
 
@@ -76,7 +71,6 @@ class FdbPemMogcImportMapper(BaseImportMapper):
         return {'carepoint_id': record['gcn_seqno']}
 
 
-@carepoint
 class FdbPemMogcImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.pem.mogc']
     _base_mapper = FdbPemMogcImportMapper
@@ -94,11 +88,10 @@ class FdbPemMogcImporter(CarepointImporter):
         record = self.carepoint_record
         domain = {'pemono': record['pemono']}
         attributes = ['pemono', 'pemono_sn']
+        Moes = self.env['carepoint.fdb.pem.moe'].delay(self.PRIORITY)
         for rec_id in pem_adapter.search_read(attributes, **domain):
-            import_record.delay(
-                self.session,
-                'carepoint.fdb.pem.moe',
-                self.backend_record.id,
+            Moes.import_record(
+                self.backend_record,
                 '{0},{1}'.format(rec_id['pemono'], rec_id['pemono_sn']),
                 force=True,
             )

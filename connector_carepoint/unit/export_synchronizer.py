@@ -10,12 +10,11 @@ import psycopg2
 
 import odoo
 from odoo.tools.translate import _
-from odoo.addons.connector.queue.job import job, related_action
+from odoo.addons.queue_job.job import job, related_action
 from odoo.addons.connector.unit.synchronizer import Exporter
 from odoo.addons.connector.exception import (IDMissingInBackend,
                                              RetryableJobError,
                                              )
-from .import_synchronizer import import_record
 from ..connector import get_environment
 from ..related_action import unwrap_binding
 
@@ -33,6 +32,8 @@ In addition to its export job, an exporter has to:
 
 class CarepointBaseExporter(Exporter):
     """ Base exporter for Carepoint """
+
+    PRIORITY = 10
 
     def __init__(self, connector_env):
         """
@@ -52,9 +53,9 @@ class CarepointBaseExporter(Exporter):
         # force is True because the sync_date will be more recent
         # so the import would be skipped
         assert self.carepoint_id
-        import_record.delay(self.session, self.model._name,
-                            self.backend_record.id, self.carepoint_id,
-                            force=True)
+        self._model.delay(self.PRIORITY).import_record(
+            self.backend_record, self.carepoint_id, force=True,
+        )
 
     def _immediate_import(self):
         """ Perform an immediate import of the record
@@ -64,9 +65,9 @@ class CarepointBaseExporter(Exporter):
         # force is True because the sync_date will be more recent
         # so the import would be skipped
         assert self.carepoint_id
-        import_record(self.session, self.model._name,
-                      self.backend_record.id, self.carepoint_id,
-                      force=True)
+        self.model.import_record(
+            self.backend_record, self.carepoint_id, force=True,
+        )
 
     def _should_import(self):
         """ Before the export, compare the update date
@@ -296,16 +297,8 @@ class CarepointExporter(CarepointBaseExporter):
         _logger.debug('Enforce user %s, %s', self.binding_record.create_uid, self.binding_record.write_uid)
         if self.binding_record._name == 'carepoint.res.users':
             return
-        export_record(
-            self.session,
-            'carepoint.res.users',
-            self.binding_record.create_uid.id,
-        )
-        export_record(
-            self.session,
-            'carepoint.res.users',
-            self.binding_record.write_uid.id,
-        )
+        self.binding_record.create_uid.export_record()
+        self.binding_record.write_uid.export_record()
 
     def _export_dependencies(self):
         """ Export the dependencies for the record """
@@ -397,6 +390,4 @@ class CarepointExporter(CarepointBaseExporter):
 def export_record(session, model_name, binding_id, fields=None):
     """ Export a record to Carepoint """
     record = session.env[model_name].browse(binding_id)
-    env = get_environment(session, model_name, record.backend_id.id)
-    exporter = env.get_connector_unit(CarepointExporter)
-    return exporter.run(binding_id, fields=fields)
+    return record.export_record(fields)

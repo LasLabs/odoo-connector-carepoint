@@ -32,7 +32,7 @@ class TestConnector(SetUpCarepointBase):
             'warehouse_id': self.env.ref('stock.warehouse0').id,
         })
 
-    def test_default_backend_id(self):
+    def test_default_backend(self):
         self.assertEqual(self.backend, self.binding_id.backend_id)
 
     def test_get_environment_gets_backend_record(self):

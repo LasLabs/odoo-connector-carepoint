@@ -7,9 +7,8 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper, trim
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -42,12 +41,10 @@ class CarepointFdbNdcCsExt(models.Model):
     )
 
 
-@carepoint
-class FdbNdcCsExtAdapter(CarepointCRUDAdapter):
+class FdbNdcCsExtAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.ndc.cs.ext'
 
 
-@carepoint
 class FdbNdcCsExtBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbNdcCsExts.
     For every product category in the list, a delayed job is created.
@@ -56,7 +53,6 @@ class FdbNdcCsExtBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.ndc.cs.ext']
 
 
-@carepoint
 class FdbNdcCsExtImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.ndc.cs.ext'
     direct = [
@@ -139,7 +135,6 @@ class FdbNdcCsExtImportMapper(BaseImportMapper):
         return {'carepoint_id': record['ndc'].strip()}
 
 
-@carepoint
 class FdbNdcCsExtImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.ndc.cs.ext']
     _base_mapper = FdbNdcCsExtImportMapper

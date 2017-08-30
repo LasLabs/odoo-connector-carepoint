@@ -9,13 +9,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
                            CommonDateImporterMixer,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -61,13 +60,11 @@ class CarepointCarepointVendor(models.Model):
     )
 
 
-@carepoint
-class CarepointVendorAdapter(CarepointCRUDAdapter):
+class CarepointVendorAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Vendor """
     _model_name = 'carepoint.carepoint.vendor'
 
 
-@carepoint
 class CarepointVendorBatchImporter(DelayedBatchImporter,
                                    CommonDateImporterMixer):
     """ Import the Carepoint Vendors.
@@ -76,7 +73,6 @@ class CarepointVendorBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.carepoint.vendor']
 
 
-@carepoint
 class CarepointVendorImportMapper(PersonImportMapper):
     _model_name = 'carepoint.carepoint.vendor'
 
@@ -134,14 +130,12 @@ class CarepointVendorImportMapper(PersonImportMapper):
             return {'odoo_id': vendor_id[0].id}
 
 
-@carepoint
 class CarepointVendorImporter(CarepointImporter,
                               CommonDateImporterMixer):
     _model_name = ['carepoint.carepoint.vendor']
     _base_mapper = CarepointVendorImportMapper
 
 
-@carepoint
 class CarepointVendorExportMapper(PersonExportMapper):
     _model_name = 'carepoint.carepoint.vendor'
 
@@ -162,7 +156,6 @@ class CarepointVendorExportMapper(PersonExportMapper):
         return {'STATE': record.state_id.code}
 
 
-@carepoint
 class CarepointVendorExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.vendor']
     _base_mapper = CarepointVendorExportMapper

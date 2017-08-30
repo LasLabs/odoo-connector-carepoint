@@ -8,8 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
@@ -57,13 +56,11 @@ class CarepointCarepointAddressOrganization(models.Model):
     )
 
 
-@carepoint
-class CarepointAddressOrganizationAdapter(CarepointCRUDAdapter):
+class CarepointAddressOrganizationAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Address Organization """
     _model_name = 'carepoint.carepoint.address.organization'
 
 
-@carepoint
 class CarepointAddressOrganizationBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Address Organizations.
     For every address in the list, a delayed job is created.
@@ -71,7 +68,6 @@ class CarepointAddressOrganizationBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.address.organization']
 
 
-@carepoint
 class CarepointAddressOrganizationImportMapper(
     CarepointAddressAbstractImportMapper,
 ):
@@ -94,7 +90,6 @@ class CarepointAddressOrganizationImportMapper(
                                            record['addr_id'])}
 
 
-@carepoint
 class CarepointAddressOrganizationImporter(
     CarepointAddressAbstractImporter,
 ):
@@ -110,19 +105,17 @@ class CarepointAddressOrganizationImporter(
                                 'carepoint.medical.organization')
 
 
-@carepoint
 class CarepointAddressOrganizationUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.address.organization'
 
     def _import_addresses(self, organization_id, partner_binding):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointAddressOrganizationImporter)
         address_ids = adapter.search(org_id=organization_id)
         for address_id in address_ids:
             importer.run(address_id)
 
 
-@carepoint
 class CarepointAddressOrganizationExportMapper(
     CarepointAddressAbstractExportMapper
 ):
@@ -135,7 +128,6 @@ class CarepointAddressOrganizationExportMapper(
         return {'org_id': rec_id}
 
 
-@carepoint
 class CarepointAddressOrganizationExporter(
     CarepointAddressAbstractExporter
 ):

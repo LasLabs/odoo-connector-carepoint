@@ -6,7 +6,7 @@ import mock
 
 from odoo.addons.connector_carepoint.models import phone_physician
 
-from ...unit.backend_adapter import CarepointCRUDAdapter
+from ...unit.backend_adapter import CarepointAdapter
 
 from ..common import SetUpCarepointBase
 
@@ -108,7 +108,7 @@ class TestCarepointPhonePhysicianUnit(PhonePhysicianTestBase):
             with self.assertRaises(EndTestException):
                 self.unit._import_phones(None, None)
             mk.assert_has_calls([
-                mock.call(CarepointCRUDAdapter),
+                mock.call(CarepointAdapter),
                 mock.call(
                     phone_physician.CarepointPhonePhysicianImporter,
                 ),

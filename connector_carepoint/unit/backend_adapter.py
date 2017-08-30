@@ -6,7 +6,7 @@ import logging
 
 from contextlib import contextmanager
 
-from odoo.addons.connector.unit.backend_adapter import CRUDAdapter
+from odoo.addons.component.core import Component
 
 try:
     from sqlalchemy.exc import InvalidRequestError
@@ -22,8 +22,10 @@ except ImportError:
     _logger.info('Cannot import ``carepoint`` Python library.')
 
 
-class CarepointCRUDAdapter(CRUDAdapter):
+class CarepointAdapter(Component):
     """ External Records Adapter for Carepoint """
+
+    _name = 'carepoint.adapter'
 
     RECONNECT_EXCEPTIONS = [
         InvalidRequestError,
@@ -35,7 +37,7 @@ class CarepointCRUDAdapter(CRUDAdapter):
         :param connector_env: current environment (backend, session, ...)
         :type connector_env: :class:`connector.connector.ConnectorEnvironment`
         """
-        super(CarepointCRUDAdapter, self).__init__(connector_env)
+        super(CarepointAdapter, self).__init__(connector_env)
         backend = self.backend_record
         self.carepoint = Carepoint(
             server=backend.server,

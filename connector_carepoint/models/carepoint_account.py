@@ -8,9 +8,8 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -75,8 +74,7 @@ class CarepointCarepointAccount(models.Model):
     )
 
 
-@carepoint
-class CarepointAccountAdapter(CarepointCRUDAdapter):
+class CarepointAccountAdapter(CarepointAdapter):
     _model_name = 'carepoint.carepoint.account'
 
     def create(self, data):
@@ -111,7 +109,6 @@ class CarepointAccountAdapter(CarepointCRUDAdapter):
             return None
 
 
-@carepoint
 class CarepointAccountUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.account'
 
@@ -133,7 +130,6 @@ class CarepointAccountUnit(ConnectorUnit):
         adapter = self.unit_for(CarepointAccountAdapter)
         return adapter.search(ID=account_id)
 
-@carepoint
 class CarepointAccountBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint CarepointAccounts.
     For every product category in the list, a delayed job is created.
@@ -142,7 +138,6 @@ class CarepointAccountBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.account']
 
 
-@carepoint
 class CarepointAccountImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.account'
     direct = []
@@ -158,7 +153,6 @@ class CarepointAccountImportMapper(BaseImportMapper):
         return {'carepoint_id': '%s,%s' % (record['pat_id'], record['ID'])}
 
 
-@carepoint
 class CarepointAccountImporter(CarepointImporter):
     _model_name = ['carepoint.carepoint.account']
     _base_mapper = CarepointAccountImportMapper
@@ -170,7 +164,6 @@ class CarepointAccountImporter(CarepointImporter):
                                 'carepoint.medical.patient')
 
 
-@carepoint
 class CarepointAccountExportMapper(ExportMapper):
     _model_name = 'carepoint.carepoint.account'
     direct = []
@@ -190,7 +183,6 @@ class CarepointAccountExportMapper(ExportMapper):
         }
 
 
-@carepoint
 class CarepointAccountExporter(CarepointExporter):
     _model_name = 'carepoint.carepoint.account'
     _base_mapper = CarepointAccountExportMapper

@@ -9,9 +9,8 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import CarepointImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -52,26 +51,23 @@ class CarepointAccountInvoiceLine(models.Model):
     )
 
 
-@carepoint
-class AccountInvoiceLineAdapter(CarepointCRUDAdapter):
+class AccountInvoiceLineAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Patient """
     _model_name = 'carepoint.account.invoice.line'
 
 
-@carepoint
 class AccountInvoiceLineUnit(ConnectorUnit):
     # @TODO: Move this somewhere else, here due to circular import issue
     _model_name = 'carepoint.account.invoice.line'
 
     def _import_invoice_lines_for_procurement(self, rxdisp_id):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(AccountInvoiceLineImporter)
         rec_ids = adapter.search(rxdisp_id=rxdisp_id)
         for rec_id in rec_ids:
             importer.run(rec_id)
 
 
-@carepoint
 class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Patients.
     For every order in the list, a delayed job is created.
@@ -79,7 +75,6 @@ class AccountInvoiceLineBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.account.invoice.line']
 
 
-@carepoint
 class AccountInvoiceLineImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.account.invoice.line'
 
@@ -127,7 +122,6 @@ class AccountInvoiceLineImportMapper(CarepointImportMapper):
         return {'carepoint_id': record['rxdisp_id']}
 
 
-@carepoint
 class AccountInvoiceLineImporter(CarepointImporter):
     _model_name = ['carepoint.account.invoice.line']
 
@@ -171,17 +165,14 @@ class AccountInvoiceLineImporter(CarepointImporter):
             invoice_id.write(vals)
 
 
-@carepoint
 class AccountInvoiceLineExportMapper(ExportMapper):
     _model_name = 'carepoint.account.invoice.line'
 
 
-@carepoint
 class AccountInvoiceLineExporter(CarepointExporter):
     _model_name = ['carepoint.account.invoice.line']
     _base_mapper = AccountInvoiceLineExportMapper
 
 
-@carepoint
 class AccountInvoiceLineDeleteSynchronizer(CarepointDeleter):
     _model_name = ['carepoint.account.invoice.line']

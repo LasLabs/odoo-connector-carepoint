@@ -8,13 +8,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PartnerImportMapper,
                            ExportMapper,
                            CommonDateImporterMixer,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -63,13 +62,11 @@ class CarepointCarepointOrganization(models.Model):
     )
 
 
-@carepoint
-class CarepointOrganizationAdapter(CarepointCRUDAdapter):
+class CarepointOrganizationAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Organization """
     _model_name = 'carepoint.org.bind'
 
 
-@carepoint
 class CarepointOrganizationBatchImporter(DelayedBatchImporter,
                                          CommonDateImporterMixer):
     """ Import the Carepoint Organizations.
@@ -78,7 +75,6 @@ class CarepointOrganizationBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.org.bind']
 
 
-@carepoint
 class CarepointOrganizationImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.org.bind'
 
@@ -110,7 +106,6 @@ class CarepointOrganizationImportMapper(PartnerImportMapper):
             return {'odoo_id': organization_id.id}
 
 
-@carepoint
 class CarepointOrganizationImporter(CarepointImporter,
                                     CommonDateImporterMixer):
     _model_name = ['carepoint.org.bind']
@@ -126,7 +121,6 @@ class CarepointOrganizationImporter(CarepointImporter,
         phone._import_phones(self.carepoint_id, partner_binding)
 
 
-@carepoint
 class CarepointOrganizationExportMapper(ExportMapper):
     _model_name = 'carepoint.org.bind'
 
@@ -143,7 +137,6 @@ class CarepointOrganizationExportMapper(ExportMapper):
         return {'org_id': record.carepoint_id}
 
 
-@carepoint
 class CarepointOrganizationExporter(CarepointExporter):
     _model_name = ['carepoint.org.bind']
     _base_mapper = CarepointOrganizationExportMapper

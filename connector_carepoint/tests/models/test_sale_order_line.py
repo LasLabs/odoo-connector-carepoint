@@ -144,7 +144,7 @@ class TestSaleOrderLineUnit(SaleOrderLineTestBase):
             with self.assertRaises(EndTestException):
                 self.unit._get_order_lines(True)
             mk.assert_called_once_with(
-                sale_order_line.CarepointCRUDAdapter
+                sale_order_line.CarepointAdapter
             )
 
     def test_get_order_lines_search(self):

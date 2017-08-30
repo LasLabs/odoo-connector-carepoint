@@ -9,13 +9,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -107,13 +106,11 @@ class CarepointSaleOrder(models.Model):
             record.carepoint_account_id = account.id
 
 
-@carepoint
-class SaleOrderAdapter(CarepointCRUDAdapter):
+class SaleOrderAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Patient """
     _model_name = 'carepoint.sale.order'
 
 
-@carepoint
 class SaleOrderBatchImporter(DelayedBatchImporter,
                              CommonDateImporterMixer):
     """ Import the Carepoint Patients.
@@ -130,7 +127,6 @@ class SaleOrderBatchImporter(DelayedBatchImporter,
             self._import_record(record_id)
 
 
-@carepoint
 class SaleOrderImportMapper(CarepointImportMapper,
                             CommonDateImportMapperMixer):
     _model_name = 'carepoint.sale.order'
@@ -189,7 +185,6 @@ class SaleOrderImportMapper(CarepointImportMapper,
         return {'carepoint_id': record['order_id']}
 
 
-@carepoint
 class SaleOrderImporter(CarepointImporter,
                         CommonDateImporterMixer):
     _model_name = ['carepoint.sale.order']
@@ -222,7 +217,6 @@ class SaleOrderImporter(CarepointImporter,
         # )
 
 
-@carepoint
 class SaleOrderExportMapper(ExportMapper,
                             CommonDateExportMapperMixer):
     _model_name = 'carepoint.sale.order'
@@ -263,7 +257,6 @@ class SaleOrderExportMapper(ExportMapper,
                 }
 
 
-@carepoint
 class SaleOrderExporter(CarepointExporter):
     _model_name = ['carepoint.sale.order']
     _base_mapper = SaleOrderExportMapper

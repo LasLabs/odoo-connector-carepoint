@@ -8,8 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .phone_abstract import (CarepointPhoneAbstractImportMapper,
@@ -50,13 +49,11 @@ class CarepointCarepointPhoneStore(models.Model):
     )
 
 
-@carepoint
-class CarepointPhoneStoreAdapter(CarepointCRUDAdapter):
+class CarepointPhoneStoreAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Phone Store """
     _model_name = 'carepoint.carepoint.phone.store'
 
 
-@carepoint
 class CarepointPhoneStoreBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Phone Stores.
     For every phone in the list, a delayed job is created.
@@ -64,7 +61,6 @@ class CarepointPhoneStoreBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.phone.store']
 
 
-@carepoint
 class CarepointPhoneStoreImportMapper(
     CarepointPhoneAbstractImportMapper,
 ):
@@ -87,7 +83,6 @@ class CarepointPhoneStoreImportMapper(
                                            record['phone_id'])}
 
 
-@carepoint
 class CarepointPhoneStoreImporter(
     CarepointPhoneAbstractImporter,
 ):
@@ -101,12 +96,11 @@ class CarepointPhoneStoreImporter(
                                 'carepoint.carepoint.store')
 
 
-@carepoint
 class CarepointPhoneStoreUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.phone.store'
 
     def _import_phones(self, store_id, partner_binding):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointPhoneStoreImporter)
         phone_ids = adapter.search(store_id=store_id)
         for phone_id in phone_ids:

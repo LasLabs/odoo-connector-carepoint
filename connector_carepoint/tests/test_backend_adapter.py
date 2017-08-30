@@ -16,7 +16,7 @@ class TestBackendAdapter(SetUpCarepointBase):
 
     def setUp(self):
         super(TestBackendAdapter, self).setUp()
-        self.Model = backend_adapter.CarepointCRUDAdapter
+        self.Model = backend_adapter.CarepointAdapter
 
     def _init_model(self, model='carepoint.carepoint.store'):
         self.model = self.env[model]

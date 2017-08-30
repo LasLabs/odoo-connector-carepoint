@@ -7,8 +7,7 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import PartnerImportMapper, trim
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -47,13 +46,11 @@ class CarepointMedicalPathologyCodeType(models.Model):
     )
 
 
-@carepoint
-class MedicalPathologyCodeTypeAdapter(CarepointCRUDAdapter):
+class MedicalPathologyCodeTypeAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.medical.pathology.code.type'
 
 
-@carepoint
 class MedicalPathologyCodeTypeBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Stores.
     For every company in the list, a delayed job is created.
@@ -61,7 +58,6 @@ class MedicalPathologyCodeTypeBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.medical.pathology.code.type']
 
 
-@carepoint
 class MedicalPathologyCodeTypeImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.medical.pathology.code.type'
 
@@ -85,7 +81,6 @@ class MedicalPathologyCodeTypeImportMapper(PartnerImportMapper):
         return {'carepoint_id': record['icd_cd_type']}
 
 
-@carepoint
 class MedicalPathologyCodeTypeImporter(CarepointImporter):
     _model_name = ['carepoint.medical.pathology.code.type']
     _base_mapper = MedicalPathologyCodeTypeImportMapper

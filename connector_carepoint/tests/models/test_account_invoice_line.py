@@ -49,7 +49,7 @@ class TestAccountInvoiceLineUnit(AccountInvoiceLineTestBase):
             with self.assertRaises(EndTestException):
                 self.unit._import_invoice_lines_for_procurement(True)
             mk.assert_called_once_with(
-                account_invoice_line.CarepointCRUDAdapter
+                account_invoice_line.CarepointAdapter
             )
 
     def test_import_invoice_lines_for_procurement_unit_for_importer(self):

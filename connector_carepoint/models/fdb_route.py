@@ -7,12 +7,11 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (BaseImportMapper,
                            trim,
                            trim_and_titleize,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -45,12 +44,10 @@ class CarepointFdbRoute(models.Model):
     )
 
 
-@carepoint
-class FdbRouteAdapter(CarepointCRUDAdapter):
+class FdbRouteAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.route'
 
 
-@carepoint
 class FdbRouteBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbRoutes.
     For every product category in the list, a delayed job is created.
@@ -59,7 +56,6 @@ class FdbRouteBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.route']
 
 
-@carepoint
 class FdbRouteImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.route'
     direct = [
@@ -89,7 +85,6 @@ class FdbRouteImportMapper(BaseImportMapper):
         return {'carepoint_id': record['gcrt'].strip()}
 
 
-@carepoint
 class FdbRouteImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.route']
     _base_mapper = FdbRouteImportMapper

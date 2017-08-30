@@ -7,12 +7,11 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (BaseImportMapper,
                            trim,
                            trim_and_titleize,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -45,12 +44,10 @@ class CarepointFdbForm(models.Model):
     )
 
 
-@carepoint
-class FdbFormAdapter(CarepointCRUDAdapter):
+class FdbFormAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.form'
 
 
-@carepoint
 class FdbFormBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbForms.
     For every product category in the list, a delayed job is created.
@@ -59,7 +56,6 @@ class FdbFormBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.form']
 
 
-@carepoint
 class FdbFormImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.form'
     direct = [
@@ -87,7 +83,6 @@ class FdbFormImportMapper(BaseImportMapper):
         return {'form_id': form.id}
 
 
-@carepoint
 class FdbFormImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.form']
     _base_mapper = FdbFormImportMapper

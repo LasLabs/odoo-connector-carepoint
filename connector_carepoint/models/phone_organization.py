@@ -8,8 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .phone_abstract import (CarepointPhoneAbstractImportMapper,
@@ -57,13 +56,11 @@ class CarepointCarepointPhoneOrganization(models.Model):
     )
 
 
-@carepoint
-class CarepointPhoneOrganizationAdapter(CarepointCRUDAdapter):
+class CarepointPhoneOrganizationAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Phone Organization """
     _model_name = 'carepoint.carepoint.phone.organization'
 
 
-@carepoint
 class CarepointPhoneOrganizationBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Phone Organizations.
     For every phone in the list, a delayed job is created.
@@ -71,7 +68,6 @@ class CarepointPhoneOrganizationBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.phone.organization']
 
 
-@carepoint
 class CarepointPhoneOrganizationImportMapper(
     CarepointPhoneAbstractImportMapper,
 ):
@@ -94,7 +90,6 @@ class CarepointPhoneOrganizationImportMapper(
                                            record['phone_id'])}
 
 
-@carepoint
 class CarepointPhoneOrganizationImporter(
     CarepointPhoneAbstractImporter,
 ):
@@ -110,19 +105,17 @@ class CarepointPhoneOrganizationImporter(
                                 'carepoint.medical.organization')
 
 
-@carepoint
 class CarepointPhoneOrganizationUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.phone.organization'
 
     def _import_phones(self, organization_id, partner_binding):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointPhoneOrganizationImporter)
         phone_ids = adapter.search(org_id=organization_id)
         for phone_id in phone_ids:
             importer.run(phone_id)
 
 
-@carepoint
 class CarepointPhoneOrganizationExportMapper(
     CarepointPhoneAbstractExportMapper
 ):
@@ -135,7 +128,6 @@ class CarepointPhoneOrganizationExportMapper(
         return {'org_id': rec_id}
 
 
-@carepoint
 class CarepointPhoneOrganizationExporter(
     CarepointPhoneAbstractExporter
 ):

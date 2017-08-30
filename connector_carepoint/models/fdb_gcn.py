@@ -6,9 +6,8 @@ import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -41,12 +40,10 @@ class CarepointFdbGcn(models.Model):
     )
 
 
-@carepoint
-class FdbGcnAdapter(CarepointCRUDAdapter):
+class FdbGcnAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.gcn'
 
 
-@carepoint
 class FdbGcnBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbGcns.
     For every product category in the list, a delayed job is created.
@@ -55,7 +52,6 @@ class FdbGcnBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.gcn']
 
 
-@carepoint
 class FdbGcnImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.gcn'
     direct = [
@@ -83,7 +79,6 @@ class FdbGcnImportMapper(BaseImportMapper):
         return {'carepoint_id': record['gcn_seqno']}
 
 
-@carepoint
 class FdbGcnImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.gcn']
     _base_mapper = FdbGcnImportMapper

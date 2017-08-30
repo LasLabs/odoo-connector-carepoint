@@ -9,12 +9,11 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                none,
                                                changed_by,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CommonDateImporterMixer,
                            PersonExportMapper,
                            PersonImportMapper,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -52,13 +51,11 @@ class CarepointResUsers(models.Model):
     )
 
 
-@carepoint
-class ResUsersAdapter(CarepointCRUDAdapter):
+class ResUsersAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint User """
     _model_name = 'carepoint.res.users'
 
 
-@carepoint
 class ResUsersBatchImporter(DelayedBatchImporter,
                             CommonDateImporterMixer):
     """ Import the Carepoint Users.
@@ -67,7 +64,6 @@ class ResUsersBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.res.users']
 
 
-@carepoint
 class ResUsersImportMapper(PersonImportMapper):
     _model_name = 'carepoint.res.users'
 
@@ -104,14 +100,12 @@ class ResUsersImportMapper(PersonImportMapper):
             return {'odoo_id': user_id.id}
 
 
-@carepoint
 class ResUsersImporter(CarepointImporter,
                        CommonDateImporterMixer):
     _model_name = ['carepoint.res.users']
     _base_mapper = ResUsersImportMapper
 
 
-@carepoint
 class ResUsersExportMapper(PersonExportMapper):
     _model_name = 'carepoint.res.users'
 
@@ -129,7 +123,6 @@ class ResUsersExportMapper(PersonExportMapper):
         }
 
 
-@carepoint
 class ResUsersExporter(CarepointExporter):
     _model_name = ['carepoint.res.users']
     _base_mapper = ResUsersExportMapper

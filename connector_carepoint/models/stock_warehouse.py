@@ -7,8 +7,7 @@ from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import CarepointImportMapper, trim
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -46,13 +45,11 @@ class CarepointStockWarehouse(models.Model):
     )
 
 
-@carepoint
-class StockWarehouseAdapter(CarepointCRUDAdapter):
+class StockWarehouseAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.stock.warehouse'
 
 
-@carepoint
 class StockWarehouseBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Stores.
     For every company in the list, a delayed job is created.
@@ -60,7 +57,6 @@ class StockWarehouseBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.stock.warehouse']
 
 
-@carepoint
 class StockWarehouseImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.stock.warehouse'
 
@@ -120,7 +116,6 @@ class StockWarehouseImportMapper(CarepointImportMapper):
         return {'carepoint_id': record['store_id']}
 
 
-@carepoint
 class StockWarehouseImporter(CarepointImporter):
     _model_name = ['carepoint.stock.warehouse']
     _base_mapper = StockWarehouseImportMapper

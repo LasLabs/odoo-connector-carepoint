@@ -9,9 +9,8 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                changed_by,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import CarepointImportMapper, trim
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -81,12 +80,10 @@ class CarepointCarepointItem(models.Model):
     )
 
 
-@carepoint
-class CarepointItemAdapter(CarepointCRUDAdapter):
+class CarepointItemAdapter(CarepointAdapter):
     _model_name = 'carepoint.carepoint.item'
 
 
-@carepoint
 class CarepointItemBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Items.
     For every product category in the list, a delayed job is created.
@@ -95,7 +92,6 @@ class CarepointItemBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.item']
 
 
-@carepoint
 class CarepointItemImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.carepoint.item'
 
@@ -151,7 +147,6 @@ class CarepointItemImportMapper(CarepointImportMapper):
         )
 
 
-@carepoint
 class CarepointItemImporter(CarepointImporter):
     _model_name = ['carepoint.carepoint.item']
 
@@ -168,7 +163,6 @@ class CarepointItemImporter(CarepointImporter):
                                 'carepoint.carepoint.vendor')
 
 
-@carepoint
 class CarepointItemExportMapper(ExportMapper):
     _model_name = 'carepoint.carepoint.item'
 
@@ -192,7 +186,6 @@ class CarepointItemExportMapper(ExportMapper):
                     }
 
 
-@carepoint
 class CarepointItemExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.item']
     _base_mapper = CarepointItemExportMapper

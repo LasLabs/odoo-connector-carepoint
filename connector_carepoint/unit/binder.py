@@ -7,9 +7,6 @@ import odoo
 
 from odoo.addons.connector.connector import Binder
 
-from ..backend import carepoint
-
-
 _logger = logging.getLogger(__name__)
 
 
@@ -17,7 +14,6 @@ class CarepointBinder(Binder):
     """ Generic Binder for Carepoint """
 
 
-@carepoint
 class CarepointModelBinder(CarepointBinder):
     """ Bindings are done directly on the binding model.
     Binding models are models called ``carepoint.{normal_model}``,

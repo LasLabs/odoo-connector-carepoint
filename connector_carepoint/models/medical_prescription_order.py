@@ -10,13 +10,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                convert,
                                                backend_to_m2o,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -68,13 +67,11 @@ class CarepointMedicalPrescriptionOrder(models.Model):
     )
 
 
-@carepoint
-class MedicalPrescriptionOrderAdapter(CarepointCRUDAdapter):
+class MedicalPrescriptionOrderAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Prescription """
     _model_name = 'carepoint.medical.prescription.order'
 
 
-@carepoint
 class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter,
                                             CommonDateImporterMixer):
     """ Import the Carepoint Prescriptions.
@@ -83,7 +80,6 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.medical.prescription.order']
 
 
-@carepoint
 class MedicalPrescriptionOrderImportMapper(CarepointImportMapper,
                                            CommonDateImportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
@@ -108,7 +104,6 @@ class MedicalPrescriptionOrderImportMapper(CarepointImportMapper,
         return {'partner_id': store.pharmacy_id.id}
 
 
-@carepoint
 class MedicalPrescriptionOrderImporter(CarepointImporter,
                                        CommonDateImporterMixer):
     _model_name = ['carepoint.medical.prescription.order']
@@ -123,7 +118,6 @@ class MedicalPrescriptionOrderImporter(CarepointImporter,
                                 'carepoint.medical.physician')
 
 
-@carepoint
 class MedicalPrescriptionOrderExportMapper(ExportMapper,
                                            CommonDateExportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
@@ -146,7 +140,6 @@ class MedicalPrescriptionOrderExportMapper(ExportMapper,
             return {'status_cn': 3}
 
 
-@carepoint
 class MedicalPrescriptionOrderExporter(CarepointExporter):
     _model_name = ['carepoint.medical.prescription.order']
     _base_mapper = MedicalPrescriptionOrderExportMapper

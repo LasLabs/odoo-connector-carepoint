@@ -9,13 +9,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
                            CommonDateImporterMixer,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -58,13 +57,11 @@ class CarepointMedicalPatient(models.Model):
     )
 
 
-@carepoint
-class MedicalPatientAdapter(CarepointCRUDAdapter):
+class MedicalPatientAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Patient """
     _model_name = 'carepoint.medical.patient'
 
 
-@carepoint
 class MedicalPatientBatchImporter(DelayedBatchImporter,
                                   CommonDateImporterMixer):
     """ Import the Carepoint Patients.
@@ -73,7 +70,6 @@ class MedicalPatientBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.medical.patient']
 
 
-@carepoint
 class MedicalPatientImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.patient'
 
@@ -118,7 +114,6 @@ class MedicalPatientImportMapper(PersonImportMapper):
             return {'odoo_id': patient_id.id}
 
 
-@carepoint
 class MedicalPatientImporter(CarepointImporter,
                              CommonDateImporterMixer):
     _model_name = ['carepoint.medical.patient']
@@ -140,7 +135,6 @@ class MedicalPatientImporter(CarepointImporter,
         disease._import_by_patient(self.carepoint_id)
 
 
-@carepoint
 class MedicalPatientExportMapper(PersonExportMapper):
     _model_name = 'carepoint.medical.patient'
 
@@ -175,7 +169,6 @@ class MedicalPatientExportMapper(PersonExportMapper):
         return {'no_safety_caps_yn': not record.safety_cap_yn}
 
 
-@carepoint
 class MedicalPatientExporter(CarepointExporter):
     _model_name = ['carepoint.medical.patient']
     _base_mapper = MedicalPatientExportMapper

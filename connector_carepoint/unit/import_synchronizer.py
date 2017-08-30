@@ -14,10 +14,9 @@ are already bound, to update the last sync date.
 
 import logging
 from odoo import fields, _
-from odoo.addons.connector.queue.job import job
+from odoo.addons.queue_job.job import job
 from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.synchronizer import Importer
-from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
 
 
@@ -33,6 +32,8 @@ def int_or_str(val):
 
 class CarepointImporter(Importer):
     """ Base importer for Carepoint """
+
+    PRIORITY = 10
 
     def __init__(self, connector_env):
         """
@@ -200,21 +201,15 @@ class CarepointImporter(Importer):
             return
         try:
             if self.carepoint_record['add_user_id']:
-                import_record(
-                    self.session,
-                    'carepoint.res.users',
-                    self.backend_record.id,
-                    self.carepoint_record['add_user_id'],
+                self.env['carepoint.res.users'].import_record(
+                    self.backend_record, self.carepoint_record['add_user_id'],
                 )
         except KeyError:
             pass
         try:
             if self.carepoint_record['chg_user_id']:
-                import_record(
-                    self.session,
-                    'carepoint.res.users',
-                    self.backend_record.id,
-                    self.carepoint_record['chg_user_id'],
+                self.env['carepoint.res.users'].import_record(
+                    self.backend_record, self.carepoint_record['chg_user_id'],
                 )
         except KeyError:
             pass
@@ -278,6 +273,8 @@ class BatchImporter(Importer):
     the import of each item separately.
     """
 
+    PRIORITY = 10
+
     def run(self, filters=None):
         """ Run the synchronization """
         if filters is None:
@@ -302,10 +299,9 @@ class DirectBatchImporter(BatchImporter):
 
     def _import_record(self, record_id):
         """ Import the record directly """
-        import_record(self.session,
-                      self.model._name,
-                      self.backend_record.id,
-                      int_or_str(record_id))
+        self.model.import_record(
+            self.backend_record, int_or_str(record_id),
+        )
 
 
 class DelayedBatchImporter(BatchImporter):
@@ -314,51 +310,36 @@ class DelayedBatchImporter(BatchImporter):
 
     def _import_record(self, record_id, **kwargs):
         """ Delay the import of the records"""
-        import_record.delay(self.session,
-                            self.model._name,
-                            self.backend_record.id,
-                            int_or_str(record_id),
-                            **kwargs)
-
-
-@carepoint
-class SimpleRecordImporter(CarepointImporter):
-    """ Import one Carepoint Store """
-    _model_name = [
-        'carepoint.store',
-    ]
-
-
-@carepoint
-class AddCheckpoint(ConnectorUnit):
-    """ Add a connector.checkpoint on the underlying model
-    (not the carepoint.* but the _inherits'ed model) """
-
-    _model_name = ['carepoint.product.product',
-                   'carepoint.product.category',
-                   ]
-
-    def run(self, odoo_binding_id):
-        binding = self.model.browse(odoo_binding_id)
-        record = binding.odoo_id
-        add_checkpoint(self.session,
-                       record._name,
-                       record.id,
-                       self.backend_record.id)
-
-
-@job(default_channel='root.carepoint')
-def import_batch(session, model_name, backend_id, filters=None):
-    """ Prepare a batch import of records from Carepoint """
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(DelayedBatchImporter)
-    importer.run(filters=filters)
-
-
-@job(default_channel='root.carepoint')
-def import_record(session, model_name, backend_id, carepoint_id, force=False):
-    """ Import a record from Carepoint """
-    env = get_environment(session, model_name, backend_id)
-    importer = env.get_connector_unit(CarepointImporter)
-    _logger.debug('Importing CP Record %s from %s', carepoint_id, model_name)
-    importer.run(carepoint_id, force=force)
+        self.model.delay(self.PRIORITY).import_record(
+            self.backend_record, int_or_str(record_id), **kwargs
+        )
+#
+#
+# # class SimpleRecordImporter(CarepointImporter):
+#     """ Import one Carepoint Store """
+#     _model_name = [
+#         'carepoint.store',
+#     ]
+#
+#
+# # class AddCheckpoint(ConnectorUnit):
+#     """ Add a connector.checkpoint on the underlying model
+#     (not the carepoint.* but the _inherits'ed model) """
+#
+#     _model_name = ['carepoint.product.product',
+#                    'carepoint.product.category',
+#                    ]
+#
+#     def run(self, odoo_binding_id):
+#         binding = self.model.browse(odoo_binding_id)
+#         record = binding.odoo_id
+#         add_checkpoint(self.session,
+#                        record._name,
+#                        record.id,
+#                        self.backend_record.id)
+#
+# @job(default_channel='root.carepoint')
+# def import_record(session, model_name, backend_id, carepoint_id, force=False):
+#     """ Import a record from Carepoint """
+#     env = get_environment(session, model_name, backend_id)
+#     return env[model_name].import_record(backend_id, carepoint_id, force)

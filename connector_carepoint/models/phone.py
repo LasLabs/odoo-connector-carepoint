@@ -10,9 +10,8 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                changed_by,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -93,25 +92,22 @@ class CarepointCarepointPhone(models.Model):
     )
 
 
-@carepoint
-class CarepointPhoneAdapter(CarepointCRUDAdapter):
+class CarepointPhoneAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Phone """
     _model_name = 'carepoint.carepoint.phone'
 
 
-@carepoint
 class CarepointPhoneUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.phone'
 
     def _import_by_filter(self, **filters):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointPhoneImporter)
         rec_ids = adapter.search(**filters)
         for rec_id in rec_ids:
             importer.run(rec_id)
 
 
-@carepoint
 class CarepointPhoneBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Phones.
     For every phone in the list, a delayed job is created.
@@ -119,7 +115,6 @@ class CarepointPhoneBatchImporter(DelayedBatchImporter):
     _model_name = 'carepoint.carepoint.phone'
 
 
-@carepoint
 class CarepointPhoneImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.phone'
 
@@ -141,13 +136,11 @@ class CarepointPhoneImportMapper(BaseImportMapper):
         return {'carepoint_id': record['phone_id']}
 
 
-@carepoint
 class CarepointPhoneImporter(CarepointImporter):
     _model_name = 'carepoint.carepoint.phone'
     _base_mapper = CarepointPhoneImportMapper
 
 
-@carepoint
 class CarepointPhoneExportMapper(ExportMapper):
     _model_name = 'carepoint.carepoint.phone'
 
@@ -174,7 +167,6 @@ class CarepointPhoneExportMapper(ExportMapper):
         return {'phone_id': record.carepoint_id}
 
 
-@carepoint
 class CarepointPhoneExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.phone']
     _base_mapper = CarepointPhoneExportMapper

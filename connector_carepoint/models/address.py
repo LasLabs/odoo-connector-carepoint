@@ -11,10 +11,9 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
 from ..unit.mapper import trim_and_titleize
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -110,25 +109,22 @@ class CarepointCarepointAddress(models.Model):
     )
 
 
-@carepoint
-class CarepointAddressAdapter(CarepointCRUDAdapter):
+class CarepointAddressAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Address """
     _model_name = 'carepoint.carepoint.address'
 
 
-@carepoint
 class CarepointAddressUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.address'
 
     def _import_by_filter(self, **filters):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointAddressImporter)
         rec_ids = adapter.search(**filters)
         for rec_id in rec_ids:
             importer.run(rec_id)
 
 
-@carepoint
 class CarepointAddressBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Addresss.
     For every address in the list, a delayed job is created.
@@ -136,7 +132,6 @@ class CarepointAddressBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.address']
 
 
-@carepoint
 class CarepointAddressImportMapper(BaseImportMapper):
     _model_name = 'carepoint.carepoint.address'
 
@@ -171,13 +166,11 @@ class CarepointAddressImportMapper(BaseImportMapper):
         return {'carepoint_id': record['addr_id']}
 
 
-@carepoint
 class CarepointAddressImporter(CarepointImporter):
     _model_name = ['carepoint.carepoint.address']
     _base_mapper = CarepointAddressImportMapper
 
 
-@carepoint
 class CarepointAddressExportMapper(ExportMapper):
     _model_name = 'carepoint.carepoint.address'
 
@@ -215,7 +208,6 @@ class CarepointAddressExportMapper(ExportMapper):
         return {'addr_id': record.carepoint_id}
 
 
-@carepoint
 class CarepointAddressExporter(CarepointExporter):
     _model_name = ['carepoint.carepoint.address']
     _base_mapper = CarepointAddressExportMapper

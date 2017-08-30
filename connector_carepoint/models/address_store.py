@@ -8,8 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
@@ -50,13 +49,11 @@ class CarepointCarepointAddressStore(models.Model):
     )
 
 
-@carepoint
-class CarepointAddressStoreAdapter(CarepointCRUDAdapter):
+class CarepointAddressStoreAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Address Store """
     _model_name = 'carepoint.carepoint.address.store'
 
 
-@carepoint
 class CarepointAddressStoreBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Address Stores.
     For every address in the list, a delayed job is created.
@@ -64,7 +61,6 @@ class CarepointAddressStoreBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.address.store']
 
 
-@carepoint
 class CarepointAddressStoreImportMapper(
     CarepointAddressAbstractImportMapper,
 ):
@@ -87,7 +83,6 @@ class CarepointAddressStoreImportMapper(
                                            record['addr_id'])}
 
 
-@carepoint
 class CarepointAddressStoreImporter(
     CarepointAddressAbstractImporter,
 ):
@@ -101,12 +96,11 @@ class CarepointAddressStoreImporter(
                                 'carepoint.carepoint.store')
 
 
-@carepoint
 class CarepointAddressStoreUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.address.store'
 
     def _import_addresses(self, store_id, partner_binding):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointAddressStoreImporter)
         address_ids = adapter.search(store_id=store_id)
         for address_id in address_ids:

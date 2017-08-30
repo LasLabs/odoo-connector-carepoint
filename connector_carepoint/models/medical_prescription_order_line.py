@@ -13,13 +13,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                convert,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -63,8 +62,7 @@ class CarepointMedicalPrescriptionOrderLine(models.Model):
     out_of_refills = fields.Boolean()
 
 
-@carepoint
-class MedicalPrescriptionOrderLineAdapter(CarepointCRUDAdapter):
+class MedicalPrescriptionOrderLineAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Prescription """
     _model_name = 'carepoint.rx.ord.ln'
 
@@ -108,7 +106,6 @@ class MedicalPrescriptionOrderLineAdapter(CarepointCRUDAdapter):
         return super(MedicalPrescriptionOrderLineAdapter, self).create(data)
 
 
-@carepoint
 class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter,
                                                 CommonDateImporterMixer):
     """ Import the Carepoint Prescriptions.
@@ -117,7 +114,6 @@ class MedicalPrescriptionOrderLineBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.rx.ord.ln']
 
 
-@carepoint
 class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
                                                CommonDateImportMapperMixer):
     _model_name = 'carepoint.rx.ord.ln'
@@ -252,7 +248,6 @@ class MedicalPrescriptionOrderLineImportMapper(CarepointImportMapper,
         return {'carepoint_id': record['rx_id']}
 
 
-@carepoint
 class MedicalPrescriptionOrderLineImporter(CarepointImporter,
                                            CommonDateImporterMixer):
     _model_name = ['carepoint.rx.ord.ln']
@@ -268,7 +263,6 @@ class MedicalPrescriptionOrderLineImporter(CarepointImporter,
                                 'carepoint.fdb.ndc')
 
 
-@carepoint
 class MedicalPrescriptionOrderLineExportMapper(ExportMapper,
                                                CommonDateExportMapperMixer):
     _model_name = 'carepoint.rx.ord.ln'
@@ -412,7 +406,6 @@ class MedicalPrescriptionOrderLineExportMapper(ExportMapper,
         }
 
 
-@carepoint
 class MedicalPrescriptionOrderLineExporter(CarepointExporter):
     _model_name = ['carepoint.rx.ord.ln']
     _base_mapper = MedicalPrescriptionOrderLineExportMapper

@@ -9,14 +9,7 @@ import dateutil.rrule as rrule
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from odoo.addons.connector.session import ConnectorSession
 from odoo.addons.base.res.res_partner import _tz_get
-
-from ..unit.import_synchronizer import (import_batch,
-                                        import_record,
-                                        DirectBatchImporter,
-                                        )
-from ..backend import carepoint
 
 _logger = logging.getLogger(__name__)
 
@@ -32,8 +25,6 @@ class CarepointBackend(models.Model):
     _name = 'carepoint.backend'
     _description = 'Carepoint Backend'
     _inherit = 'connector.backend'
-
-    _backend_type = 'carepoint'
 
     _sql_constraints = [
         ('sale_prefix_uniq', 'unique(sale_prefix)',
@@ -250,12 +241,6 @@ class CarepointBackend(models.Model):
                 ))
 
     @api.model
-    def __get_model_session(self):
-        return ConnectorSession(
-            self.env.cr, self.env.uid, context=self.env.context
-        )
-
-    @api.model
     def select_versions(self):
         """ Available versions in the backend.
         Can be inherited to add custom versions.  Using this method
@@ -272,7 +257,6 @@ class CarepointBackend(models.Model):
 
     @api.multi
     def synchronize_metadata(self):
-        session = self.__get_model_session()
         for backend in self:
             for model in ('carepoint.carepoint.store',
                           # 'carepoint.res.users',
@@ -280,15 +264,16 @@ class CarepointBackend(models.Model):
                 # import directly, do not delay because this
                 # is a fast operation, a direct return is fine
                 # and it is simpler to import them sequentially
-                import_batch(session, model, backend.id)
+                self.env[model].import_batch(backend)
         return True
 
     @api.multi
-    def _import_all(self, model):
-        session = self.__get_model_session()
+    def _import_all(self, model_name, priority=10):
         for backend in self:
             backend.check_carepoint_structure()
-            import_batch.delay(session, model, backend.id)
+            self.env[model_name].delay(priority).import_batch(
+                backend,
+            )
 
     @api.multi
     def _import_from_date(self, model, from_date_field,
@@ -337,8 +322,7 @@ class CarepointBackend(models.Model):
         self.write({from_date_field: next_time})
 
     @api.multi
-    def __import_from_date(self, model, start, end, chg_date_field):
-        session = self.__get_model_session()
+    def __import_from_date(self, model_name, start, end, chg_date_field, priority=10):
         if start > end:
             old_start = start
             start = end
@@ -351,7 +335,9 @@ class CarepointBackend(models.Model):
                     '<=': end,
                 },
             }
-            import_batch.delay(session, model, backend.id, filters=filters)
+            self.env[model_name].delay(priority).import_batch(
+                backend, filters=filters,
+            )
 
     @api.model_cr_context
     def __iter_rrule(self, start, end, inc=True, freq=rrule.MONTHLY):
@@ -364,43 +350,34 @@ class CarepointBackend(models.Model):
             yield end
 
     @api.multi
-    def import_fdb_ndc_by_control_code(self):
+    def import_fdb_ndc_by_control_code(self, priority=10):
         """ It triggers an import of FDB NDCs by DEA code. """
-        session = self.__get_model_session()
         for backend in self:
             backend.check_carepoint_structure()
-            import_batch.delay(
-                session,
-                'carepoint.fdb.ndc',
-                backend.id,
+            self.env['carepoint.fdb.ndc'].delay(priority).import_batch(
+                backend,
                 filters={
                     'dea': int(backend.import_fdb_ndc_control_code),
                 },
             )
 
     @api.model
-    def resync_all(self, binding_model):
+    def resync_all(self, binding_model, priority=10):
         """ Resync all bindings for model """
-        session = self.__get_model_session()
         for record_id in self.env[binding_model].search([]):
-            for binding_id in record_id.carepoint_bind_ids:
-                import_record.delay(session,
-                                    binding_model,
-                                    binding_id.backend_id.id,
-                                    binding_id.carepoint_id,
-                                    force=True,
-                                    )
+            for binding in record_id.carepoint_bind_ids:
+                self.env[binding_model].delay(priority).import_record(
+                    binding.backend_id, bindind.carepoint_id, force=True,
+                )
 
     @api.model
-    def force_sync(self, binding_model, remote_pk, backend_id):
+    def force_sync(self, binding_model, remote_pk, backend):
         """ Force sycronization based on model and primary key """
-        session = self.__get_model_session()
-        import_record.delay(session,
-                            binding_model,
-                            backend_id,
-                            remote_pk,
-                            force=True,
-                            )
+        if isinstance(backend, int):
+            backend = self.browse(backend)
+        self.env[binding_model].delay(priority).import_record(
+            backend, remote_pk, force=True,
+        )
 
     @api.multi
     def import_carepoint_item(self):
@@ -491,15 +468,6 @@ class CarepointBackend(models.Model):
         # self._import_all('carepoint.fdb.gcn.seq')
         return True
 
-
-@carepoint
-class MetadataBatchImporter(DirectBatchImporter):
-    """ Import the records directly, without delaying the jobs.
-    Import the Carepoint Stores
-    They are imported directly because this is a rare and fast operation,
-    and we don't really bother if it blocks the UI during this time.
-    (that's also a mean to rapidly check the connectivity with Carepoint).
-    """
-    _model_name = [
-        'carepoint.store',
-    ]
+    @api.model
+    def select_versions(self):
+        return [('2.99', '2.99+')]

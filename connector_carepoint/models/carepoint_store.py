@@ -8,8 +8,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PartnerImportMapper,
                            trim,
                            CommonDateImporterMixer,
@@ -76,13 +75,11 @@ class CarepointCarepointStore(models.Model):
     )
 
 
-@carepoint
-class CarepointStoreAdapter(CarepointCRUDAdapter):
+class CarepointStoreAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.carepoint.store'
 
 
-@carepoint
 class CarepointStoreBatchImporter(DelayedBatchImporter,
                                   CommonDateImporterMixer):
     """ Import the Carepoint Stores.
@@ -91,7 +88,6 @@ class CarepointStoreBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.carepoint.store']
 
 
-@carepoint
 class CarepointStoreImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.carepoint.store'
 
@@ -138,7 +134,6 @@ class CarepointStoreImportMapper(PartnerImportMapper):
         return {'carepoint_id': record['store_id']}
 
 
-@carepoint
 class CarepointStoreImporter(CarepointImporter,
                              CommonDateImporterMixer):
     _model_name = ['carepoint.carepoint.store']

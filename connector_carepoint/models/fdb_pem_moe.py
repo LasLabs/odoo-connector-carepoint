@@ -6,9 +6,8 @@ import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper, trim
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -41,12 +40,10 @@ class CarepointFdbPemMoe(models.Model):
     )
 
 
-@carepoint
-class FdbPemMoeAdapter(CarepointCRUDAdapter):
+class FdbPemMoeAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.pem.moe'
 
 
-@carepoint
 class FdbPemMoeBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbPemMoes.
     For every product category in the list, a delayed job is created.
@@ -55,7 +52,6 @@ class FdbPemMoeBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.pem.moe']
 
 
-@carepoint
 class FdbPemMoeImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.pem.moe'
 
@@ -82,7 +78,6 @@ class FdbPemMoeImportMapper(BaseImportMapper):
                                            )}
 
 
-@carepoint
 class FdbPemMoeImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.pem.moe']
     _base_mapper = FdbPemMoeImportMapper

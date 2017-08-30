@@ -9,7 +9,6 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
 from ..unit.export_synchronizer import CarepointExporter
 
@@ -142,7 +141,6 @@ class CarepointAddressAbstract(models.AbstractModel):
         return address
 
 
-@carepoint
 class CarepointAddressAbstractImportMapper(BaseImportMapper):
 
     @staticmethod
@@ -207,7 +205,6 @@ class CarepointAddressAbstractImportMapper(BaseImportMapper):
         return {'address_id': address_id}
 
 
-@carepoint
 class CarepointAddressAbstractImporter(CarepointImporter):
     _model_name = 'carepoint.address.abstract'
 
@@ -224,7 +221,6 @@ class CarepointAddressAbstractImporter(CarepointImporter):
         return binding
 
 
-@carepoint
 class CarepointAddressAbstractExportMapper(ExportMapper):
 
     @mapping
@@ -246,7 +242,6 @@ class CarepointAddressAbstractExportMapper(ExportMapper):
         return res
 
 
-@carepoint
 class CarepointAddressAbstractExporter(CarepointExporter):
     _model_name = 'carepoint.address.abstract'
 

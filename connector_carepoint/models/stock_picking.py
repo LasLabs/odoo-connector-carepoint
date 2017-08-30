@@ -8,13 +8,12 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -52,25 +51,22 @@ class CarepointStockPicking(models.Model):
     )
 
 
-@carepoint
-class StockPickingAdapter(CarepointCRUDAdapter):
+class StockPickingAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Patient """
     _model_name = 'carepoint.stock.picking'
 
 
-@carepoint
 class StockPickingUnit(ConnectorUnit):
     _model_name = 'carepoint.stock.picking'
 
     def _import_pickings_for_sale(self, sale_order_id):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(StockPickingImporter)
         rec_ids = adapter.search(order_id=sale_order_id)
         for rec_id in rec_ids:
             importer.run(rec_id)
 
 
-@carepoint
 class StockPickingBatchImporter(DelayedBatchImporter,
                                 CommonDateImporterMixer):
     """ Import the Carepoint Patients.
@@ -79,7 +75,6 @@ class StockPickingBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.stock.picking']
 
 
-@carepoint
 class StockPickingImportMapper(CarepointImportMapper,
                                CommonDateImportMapperMixer):
     _model_name = 'carepoint.stock.picking'
@@ -101,7 +96,6 @@ class StockPickingImportMapper(CarepointImportMapper,
         return {'carepoint_id': record['order_id']}
 
 
-@carepoint
 class StockPickingImporter(CarepointImporter,
                            CommonDateImporterMixer):
     _model_name = ['carepoint.stock.picking']

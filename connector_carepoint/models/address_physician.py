@@ -8,8 +8,7 @@ from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.import_synchronizer import DelayedBatchImporter
 
 from .address_abstract import (CarepointAddressAbstractImportMapper,
@@ -57,13 +56,11 @@ class CarepointCarepointAddressPhysician(models.Model):
     )
 
 
-@carepoint
-class CarepointAddressPhysicianAdapter(CarepointCRUDAdapter):
+class CarepointAddressPhysicianAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Address Physician """
     _model_name = 'carepoint.carepoint.address.physician'
 
 
-@carepoint
 class CarepointAddressPhysicianBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Address Physicians.
     For every address in the list, a delayed job is created.
@@ -71,7 +68,6 @@ class CarepointAddressPhysicianBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.carepoint.address.physician']
 
 
-@carepoint
 class CarepointAddressPhysicianImportMapper(
     CarepointAddressAbstractImportMapper,
 ):
@@ -104,7 +100,6 @@ class CarepointAddressPhysicianImportMapper(
                                            record['addr_id'])}
 
 
-@carepoint
 class CarepointAddressPhysicianImporter(
     CarepointAddressAbstractImporter,
 ):
@@ -118,19 +113,17 @@ class CarepointAddressPhysicianImporter(
                                 'carepoint.medical.physician')
 
 
-@carepoint
 class CarepointAddressPhysicianUnit(ConnectorUnit):
     _model_name = 'carepoint.carepoint.address.physician'
 
     def _import_addresses(self, physician_id, partner_binding):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         importer = self.unit_for(CarepointAddressPhysicianImporter)
         address_ids = adapter.search(md_id=physician_id)
         for address_id in address_ids:
             importer.run(address_id)
 
 
-@carepoint
 class CarepointAddressPhysicianExportMapper(
     CarepointAddressAbstractExportMapper
 ):
@@ -143,7 +136,6 @@ class CarepointAddressPhysicianExportMapper(
         return {'md_id': rec_id}
 
 
-@carepoint
 class CarepointAddressPhysicianExporter(
     CarepointAddressAbstractExporter
 ):

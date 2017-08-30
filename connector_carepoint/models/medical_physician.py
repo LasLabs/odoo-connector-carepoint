@@ -8,13 +8,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
                            CommonDateImporterMixer,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -56,13 +55,11 @@ class CarepointMedicalPhysician(models.Model):
     )
 
 
-@carepoint
-class MedicalPhysicianAdapter(CarepointCRUDAdapter):
+class MedicalPhysicianAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Physician """
     _model_name = 'carepoint.medical.physician'
 
 
-@carepoint
 class MedicalPhysicianBatchImporter(DelayedBatchImporter,
                                     CommonDateImporterMixer):
     """ Import the Carepoint Physicians.
@@ -71,7 +68,6 @@ class MedicalPhysicianBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.medical.physician']
 
 
-@carepoint
 class MedicalPhysicianImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.physician'
 
@@ -104,7 +100,6 @@ class MedicalPhysicianImportMapper(PersonImportMapper):
             return {'odoo_id': physician_id.id}
 
 
-@carepoint
 class MedicalPhysicianImporter(CarepointImporter,
                                CommonDateImporterMixer):
     _model_name = ['carepoint.medical.physician']
@@ -120,7 +115,6 @@ class MedicalPhysicianImporter(CarepointImporter,
         phone._import_phones(self.carepoint_id, partner_binding)
 
 
-@carepoint
 class MedicalPhysicianExportMapper(PersonExportMapper):
     _model_name = 'carepoint.medical.physician'
 
@@ -134,7 +128,6 @@ class MedicalPhysicianExportMapper(PersonExportMapper):
     ]
 
 
-@carepoint
 class MedicalPhysicianExporter(CarepointExporter):
     _model_name = ['carepoint.medical.physician']
     _base_mapper = MedicalPhysicianExportMapper

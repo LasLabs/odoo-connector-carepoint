@@ -6,11 +6,10 @@ import logging
 from odoo import models, fields
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -43,12 +42,10 @@ class CarepointMedicalMedicamentAttributeType(models.Model):
     )
 
 
-@carepoint
-class MedicalMedicamentAttributeTypeAdapter(CarepointCRUDAdapter):
+class MedicalMedicamentAttributeTypeAdapter(CarepointAdapter):
     _model_name = 'carepoint.medical.medicament.attribute.type'
 
 
-@carepoint
 class MedicalMedicamentAttributeTypeBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint MedicalMedicamentAttributeTypes.
     For every product category in the list, a delayed job is created.
@@ -57,7 +54,6 @@ class MedicalMedicamentAttributeTypeBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.medical.medicament.attribute.type']
 
 
-@carepoint
 class MedicalMedicamentAttributeTypeImportMapper(CarepointImportMapper):
     _model_name = 'carepoint.medical.medicament.attribute.type'
     direct = [
@@ -70,7 +66,6 @@ class MedicalMedicamentAttributeTypeImportMapper(CarepointImportMapper):
         return {'carepoint_id': record['IPTCATID']}
 
 
-@carepoint
 class MedicalMedicamentAttributeTypeImporter(CarepointImporter):
     _model_name = ['carepoint.medical.medicament.attribute.type']
     _base_mapper = MedicalMedicamentAttributeTypeImportMapper

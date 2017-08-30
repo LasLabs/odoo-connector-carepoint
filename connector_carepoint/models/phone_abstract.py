@@ -9,7 +9,6 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                ExportMapper,
                                                )
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import CarepointImporter
 from ..unit.export_synchronizer import CarepointExporter
 
@@ -139,7 +138,6 @@ class CarepointPhoneAbstract(models.AbstractModel):
         return phones
 
 
-@carepoint
 class CarepointPhoneAbstractImportMapper(BaseImportMapper):
 
     # It provides a mapping for Carepoint Phone Types to Odoo
@@ -197,7 +195,6 @@ class CarepointPhoneAbstractImportMapper(BaseImportMapper):
         return {'phone_id': phone_id}
 
 
-@carepoint
 class CarepointPhoneAbstractImporter(CarepointImporter):
     _model_name = 'carepoint.phone.abstract'
 
@@ -214,7 +211,6 @@ class CarepointPhoneAbstractImporter(CarepointImporter):
         return binding
 
 
-@carepoint
 class CarepointPhoneAbstractExportMapper(ExportMapper):
 
     PHONE_MAP = {
@@ -259,7 +255,6 @@ class CarepointPhoneAbstractExportMapper(ExportMapper):
         }
 
 
-@carepoint
 class CarepointPhoneAbstractExporter(CarepointExporter):
     _model_name = 'carepoint.phone.abstract'
 

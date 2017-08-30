@@ -11,13 +11,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                follow_m2o_relations,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -79,18 +78,16 @@ class CarepointProcurementOrder(models.Model):
             rec_id.carepoint_store_id = store.id
 
 
-@carepoint
-class ProcurementOrderAdapter(CarepointCRUDAdapter):
+class ProcurementOrderAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Patient """
     _model_name = 'carepoint.procurement.order'
 
 
-@carepoint
 class ProcurementOrderUnit(ConnectorUnit):
     _model_name = 'carepoint.procurement.order'
 
     def _get_order_lines(self, sale_order_id):
-        adapter = self.unit_for(CarepointCRUDAdapter)
+        adapter = self.unit_for(CarepointAdapter)
         return adapter.search(order_id=sale_order_id)
 
     def _import_procurements_for_sale(self, sale_order_id):
@@ -102,7 +99,6 @@ class ProcurementOrderUnit(ConnectorUnit):
         return len(self._get_order_lines(sale_order_id))
 
 
-@carepoint
 class ProcurementOrderBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint Patients.
     For every patient in the list, a delayed job is created.
@@ -110,7 +106,6 @@ class ProcurementOrderBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.procurement.order']
 
 
-@carepoint
 class ProcurementOrderImportMapper(CarepointImportMapper,
                                    CommonDateImportMapperMixer):
     _model_name = 'carepoint.procurement.order'
@@ -176,7 +171,6 @@ class ProcurementOrderImportMapper(CarepointImportMapper,
         return {'carepoint_id': record['rxdisp_id']}
 
 
-@carepoint
 class ProcurementOrderImporter(CarepointImporter,
                                CommonDateImporterMixer):
     _model_name = ['carepoint.procurement.order']
@@ -220,7 +214,6 @@ class ProcurementOrderImporter(CarepointImporter,
         # )
 
 
-@carepoint
 class ProcurementOrderLineExportMapper(ExportMapper,
                                        CommonDateExportMapperMixer):
     _model_name = 'carepoint.procurement.order'
@@ -257,7 +250,6 @@ class ProcurementOrderLineExportMapper(ExportMapper,
                 }
 
 
-@carepoint
 class ProcurementOrderLineExporter(CarepointExporter):
     _model_name = ['carepoint.procurement.order']
     _base_mapper = ProcurementOrderLineExportMapper

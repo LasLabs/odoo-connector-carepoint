@@ -7,9 +7,8 @@ from odoo import models, fields
 from odoo.addons.connector.connector import ConnectorUnit
 from odoo.addons.connector.unit.mapper import (mapping,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import BaseImportMapper
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -42,12 +41,10 @@ class CarepointFdbImgDate(models.Model):
     )
 
 
-@carepoint
-class FdbImgDateAdapter(CarepointCRUDAdapter):
+class FdbImgDateAdapter(CarepointAdapter):
     _model_name = 'carepoint.fdb.img.date'
 
 
-@carepoint
 class FdbImgDateUnit(ConnectorUnit):
     _model_name = 'carepoint.fdb.img.date'
 
@@ -59,7 +56,6 @@ class FdbImgDateUnit(ConnectorUnit):
             importer.run(record)
 
 
-@carepoint
 class FdbImgDateBatchImporter(DelayedBatchImporter):
     """ Import the Carepoint FdbImgDates.
     For every product category in the list, a delayed job is created.
@@ -68,7 +64,6 @@ class FdbImgDateBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.fdb.img.date']
 
 
-@carepoint
 class FdbImgDateImportMapper(BaseImportMapper):
     _model_name = 'carepoint.fdb.img.date'
     direct = [
@@ -95,7 +90,6 @@ class FdbImgDateImportMapper(BaseImportMapper):
                                            )}
 
 
-@carepoint
 class FdbImgDateImporter(CarepointImporter):
     _model_name = ['carepoint.fdb.img.date']
     _base_mapper = FdbImgDateImportMapper

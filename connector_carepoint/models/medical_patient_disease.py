@@ -12,8 +12,7 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                follow_m2o_relations,
                                                ExportMapper,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..backend import carepoint
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import PartnerImportMapper
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
@@ -58,18 +57,15 @@ class CarepointMedicalPatientDisease(models.Model):
     )
 
 
-@carepoint
-class MedicalPatientDiseaseAdapter(CarepointCRUDAdapter):
+class MedicalPatientDiseaseAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Store """
     _model_name = 'carepoint.medical.patient.disease'
 
 
-@carepoint
 class MedicalPatientDiseaseBatchImporter(DelayedBatchImporter):
     _model_name = ['carepoint.medical.patient.disease']
 
 
-@carepoint
 class MedicalPatientDiseaseUnit(ConnectorUnit):
     _model_name = 'carepoint.medical.patient.disease'
 
@@ -80,7 +76,6 @@ class MedicalPatientDiseaseUnit(ConnectorUnit):
             importer.run(record)
 
 
-@carepoint
 class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
     _model_name = 'carepoint.medical.patient.disease'
 
@@ -120,7 +115,6 @@ class MedicalPatientDiseaseImportMapper(PartnerImportMapper):
         return {'carepoint_id': record['ptdx_id']}
 
 
-@carepoint
 class MedicalPatientDiseaseImporter(CarepointImporter):
     _model_name = ['carepoint.medical.patient.disease']
     _base_mapper = MedicalPatientDiseaseImportMapper
@@ -144,7 +138,6 @@ class MedicalPatientDiseaseImporter(CarepointImporter):
         return binding
 
 
-@carepoint
 class MedicalPatientDiseaseExportMapper(ExportMapper):
     _model_name = 'carepoint.medical.patient.disease'
 
@@ -157,7 +150,6 @@ class MedicalPatientDiseaseExportMapper(ExportMapper):
     ]
 
 
-@carepoint
 class MedicalPatientDiseaseExporter(CarepointExporter):
     _model_name = 'carepoint.medical.patient.disease'
     _base_mapper = MedicalPatientDiseaseExportMapper

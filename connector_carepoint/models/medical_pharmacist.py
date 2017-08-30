@@ -8,13 +8,12 @@ from odoo.addons.connector.unit.mapper import (mapping,
                                                only_create,
                                                none,
                                                )
-from ..unit.backend_adapter import CarepointCRUDAdapter
+from ..unit.backend_adapter import CarepointAdapter
 from ..unit.mapper import (PersonImportMapper,
                            PersonExportMapper,
                            CommonDateImporterMixer,
                            trim,
                            )
-from ..backend import carepoint
 from ..unit.import_synchronizer import (DelayedBatchImporter,
                                         CarepointImporter,
                                         )
@@ -53,13 +52,11 @@ class CarepointMedicalPharmacist(models.Model):
     )
 
 
-@carepoint
-class MedicalPharmacistAdapter(CarepointCRUDAdapter):
+class MedicalPharmacistAdapter(CarepointAdapter):
     """ Backend Adapter for the Carepoint Pharmacist """
     _model_name = 'carepoint.medical.pharmacist'
 
 
-@carepoint
 class MedicalPharmacistBatchImporter(DelayedBatchImporter,
                                      CommonDateImporterMixer):
     """ Import the Carepoint Pharmacists.
@@ -68,7 +65,6 @@ class MedicalPharmacistBatchImporter(DelayedBatchImporter,
     _model_name = ['carepoint.medical.pharmacist']
 
 
-@carepoint
 class MedicalPharmacistImportMapper(PersonImportMapper):
     _model_name = 'carepoint.medical.pharmacist'
 
@@ -90,7 +86,6 @@ class MedicalPharmacistImportMapper(PersonImportMapper):
         }
 
 
-@carepoint
 class MedicalPharmacistImporter(CarepointImporter,
                                 CommonDateImporterMixer):
     _model_name = ['carepoint.medical.pharmacist']
