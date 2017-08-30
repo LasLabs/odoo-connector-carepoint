@@ -11,7 +11,7 @@
     "license": "AGPL-3",
     "website": "https://laslabs.com",
     "depends": [
-        "connector",
+        "connector_v9",
         "first_databank",
         "medical_physician_us",
         "medical_patient_us",
