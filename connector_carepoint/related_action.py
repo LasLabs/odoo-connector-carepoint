@@ -9,7 +9,7 @@ When called on a job, they will return an action to the client.
 """
 
 from odoo import _
-from odoo.addons.connector.connector import ConnectorEnvironment
+from odoo.addons.connector_v9.connector import ConnectorEnvironment
 from .unit.binder import CarepointBinder
 
 

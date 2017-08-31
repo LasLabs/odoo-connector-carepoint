@@ -4,12 +4,12 @@
 
 import logging
 from odoo import api, models, fields
-from odoo.addons.connector.unit.mapper import (mapping,
+from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                ExportMapper,
                                                only_create,
                                                m2o_to_backend,
                                                )
-from odoo.addons.connector.connector import ConnectorUnit
+from odoo.addons.connector_v9.connector import ConnectorUnit
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import (CarepointImportMapper,
                            CommonDateExportMapperMixer,

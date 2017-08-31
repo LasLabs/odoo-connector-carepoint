@@ -5,7 +5,7 @@
 import logging
 import odoo
 
-from odoo.addons.connector.connector import Binder
+from odoo.addons.connector_v9.connector import Binder
 
 from ..backend import carepoint
 

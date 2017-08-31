@@ -6,7 +6,7 @@ import mock
 
 from odoo import fields
 
-from odoo.addons.connector.exception import IDMissingInBackend
+from odoo.addons.connector_v9.exception import IDMissingInBackend
 
 from odoo.addons.connector_carepoint.unit import export_synchronizer
 

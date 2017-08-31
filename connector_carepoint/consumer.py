@@ -2,11 +2,11 @@
 # Copyright 2015-2017 LasLabs Inc.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo.addons.connector.connector import Binder
+from odoo.addons.connector_v9.connector import Binder
 from .unit.export_synchronizer import export_record
 # from .unit.delete_synchronizer import export_delete_record
 from .connector import get_environment
-from odoo.addons.connector.event import (on_record_write,
+from odoo.addons.connector_v9.event import (on_record_write,
                                          on_record_create,
                                          # on_record_unlink
                                          )

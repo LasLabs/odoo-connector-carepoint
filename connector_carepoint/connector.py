@@ -3,8 +3,8 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import models, fields, api
-from odoo.addons.connector.connector import ConnectorEnvironment
-from odoo.addons.connector.checkpoint import checkpoint
+from odoo.addons.connector_v9.connector import ConnectorEnvironment
+from odoo.addons.connector_v9.checkpoint import checkpoint
 
 
 def get_environment(session, model_name, backend_id=None):
@@ -68,7 +68,7 @@ def add_checkpoint(session, model_name, record_id, backend_id):
     """ Add a row in the model ``connector.checkpoint`` for a record,
     meaning it has to be reviewed by a user.
     :param session: current session
-    :type session: :class:`odoo.addons.connector.session.ConnectorSession`
+    :type session: :class:`odoo.addons.connector_v9.session.ConnectorSession`
     :param model_name: name of the model of the record to be reviewed
     :type model_name: str
     :param record_id: ID of the record to be reviewed

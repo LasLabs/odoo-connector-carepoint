@@ -10,7 +10,7 @@ import importlib
 import mock
 from contextlib import contextmanager
 import odoo.tests.common as common
-from odoo.addons.connector.session import ConnectorSession
+from odoo.addons.connector_v9.session import ConnectorSession
 
 try:
     from carepoint.db import Db as CarepointDb

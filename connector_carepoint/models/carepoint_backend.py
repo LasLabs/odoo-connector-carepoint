@@ -9,7 +9,7 @@ import dateutil.rrule as rrule
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
-from odoo.addons.connector.session import ConnectorSession
+from odoo.addons.connector_v9.session import ConnectorSession
 from odoo.addons.base.res.res_partner import _tz_get
 
 from ..unit.import_synchronizer import (import_batch,

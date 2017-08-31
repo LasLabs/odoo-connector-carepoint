@@ -5,7 +5,7 @@
 import logging
 import re
 from odoo import models, fields, _
-from odoo.addons.connector.unit.mapper import (mapping,
+from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
 from ..unit.mapper import BaseImportMapper

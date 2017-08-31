@@ -10,9 +10,9 @@ import psycopg2
 
 import odoo
 from odoo.tools.translate import _
-from odoo.addons.connector.queue.job import job, related_action
-from odoo.addons.connector.unit.synchronizer import Exporter
-from odoo.addons.connector.exception import (IDMissingInBackend,
+from odoo.addons.connector_v9.queue.job import job, related_action
+from odoo.addons.connector_v9.unit.synchronizer import Exporter
+from odoo.addons.connector_v9.exception import (IDMissingInBackend,
                                              RetryableJobError,
                                              )
 from .import_synchronizer import import_record
@@ -313,7 +313,7 @@ class CarepointExporter(CarepointBaseExporter):
 
     def _map_data(self):
         """ Returns an instance of
-        :py:class:`~odoo.addons.connector.unit.mapper.MapRecord`
+        :py:class:`~odoo.addons.connector_v9.unit.mapper.MapRecord`
         """
         return self.mapper.map_record(self.binding_record)
 

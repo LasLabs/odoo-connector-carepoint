@@ -6,7 +6,7 @@ import logging
 
 from contextlib import contextmanager
 
-from odoo.addons.connector.unit.backend_adapter import CRUDAdapter
+from odoo.addons.connector_v9.unit.backend_adapter import CRUDAdapter
 
 try:
     from sqlalchemy.exc import InvalidRequestError

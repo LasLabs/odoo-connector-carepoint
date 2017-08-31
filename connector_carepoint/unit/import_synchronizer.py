@@ -14,9 +14,9 @@ are already bound, to update the last sync date.
 
 import logging
 from odoo import fields, _
-from odoo.addons.connector.queue.job import job
-from odoo.addons.connector.connector import ConnectorUnit
-from odoo.addons.connector.unit.synchronizer import Importer
+from odoo.addons.connector_v9.queue.job import job
+from odoo.addons.connector_v9.connector import ConnectorUnit
+from odoo.addons.connector_v9.unit.synchronizer import Importer
 from ..backend import carepoint
 from ..connector import get_environment, add_checkpoint
 
@@ -85,11 +85,11 @@ class CarepointImporter(Importer):
         :param carepoint_id: id of the related binding to import
         :param binding_model: name of the binding model for the relation
         :type binding_model: str | unicode
-        :param importer_cls: :class:`odoo.addons.connector.\
+        :param importer_cls: :class:`odoo.addons.connector_v9.\
                                      connector.ConnectorUnit`
                              class or parent class to use for the export.
                              By default: CarepointImporter
-        :type importer_cls: :class:`odoo.addons.connector.\
+        :type importer_cls: :class:`odoo.addons.connector_v9.\
                                     connector.MetaConnectorUnit`
         :param always: if True, the record is updated even if it already
                        exists, note that it is still skipped if it has
@@ -116,7 +116,7 @@ class CarepointImporter(Importer):
 
     def _map_data(self):
         """ Returns an instance of
-        :py:class:`~odoo.addons.connector.unit.mapper.MapRecord`
+        :py:class:`~odoo.addons.connector_v9.unit.mapper.MapRecord`
         """
         return self.mapper.map_record(self.carepoint_record)
 

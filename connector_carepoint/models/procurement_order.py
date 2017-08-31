@@ -4,8 +4,8 @@
 
 import logging
 from odoo import api, models, fields
-from odoo.addons.connector.connector import ConnectorUnit
-from odoo.addons.connector.unit.mapper import (mapping,
+from odoo.addons.connector_v9.connector import ConnectorUnit
+from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                only_create,
                                                m2o_to_backend,
                                                follow_m2o_relations,

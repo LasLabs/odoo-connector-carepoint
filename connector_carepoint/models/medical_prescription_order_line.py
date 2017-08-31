@@ -7,7 +7,7 @@ import re
 
 from odoo import fields
 from odoo import models
-from odoo.addons.connector.unit.mapper import (mapping,
+from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                only_create,
                                                changed_by,
                                                ExportMapper,

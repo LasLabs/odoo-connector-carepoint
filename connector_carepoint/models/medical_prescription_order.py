@@ -4,7 +4,7 @@
 
 import logging
 from odoo import api, fields, models
-from odoo.addons.connector.unit.mapper import (mapping,
+from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                ExportMapper,
                                                none,
                                                convert,
