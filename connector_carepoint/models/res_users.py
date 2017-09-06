@@ -80,7 +80,11 @@ class ResUsersImportMapper(PersonImportMapper):
     @mapping
     @only_create
     def login(self, record):
-        return {'login': record['login_name'].strip().lower()}
+        odoo_id = self.odoo_id(record)
+        if not odoo_id:
+            return {'login': record['login_name'].strip().lower()}
+        user = self.env['res.users'].browse(odoo_id['odoo_id'])
+        return {'login': user.login}
 
     @mapping
     @only_create
