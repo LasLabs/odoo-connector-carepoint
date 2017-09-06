@@ -93,7 +93,7 @@ class ResUsersImportMapper(PersonImportMapper):
         """Will bind the user on a existing user with the same name/login."""
         name = '%s %s' % (record['fname'], record['lname'])
         user_id = self.env['res.users'].search([
-            '|', '&',
+            '|',
             ('name', '=ilike', name),
             ('login', '=', record['login_name'].strip().lower()),
             ('share', '=', False),
