@@ -11,7 +11,7 @@ from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                backend_to_m2o,
                                                )
 from ..unit.backend_adapter import CarepointCRUDAdapter
-from ..unit.mapper import (CarepointImportMapper,
+from ..unit.mapper import (BaseImportMapper,
                            CommonDateExportMapperMixer,
                            CommonDateImporterMixer,
                            CommonDateImportMapperMixer,
@@ -84,7 +84,7 @@ class MedicalPrescriptionOrderBatchImporter(DelayedBatchImporter,
 
 
 @carepoint
-class MedicalPrescriptionOrderImportMapper(CarepointImportMapper,
+class MedicalPrescriptionOrderImportMapper(BaseImportMapper,
                                            CommonDateImportMapperMixer):
     _model_name = 'carepoint.medical.prescription.order'
 
