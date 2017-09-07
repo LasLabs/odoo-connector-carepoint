@@ -59,6 +59,7 @@ class CarepointMedicalPrescriptionOrder(models.Model):
     _inherits = {'medical.prescription.order': 'odoo_id'}
     _description = 'Carepoint Prescription'
     _cp_lib = 'prescription'  # Name of model in Carepoint lib (snake_case)
+    _carepoint_image_field = 'image'
 
     odoo_id = fields.Many2one(
         comodel_name='medical.prescription.order',

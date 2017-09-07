@@ -46,6 +46,7 @@ from . import carepoint_organization
 from . import carepoint_state
 from . import carepoint_item
 from . import carepoint_vendor
+from . import carepoint_image_data
 
 # FDB
 from . import fdb_ndc
