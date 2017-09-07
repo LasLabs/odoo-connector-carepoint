@@ -3,6 +3,9 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
+
+from datetime import datetime, timedelta
+
 from odoo import models, fields, api
 from odoo.addons.connector_v9.unit.mapper import (mapping,
                                                m2o_to_backend,
@@ -179,6 +182,17 @@ class SaleOrderImportMapper(CarepointImportMapper,
     @mapping
     # @only_create
     def state(self, record):
+
+        # Close sale if older than close_sale_days
+        if self.backend_record.close_sale_days:
+            close_delta = timedelta(days=self.backend_record.close_sale_days)
+            now = datetime.now()
+            date = fields.Datetime.from_string(
+                self.date_order(record)['date_order'],
+            )
+            if date + close_delta >= now:
+                return {'state': 'done'}
+
         state_id = self.env.ref(
             'connector_carepoint.state_%d' % record['order_state_cn']
         )

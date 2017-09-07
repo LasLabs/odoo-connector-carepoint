@@ -228,6 +228,12 @@ class CarepointBackend(models.Model):
     active = fields.Boolean(
         default=True,
     )
+    close_sale_days = fields.Integer(
+        help='Close imported sales that are older than this many days. '
+             'Note that this only works when the record is initially being '
+             'imported, or is modified on the CarePoint side. Use "0" to '
+             'disable the feature.',
+    )
     #
     # product_binding_ids = fields.One2many(
     #     comodel_name='carepoint.medical.medicament',
