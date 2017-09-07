@@ -72,7 +72,6 @@ class ResUsersImportMapper(PersonImportMapper):
     _model_name = 'carepoint.res.users'
 
     direct = [
-        ('email', 'email'),
         ('job_title_lu', 'function'),
         ('user_id', 'carepoint_id'),
     ]
@@ -90,6 +89,11 @@ class ResUsersImportMapper(PersonImportMapper):
     @only_create
     def employee(self, record):
         return {'employee': True}
+
+    @mapping
+    def email(self, record):
+        if record['email']:
+            return {'email': record['email']}
 
     @mapping
     @only_create
